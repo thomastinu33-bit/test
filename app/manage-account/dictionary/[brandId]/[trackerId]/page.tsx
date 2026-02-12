@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/Evertune";
+import { Button, AskAIButton } from "@/components/Evertune";
 import { getBrand, getTracker } from "@/app/manage-account/data";
 
 const PlusIcon = () => (
@@ -472,10 +472,13 @@ export default function DictionaryPage() {
     <div className="flex flex-col h-full min-h-0 bg-[#f6f6f6]">
       <header className="sticky top-0 z-10 flex-shrink-0 h-16 bg-white border-b border-[#eeeeee] flex items-center justify-between px-8">
         <h1 className="text-xl font-semibold text-[#262626]">Manage Account</h1>
-        <Button variant="primary" className="gap-2">
-          <PlusIcon />
-          New Tracker
-        </Button>
+        <div className="flex items-center gap-3">
+          <AskAIButton />
+          <Button variant="primary" className="gap-2">
+            <PlusIcon />
+            New Tracker
+          </Button>
+        </div>
       </header>
 
       <div className="flex-1 flex flex-col min-h-0 mt-5 mx-5 mb-5 bg-white rounded-lg overflow-hidden">

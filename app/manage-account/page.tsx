@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/Evertune";
+import { Button, AskAIButton } from "@/components/Evertune";
 
 const PlusIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -72,10 +72,13 @@ export default function ManageAccountPage() {
       {/* Top Nav */}
       <header className="sticky top-0 z-10 flex-shrink-0 h-16 bg-white border-b border-[#eeeeee] flex items-center justify-between px-8">
         <h1 className="text-xl font-semibold text-[#262626]">Manage Account</h1>
-        <Button variant="primary" className="gap-2">
-          <PlusIcon />
-          New Tracker
-        </Button>
+        <div className="flex items-center gap-3">
+          <AskAIButton />
+          <Button variant="primary" className="gap-2">
+            <PlusIcon />
+            New Tracker
+          </Button>
+        </div>
       </header>
 
       {/* Tabs + scrollable content */}
