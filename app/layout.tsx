@@ -22,9 +22,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${dmSans.variable} antialiased`}>
-        <div className="flex min-h-screen">
+        <div className="min-h-screen">
           <SideNav />
-          <main className="flex-1">{children}</main>
+          <main className="ml-[280px] h-screen flex flex-col overflow-hidden">
+            {children}
+          </main>
         </div>
       </body>
     </html>

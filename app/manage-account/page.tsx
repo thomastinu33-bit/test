@@ -68,9 +68,9 @@ export default function ManageAccountPage() {
   };
 
   return (
-    <div className="flex-1 min-h-screen bg-[#f6f6f6] flex flex-col">
+    <div className="flex flex-col h-full min-h-0 bg-[#f6f6f6]">
       {/* Top Nav */}
-      <header className="h-16 bg-white border-b border-[#eeeeee] flex items-center justify-between px-8 flex-shrink-0">
+      <header className="sticky top-0 z-10 flex-shrink-0 h-16 bg-white border-b border-[#eeeeee] flex items-center justify-between px-8">
         <h1 className="text-xl font-semibold text-[#262626]">Manage Account</h1>
         <Button variant="primary" className="gap-2">
           <PlusIcon />
@@ -78,8 +78,9 @@ export default function ManageAccountPage() {
         </Button>
       </header>
 
-      {/* Tabs */}
-      <div className="px-8 pt-5 flex-shrink-0">
+      {/* Tabs + scrollable content */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div className="flex-shrink-0 px-8 pt-5">
         <div className="flex gap-1">
           {tabs.map((tab) => (
             <button
@@ -99,9 +100,9 @@ export default function ManageAccountPage() {
       </div>
 
       {/* Container with margin */}
-      <div className="flex-1 flex flex-col mt-0 mx-5 mb-5 bg-white rounded-lg overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col mt-0 mx-5 mb-5 bg-white rounded-lg overflow-hidden">
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 min-h-0 overflow-y-auto p-8">
         <h1 className="text-2xl font-semibold text-[#262626] mb-6">Dictionaries</h1>
 
         {/* Global Search */}
@@ -127,7 +128,18 @@ export default function ManageAccountPage() {
                 key={brand.id}
                 className="bg-white border border-[#eeeeee] rounded-lg overflow-hidden"
               >
-                <div className="flex items-center justify-between p-4">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setExpandedBrand(isExpanded ? null : brand.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setExpandedBrand(isExpanded ? null : brand.id);
+                    }
+                  }}
+                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#fafafa] transition-colors"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded bg-[#595959] flex-shrink-0" />
                     <div>
@@ -139,7 +151,10 @@ export default function ManageAccountPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setExpandedBrand(isExpanded ? null : brand.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedBrand(isExpanded ? null : brand.id);
+                    }}
                     className="flex items-center gap-1.5 text-[var(--primary)] font-medium hover:underline text-sm"
                   >
                     <BookIcon />
@@ -222,7 +237,7 @@ export default function ManageAccountPage() {
                                     </span>
                                   </div>
                                   <Link
-                                    href="#"
+                                    href={`/manage-account/dictionary/bmw/${tracker.id}`}
                                     className="text-[var(--primary)] font-medium hover:underline text-sm flex items-center gap-1"
                                   >
                                     <BookIcon />
@@ -326,6 +341,7 @@ export default function ManageAccountPage() {
             );
           })}
         </div>
+      </div>
       </div>
       </div>
     </div>

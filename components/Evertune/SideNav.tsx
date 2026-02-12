@@ -231,14 +231,16 @@ export function SideNav({
 
   return (
     <aside
-      className={`flex flex-col flex-shrink-0 min-h-screen bg-white border-r border-[#eeeeee] transition-all duration-200 ${collapsed ? "w-[72px]" : "w-[280px]"} ${className}`}
+      className={`fixed inset-y-0 left-0 z-20 flex flex-col bg-white border-r border-[#eeeeee] transition-all duration-200 ${collapsed ? "w-[72px]" : "w-[280px]"} ${className}`}
     >
-      {/* Header */}
-      <div className={`flex items-center h-14 px-4 border-b border-[#eeeeee] flex-shrink-0 ${collapsed ? "justify-center" : "justify-between"}`}>
+      {/* Header - h-16 to align bottom border with top nav */}
+      <div className={`flex items-center h-16 px-4 border-b border-[#eeeeee] flex-shrink-0 ${collapsed ? "justify-center" : "justify-between"}`}>
         {!collapsed && (
-          <span className="text-xl font-semibold text-[#262626]" style={{ fontFamily: "inherit" }}>
-            Evertune
-          </span>
+          <img
+            src="/evertune.svg"
+            alt="Evertune"
+            className="h-7 w-auto object-contain"
+          />
         )}
         <button
           type="button"

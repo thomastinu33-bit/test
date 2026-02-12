@@ -2,7 +2,13 @@
 
 import { type ButtonHTMLAttributes } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "primaryOutline"
+  | "include";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -25,6 +31,10 @@ export function Button({
     secondary: "bg-[#434343] text-white hover:bg-[#333] focus:ring-[#434343]",
     outline: "border-2 border-[#434343] text-[#1f1f1f] hover:bg-[#f5f5f5] focus:ring-[#434343]",
     ghost: "text-[#434343] hover:bg-[#f5f5f5] focus:ring-[#434343]",
+    primaryOutline:
+      "bg-white border border-[#E0F3FE] text-[var(--primary)] hover:bg-[#f0f9ff] focus:ring-[var(--primary)] rounded-full",
+    include:
+      "bg-[#A5A5A5] text-white hover:bg-[#8c8c8c] focus:ring-[#A5A5A5] rounded-full",
   };
 
   return (
