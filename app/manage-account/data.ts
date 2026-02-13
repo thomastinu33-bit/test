@@ -14,6 +14,9 @@ export const trackersByBrand: Record<string, { id: string; name: string; locatio
     { id: "5", name: "Luxury Cars", location: "United States English" },
     { id: "6", name: "Luxury cars, UK", location: "United States English" },
   ],
+  porsche: [
+    { id: "luxury-suvs", name: "Luxury SUVs", location: "United States English" },
+  ],
 };
 
 export function getTracker(brandId: string, trackerId: string) {

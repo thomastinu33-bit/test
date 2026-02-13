@@ -72,10 +72,51 @@ const LogOutIcon = () => (
   </svg>
 );
 
+const ListIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+  </svg>
+);
+
+const GaugeIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="m12 14 4-4" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3.34 19a10 10 0 1 1 17.32 0" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const LibraryIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="8" height="18" x="3" y="3" rx="1" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7 3v18" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const BookOpenIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 7v14" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const DatabaseIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="12" cy="5" rx="9" ry="3" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 5V19A9 3 0 0 0 21 19V5" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 12A9 3 0 0 0 21 12" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   person: PersonIcon,
   barChart: BarChartIcon,
+  gauge: GaugeIcon,
   tag: TagIcon,
+  library: LibraryIcon,
+  bookOpen: BookOpenIcon,
+  database: DatabaseIcon,
+  list: ListIcon,
   globe: GlobeIcon,
   monitor: MonitorIcon,
   settings: SettingsIcon,
@@ -101,28 +142,26 @@ export interface SideNavProps {
 
 const defaultNavItems: NavItem[] = [
   { id: "account-overview", label: "Account Overview", icon: "person" },
-  { id: "ai-usage", label: "AI Usage", icon: "barChart" },
-  { id: "prompt-volume", label: "Prompt Volume", icon: "tag" },
+  { id: "ai-usage", label: "AI Usage", icon: "gauge" },
+  { id: "prompt-volume", label: "Prompt Volume", icon: "database" },
   {
     id: "ducati",
     label: "Ducati",
-    icon: "barChart",
     children: [],
   },
   {
     id: "ford",
     label: "Ford",
-    icon: "barChart",
     children: [],
   },
   {
     id: "porsche",
     label: "Porsche",
-    icon: "barChart",
     children: [
+      { id: "porsche-luxury-suvs", label: "Luxury SUVs", icon: "list", href: "/porsche/luxury-suvs" },
       {
-        id: "porsche-luxury-suvs",
-        label: "Luxury SUVs",
+        id: "porsche-sports-cars",
+        label: "Sports Cars",
         icon: "barChart",
         children: [
           { id: "word-association", label: "Word Association", icon: "tag" },
@@ -130,9 +169,8 @@ const defaultNavItems: NavItem[] = [
           { id: "consumer-preferences", label: "Consumer Preferences", icon: "tag" },
         ],
       },
-      { id: "porsche-sports-cars", label: "Sports Cars", icon: "barChart", children: [] },
-      { id: "common-unbranded", label: "Common Unbranded", icon: "tag" },
-      { id: "content-analytics", label: "Content Analytics", icon: "tag" },
+      { id: "common-unbranded", label: "Content Analytics", icon: "bookOpen" },
+      { id: "content-analytics", label: "Content Studio", icon: "library" },
     ],
   },
 ];
@@ -163,7 +201,7 @@ export function SideNav({
     }
   };
 
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(["porsche", "porsche-luxury-suvs"]));
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(["porsche", "porsche-sports-cars"]));
 
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
@@ -184,42 +222,59 @@ export function SideNav({
   };
 
   const renderNavItem = (item: NavItem, depth: number = 0, parentId?: string) => {
-    const hasChildren = item.children && item.children.length > 0;
+    const hasChildren = Array.isArray(item.children);
     const isExpanded = expandedIds.has(item.id);
-    const isActive = activeItemId === item.id;
+    const isActive = Boolean(item.href && pathname === item.href);
 
     const paddingLeft = depth === 0 ? "pl-4" : depth === 1 ? "pl-8" : "pl-12";
     const activeStyles = isActive
       ? "bg-[#E0F3FE] text-[#262626]"
       : "text-[#262626] hover:bg-[#f6f6f6]";
 
-    return (
-      <div key={item.id} className="w-full">
-        <button
-          type="button"
-          onClick={() => {
-            if (hasChildren) {
-              toggleExpand(item.id);
-            } else {
-              onNavigate?.(item.id);
-            }
-          }}
-          className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors rounded-r-md ${activeStyles}`}
-        >
+    const content = (
+      <>
+        {item.icon && (
           <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
             {renderIcon(item.icon)}
           </span>
-          {!collapsed && (
-            <>
-              <span className="flex-1 truncate">{item.label}</span>
-              {hasChildren && (
-                <span className="flex-shrink-0">
-                  {isExpanded ? <MinusIcon /> : <ChevronDownIcon />}
-                </span>
-              )}
-            </>
-          )}
-        </button>
+        )}
+        {!collapsed && (
+          <>
+            <span className="flex-1 truncate">{item.label}</span>
+            {hasChildren && (
+              <span className="flex-shrink-0">
+                {isExpanded ? <MinusIcon /> : <ChevronDownIcon />}
+              </span>
+            )}
+          </>
+        )}
+      </>
+    );
+
+    return (
+      <div key={item.id} className="w-full">
+        {item.href && !hasChildren ? (
+          <Link
+            href={item.href}
+            className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors rounded-r-md no-underline ${activeStyles}`}
+          >
+            {content}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              if (hasChildren) {
+                toggleExpand(item.id);
+              } else {
+                onNavigate?.(item.id);
+              }
+            }}
+            className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors rounded-r-md ${activeStyles}`}
+          >
+            {content}
+          </button>
+        )}
         {hasChildren && isExpanded && !collapsed && (
           <div className="mt-0">
             {item.children!.map((child) => renderNavItem(child, depth + 1, item.id))}
@@ -233,13 +288,13 @@ export function SideNav({
     <aside
       className={`fixed inset-y-0 left-0 z-20 flex flex-col bg-white border-r border-[#eeeeee] transition-all duration-200 ${collapsed ? "w-[72px]" : "w-[280px]"} ${className}`}
     >
-      {/* Header - h-16 to align bottom border with top nav */}
-      <div className={`flex items-center h-16 px-4 border-b border-[#eeeeee] flex-shrink-0 ${collapsed ? "justify-center" : "justify-between"}`}>
+      {/* Header - h-20 to align bottom border with tracker top nav */}
+      <div className={`flex items-center h-20 px-4 border-b border-[#eeeeee] flex-shrink-0 ${collapsed ? "justify-center" : "justify-between"}`}>
         {!collapsed && (
           <img
             src="/evertune.svg"
             alt="Evertune"
-            className="h-7 w-auto object-contain"
+            className="h-8 w-auto max-w-[160px] object-contain object-left"
           />
         )}
         <button
@@ -280,9 +335,7 @@ export function SideNav({
           href="/manage-account"
           onClick={() => onNavigate?.("manage-account")}
           className={`w-full flex items-center gap-3 py-2.5 pl-4 pr-4 text-left text-sm font-normal rounded-r-md transition-colors no-underline ${
-            isManageAccountActive || activeItemId === "manage-account"
-              ? "bg-[#E0F3FE] text-[#262626]"
-              : "text-[#262626] hover:bg-[#f6f6f6]"
+            isManageAccountActive ? "bg-[#E0F3FE] text-[#262626]" : "text-[#262626] hover:bg-[#f6f6f6]"
           }`}
         >
           <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">

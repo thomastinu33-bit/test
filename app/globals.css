@@ -4,11 +4,13 @@
   --background: #f6f6f6;
   --foreground: #262626;
   --primary: #048bc5;
+  --nav-brand: #7f7f7f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-nav-brand: var(--nav-brand);
   --font-sans: var(--font-dm-sans, "DM Sans", system-ui, -apple-system,
         BlinkMacSystemFont, "Segoe UI", sans-serif);
 }

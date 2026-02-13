@@ -90,10 +90,10 @@ const COMPETITOR_DISPLAY_NAMES = [
   "MERCEDES-BENZ",
 ];
 
-export default function DictionaryPage() {
+export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: string }) {
   const params = useParams();
-  const brandId = params.brandId as string;
-  const trackerId = params.trackerId as string;
+  const brandId = (props?.brandId ?? params.brandId) as string;
+  const trackerId = (props?.trackerId ?? params.trackerId) as string;
   const [surveyTerms, setSurveyTerms] = useState<SurveyTermRow[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [ignoredTerms, setIgnoredTerms] = useState<Set<string>>(new Set());
@@ -1047,3 +1047,4 @@ export default function DictionaryPage() {
   );
 }
 
+export default DictionaryTrackerView;
