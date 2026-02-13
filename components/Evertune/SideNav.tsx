@@ -30,9 +30,43 @@ const BarChartIcon = () => (
   </svg>
 );
 
+const AiBrandIndexIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 3v16a2 2 0 0 0 2 2h16" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="15" y="5" width="4" height="12" rx="1" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="7" y="8" width="4" height="9" rx="1" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const TagIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const WordAssociationIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      stroke="#262626"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+    />
+  </svg>
+);
+
+const ConsumerPreferencesIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 8h4" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 21v-9" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 8V3" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M17 16h4" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M19 12V3" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M19 21v-5" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 14h4" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 10V3" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 21v-7" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -111,8 +145,11 @@ const DatabaseIcon = () => (
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   person: PersonIcon,
   barChart: BarChartIcon,
+  aiBrandIndex: AiBrandIndexIcon,
   gauge: GaugeIcon,
   tag: TagIcon,
+  wordAssociation: WordAssociationIcon,
+  consumerPreferences: ConsumerPreferencesIcon,
   library: LibraryIcon,
   bookOpen: BookOpenIcon,
   database: DatabaseIcon,
@@ -164,9 +201,9 @@ const defaultNavItems: NavItem[] = [
         label: "Sports Cars",
         icon: "barChart",
         children: [
-          { id: "word-association", label: "Word Association", icon: "tag" },
-          { id: "ai-brand-index", label: "AI Brand Index", icon: "barChart" },
-          { id: "consumer-preferences", label: "Consumer Preferences", icon: "tag" },
+          { id: "word-association", label: "Word Association", icon: "wordAssociation" },
+          { id: "ai-brand-index", label: "AI Brand Index", icon: "aiBrandIndex" },
+          { id: "consumer-preferences", label: "Consumer Preferences", icon: "consumerPreferences" },
         ],
       },
       { id: "common-unbranded", label: "Content Analytics", icon: "bookOpen" },

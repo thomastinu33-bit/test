@@ -3,7 +3,9 @@
 :root {
   --background: #f6f6f6;
   --foreground: #262626;
-  --primary: #048bc5;
+  --primary: #029a9d;
+  --primary-gradient-start: color-mix(in srgb, var(--primary) 88%, white);
+  --primary-gradient-end: color-mix(in srgb, var(--primary) 92%, black);
   --nav-brand: #7f7f7f;
 }
 

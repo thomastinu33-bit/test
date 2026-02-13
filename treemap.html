@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8"/>
+
+  <title>Top-20 Keywords Treemap</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+  <style>
+
+    body{margin:0;font-family:Arial, sans-serif;}
+
+  </style>
+
+</head>
+
+<body>
+
+<div id="treemap" style="width:100vw;height:100vh;"></div>
+
+<script>
+
+// ------------------------------------------------------------------
+
+// 1.  Data – replace these two arrays with your real values
+
+// ------------------------------------------------------------------
+
+const keywords = [
+
+  "Luxurious Interiors","Cargo Space","Premium Materials","High-Performance",
+
+  "Driving Experience","Luxury SUV","Fuel Economy","Premium Price",
+
+  "High Quality Materials","Driving Engagement","Trade-Offs","Brand Prestige",
+
+  "Performance","Firm Ride","Driving Dynamics","Maintenance Costs",
+
+  "Premium Price Tag","Build Quality","Interior Quality","Powerful Engines"
+
+];
+
+const visibility = [
+
+   95,87,80, 76,70,70, 67,55,52, 51,48,46, 44,44,44, 44,44,44,44,44
+
+];
+
+// ------------------------------------------------------------------
+
+// 2.  Build the treemap arrays that Plotly wants
+
+// ------------------------------------------------------------------
+
+const labels   = ["Top 20 Keywords", ...keywords];   // first element = root
+
+const parents  = [""                 , ...Array(keywords.length).fill("Top 20 Keywords")];
+
+const values   = [visibility.reduce((a,b)=>a+b,0), ...visibility];
+
+const markerColors = values.slice();                // use same array for colouring
+
+// (optional) dynamic text colour – white for dark tiles, black for pale ones
+
+const min = Math.min(...visibility);
+
+const max = Math.max(...visibility);
+
+const mid = (min + max) / 2;
+
+const textColors = ["rgba(0,0,0,0)",         // invisible at the root
+
+                    ...visibility.map(v => v > mid ? "white" : "black")];
+
+// ------------------------------------------------------------------
+
+// 3.  Define trace + layout
+
+// ------------------------------------------------------------------
+
+const trace = {
+
+  type: "treemap",
+
+  labels:  labels,
+
+  parents: parents,
+
+  values:  values,
+
+  marker:  {
+
+    colors: markerColors,
+
+    colorscale: "Blues",
+
+    line: {width: 2, color: "white"}
+
+  },
+
+  branchvalues: "total",
+
+  texttemplate: "%{label}<br>Visibility Score: %{value}",
+
+  textfont: {size: 16, color: textColors},
+
+  root: {color: "white"}  // hide the root box
+
+};
+
+const layout = {
+
+  title: {text: "Top 20 Keywords", x: 0.01, xanchor: "left", font:{size:20}},
+
+  margin: {l:0, r:0, t:40, b:0},
+
+  coloraxis: {showscale: false},
+
+  paper_bgcolor: "white"
+
+};
+
+// ------------------------------------------------------------------
+
+// 4.  Render
+
+// ------------------------------------------------------------------
+
+Plotly.newPlot("treemap", [trace], layout, {responsive:true});
+
+</script>
+
+</body>
+
+</html>
