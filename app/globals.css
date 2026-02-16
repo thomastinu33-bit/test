@@ -4,6 +4,8 @@
   --background: #f6f6f6;
   --foreground: #262626;
   --primary: #029a9d;
+  /* Darker than primary, same hue family but bluer so it doesn’t read as success green */
+  --primary-dark: color-mix(in srgb, var(--primary) 72%, var(--blue-600));
   --primary-gradient-start: color-mix(in srgb, var(--primary) 88%, white);
   --primary-gradient-end: color-mix(in srgb, var(--primary) 92%, black);
   --nav-brand: #7f7f7f;
@@ -64,7 +66,7 @@
   --black-300: #262626;
   --black-600: #000000;
 
-  /* Viz palette: Hightouch-style chart colors (lighter, distinct). See https://ui.hightouch.com/foundation/colors */
+  /* Viz palette: Evertune-style chart colors (lighter, distinct) */
   --viz-1: #029a9d;
   --viz-2: #60a5fa;
   --viz-3: #facc15;
@@ -73,6 +75,40 @@
   --viz-6: #fb923c;
   --viz-7: #f472b6;
   --viz-8: #f87171;
+  /* Subtle gradients for viz (like primary buttons) */
+  --viz-1-gradient-start: color-mix(in srgb, var(--viz-1) 88%, white);
+  --viz-1-gradient-end: color-mix(in srgb, var(--viz-1) 92%, black);
+  --viz-2-gradient-start: color-mix(in srgb, var(--viz-2) 88%, white);
+  --viz-2-gradient-end: color-mix(in srgb, var(--viz-2) 92%, black);
+  --viz-3-gradient-start: color-mix(in srgb, var(--viz-3) 88%, white);
+  --viz-3-gradient-end: color-mix(in srgb, var(--viz-3) 92%, black);
+  --viz-4-gradient-start: color-mix(in srgb, var(--viz-4) 88%, white);
+  --viz-4-gradient-end: color-mix(in srgb, var(--viz-4) 92%, black);
+  --viz-5-gradient-start: color-mix(in srgb, var(--viz-5) 88%, white);
+  --viz-5-gradient-end: color-mix(in srgb, var(--viz-5) 92%, black);
+  --viz-6-gradient-start: color-mix(in srgb, var(--viz-6) 88%, white);
+  --viz-6-gradient-end: color-mix(in srgb, var(--viz-6) 92%, black);
+  --viz-7-gradient-start: color-mix(in srgb, var(--viz-7) 88%, white);
+  --viz-7-gradient-end: color-mix(in srgb, var(--viz-7) 92%, black);
+  --viz-8-gradient-start: color-mix(in srgb, var(--viz-8) 88%, white);
+  --viz-8-gradient-end: color-mix(in srgb, var(--viz-8) 92%, black);
+  /* Softer gradients for gauge ring (subtle rounded feel, like button) */
+  --primary-gauge-start: color-mix(in srgb, var(--primary) 96%, white);
+  --primary-gauge-end: color-mix(in srgb, var(--primary) 97%, black);
+  --viz-1-gauge-start: color-mix(in srgb, var(--viz-1) 96%, white);
+  --viz-1-gauge-end: color-mix(in srgb, var(--viz-1) 97%, black);
+  --viz-2-gauge-start: color-mix(in srgb, var(--viz-2) 96%, white);
+  --viz-2-gauge-end: color-mix(in srgb, var(--viz-2) 97%, black);
+  --viz-3-gauge-start: color-mix(in srgb, var(--viz-3) 96%, white);
+  --viz-3-gauge-end: color-mix(in srgb, var(--viz-3) 97%, black);
+  --viz-4-gauge-start: color-mix(in srgb, var(--viz-4) 96%, white);
+  --viz-4-gauge-end: color-mix(in srgb, var(--viz-4) 97%, black);
+  --viz-5-gauge-start: color-mix(in srgb, var(--viz-5) 96%, white);
+  --viz-5-gauge-end: color-mix(in srgb, var(--viz-5) 97%, black);
+  --viz-6-gauge-start: color-mix(in srgb, var(--viz-6) 96%, white);
+  --viz-6-gauge-end: color-mix(in srgb, var(--viz-6) 97%, black);
+  --viz-7-gauge-start: color-mix(in srgb, var(--viz-7) 96%, white);
+  --viz-7-gauge-end: color-mix(in srgb, var(--viz-7) 97%, black);
 }
 
 @theme inline {

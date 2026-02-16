@@ -58,10 +58,44 @@ const GAUGE_COLORS = [
   "var(--viz-7)",
 ];
 
+const GAUGE_GRADIENTS = [
+  "linear-gradient(180deg, var(--primary-gradient-start) 0%, var(--primary) 50%, var(--primary-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-2-gradient-start) 0%, var(--viz-2) 50%, var(--viz-2-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-3-gradient-start) 0%, var(--viz-3) 50%, var(--viz-3-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-4-gradient-start) 0%, var(--viz-4) 50%, var(--viz-4-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-5-gradient-start) 0%, var(--viz-5) 50%, var(--viz-5-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-6-gradient-start) 0%, var(--viz-6) 50%, var(--viz-6-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-7-gradient-start) 0%, var(--viz-7) 50%, var(--viz-7-gradient-end) 100%)",
+];
+
+const GAUGE_ARC_GRADIENT_STARTS = [
+  "var(--primary-gauge-start)",
+  "var(--viz-2-gauge-start)",
+  "var(--viz-3-gauge-start)",
+  "var(--viz-4-gauge-start)",
+  "var(--viz-5-gauge-start)",
+  "var(--viz-6-gauge-start)",
+  "var(--viz-7-gauge-start)",
+];
+const GAUGE_ARC_GRADIENT_ENDS = [
+  "var(--primary-gauge-end)",
+  "var(--viz-2-gauge-end)",
+  "var(--viz-3-gauge-end)",
+  "var(--viz-4-gauge-end)",
+  "var(--viz-5-gauge-end)",
+  "var(--viz-6-gauge-end)",
+  "var(--viz-7-gauge-end)",
+];
+
 function getChartColor(colors: readonly string[], index: number): string {
   const i = index % colors.length;
   const base = colors[i]!;
   return index < colors.length ? base : `color-mix(in oklch, ${base} 62%, white)`;
+}
+
+function getChartGradient(gradients: readonly string[], index: number): string {
+  const i = index % gradients.length;
+  return gradients[i]!;
 }
 
 function formatDateLabel(dateStr: string): string {
@@ -274,7 +308,7 @@ function OverviewTimelineChart({
                     <span className="flex items-center gap-1.5 min-w-0">
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: getChartColor(GAUGE_COLORS, idx) }}
+                        style={{ background: getChartGradient(GAUGE_GRADIENTS, idx) }}
                       />
                       <span className="text-[#525252] truncate">{s.label}</span>
                     </span>
@@ -301,7 +335,7 @@ function OverviewTimelineChart({
           <span key={s.dimension} className="flex items-center gap-2 text-xs text-[#525252]">
             <span
               className="w-3 h-0.5 rounded-full shrink-0"
-              style={{ backgroundColor: getChartColor(GAUGE_COLORS, idx) }}
+              style={{ background: getChartGradient(GAUGE_GRADIENTS, idx) }}
             />
             {s.label}
           </span>
@@ -374,7 +408,7 @@ export function OverviewViz() {
 
   if (loading && !dimensions) {
     return (
-      <div className="rounded-xl border border-[#e5e5e5] bg-white p-8 text-sm text-[#7F7F7F] shadow-sm">
+      <div className="rounded-xl border border-[#e5e5e5] bg-white p-8 text-sm text-[#7F7F7F] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
         Loading scores…
       </div>
     );
@@ -382,7 +416,7 @@ export function OverviewViz() {
 
   if (!dimensions) {
     return (
-      <div className="rounded-xl border border-[#e5e5e5] bg-white p-8 text-sm text-[#7F7F7F] shadow-sm">
+      <div className="rounded-xl border border-[#e5e5e5] bg-white p-8 text-sm text-[#7F7F7F] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
         No score data available.
       </div>
     );
@@ -408,7 +442,7 @@ export function OverviewViz() {
   };
 
   return (
-    <div ref={cardRef} className="rounded-xl border border-[#e5e5e5] bg-white shadow-sm overflow-hidden">
+    <div ref={cardRef} className="rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
         <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
           Brand Score for Porsche in Luxury SUV
@@ -516,6 +550,8 @@ export function OverviewViz() {
                       max={maxVal}
                       change={change != null && Number.isFinite(change) ? change : null}
                       arcColor={getChartColor(GAUGE_COLORS, i)}
+                      arcGradientStart={GAUGE_ARC_GRADIENT_STARTS[i]}
+                      arcGradientEnd={GAUGE_ARC_GRADIENT_ENDS[i]}
                       valueFormat={(v) => formatValue(v)}
                       inverse={isAvgPosition}
                     />

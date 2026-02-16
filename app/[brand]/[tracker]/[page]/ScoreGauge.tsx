@@ -1,11 +1,15 @@
 "use client";
 
+import { useId } from "react";
+
 interface ScoreGaugeProps {
   label: string;
   value: number;
   max: number;
   change?: number | null;
   arcColor: string;
+  arcGradientStart?: string;
+  arcGradientEnd?: string;
   valueFormat?: (n: number) => string;
   inverse?: boolean;
   icon?: React.ReactNode;
@@ -17,12 +21,16 @@ export function ScoreGauge({
   max,
   change,
   arcColor,
+  arcGradientStart,
+  arcGradientEnd,
   valueFormat = (n) => String(Math.round(n)),
   inverse = false,
   icon,
 }: ScoreGaugeProps) {
-  const size = 100;
-  const stroke = 8;
+  const gradientId = useId().replace(/:/g, "-");
+  const useGradient = arcGradientStart != null && arcGradientEnd != null;
+  const size = 120;
+  const stroke = 10;
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
   const pct = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
@@ -38,37 +46,62 @@ export function ScoreGauge({
   const changeNegative = hasChange && change < 0;
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative" style={{ width: size, height: size }}>
+    <div className="flex flex-col items-center gap-3">
+      <div
+        className="relative rounded-full"
+        style={{
+          width: size,
+          height: size,
+        }}
+      >
         <svg
           width={size}
           height={size}
           className="rotate-[-90deg]"
           aria-hidden
         >
+          <defs>
+            {useGradient && (
+              <linearGradient
+                id={gradientId}
+                x1={size / 2}
+                y1={0}
+                x2={size / 2}
+                y2={size}
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop offset="0%" stopColor={arcGradientStart} />
+                <stop offset="50%" stopColor={arcColor} />
+                <stop offset="100%" stopColor={arcGradientEnd} />
+              </linearGradient>
+            )}
+          </defs>
+          {/* Track – softer, rounded */}
           <circle
             cx={size / 2}
             cy={size / 2}
             r={r}
             fill="none"
-            stroke="#e5e5e5"
+            stroke="#f0f0f0"
             strokeWidth={stroke}
+            strokeLinecap="round"
           />
+          {/* Value arc – subtle gradient for rounded feel (like primary button) */}
           <circle
             cx={size / 2}
             cy={size / 2}
             r={r}
             fill="none"
-            stroke={arcColor}
+            stroke={useGradient ? `url(#${gradientId})` : arcColor}
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-500"
+            className="transition-all duration-500 ease-out"
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
-          <span className="text-2xl font-semibold tabular-nums text-[#262626]">
+          <span className="text-2xl font-semibold tabular-nums text-[#262626] tracking-tight">
             {valueFormat(value)}
           </span>
           <span
@@ -93,7 +126,7 @@ export function ScoreGauge({
             {icon}
           </span>
         )}
-        <span className="text-center text-sm font-medium text-[#262626]">
+        <span className="text-center text-sm font-medium text-[#525252]">
           {label}
         </span>
       </div>

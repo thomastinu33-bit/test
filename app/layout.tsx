@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} antialiased`}>
+      <body className={`${dmSans.variable} font-sans antialiased`}>
         <div className="min-h-screen">
           <SideNav />
           <AiAgentProvider>{children}</AiAgentProvider>

@@ -325,6 +325,107 @@ export function getDimensionTimelineData(
   return { dates, series };
 }
 
+/** Topic columns for results table: Overall first, then others. */
+export const RESULTS_TABLE_TOPICS: { id: keyof GaugeDimensions; label: string }[] = [
+  { id: "overall", label: "Overall" },
+  { id: "topOfMind", label: "Top of Mind" },
+  { id: "perception", label: "Perception" },
+  { id: "media", label: "Media" },
+  { id: "process", label: "Process" },
+  { id: "product", label: "Product" },
+  { id: "price", label: "Price" },
+];
+
+export interface ResultsTableRow {
+  brand: string;
+  overall: number;
+  topOfMind: number;
+  perception: number;
+  media: number;
+  process: number;
+  product: number;
+  price: number;
+  changeOverall: number | null;
+  changeTopOfMind: number | null;
+  changePerception: number | null;
+  changeMedia: number | null;
+  changeProcess: number | null;
+  changeProduct: number | null;
+  changePrice: number | null;
+}
+
+/** Results table: brands × topics for latest (or given) date, metric and models. Includes change vs previous date. */
+export function getResultsTableData(
+  metric: PorscheScoreRow["metric"],
+  brandIds: string[],
+  modelIds: string[],
+  reportDate?: string
+): { brands: string[]; topicColumns: typeof RESULTS_TABLE_TOPICS; rows: ResultsTableRow[] } {
+  const rows = getPorscheScores();
+  const date = reportDate ?? getLatestReportDate();
+  const prevDate = getReportDateDaysAgo(1);
+  const brandSet = new Set(brandIds);
+  const modelSet = new Set(modelIds);
+  const byBrandTopic = new Map<string, { sum: number; count: number }>();
+  const prevByBrandTopic = new Map<string, { sum: number; count: number }>();
+
+  for (const r of rows) {
+    if (!brandSet.has(r.brand) || r.metric !== metric) continue;
+    const mid = `${r.modelMaker}|${r.model}`;
+    if (!modelSet.has(mid)) continue;
+    const isCurrent = r.reportDate === date;
+    const isPrev = r.reportDate === prevDate;
+    if (!isCurrent && !isPrev) continue;
+    const map = isCurrent ? byBrandTopic : prevByBrandTopic;
+    for (const col of RESULTS_TABLE_TOPICS) {
+      const key = `${r.brand}|${col.id}`;
+      const cur = map.get(key) ?? { sum: 0, count: 0 };
+      const val = r[col.id] ?? r.overall;
+      cur.sum += val;
+      cur.count += 1;
+      map.set(key, cur);
+    }
+  }
+
+  const topicColumns = RESULTS_TABLE_TOPICS;
+  const resultRows: ResultsTableRow[] = brandIds
+    .filter((b) => brandSet.has(b))
+    .map((brand) => {
+      const row: ResultsTableRow = {
+        brand,
+        overall: 0,
+        topOfMind: 0,
+        perception: 0,
+        media: 0,
+        process: 0,
+        product: 0,
+        price: 0,
+        changeOverall: null,
+        changeTopOfMind: null,
+        changePerception: null,
+        changeMedia: null,
+        changeProcess: null,
+        changeProduct: null,
+        changePrice: null,
+      };
+      for (const col of topicColumns) {
+        const key = `${brand}|${col.id}`;
+        const v = byBrandTopic.get(key);
+        const currentVal = v && v.count > 0 ? Math.round((v.sum / v.count) * 10) / 10 : 0;
+        row[col.id] = currentVal;
+        const prevV = prevByBrandTopic.get(key);
+        if (prevV && prevV.count > 0) {
+          const prevVal = Math.round((prevV.sum / prevV.count) * 10) / 10;
+          const changeKey = (`change${col.id.charAt(0).toUpperCase()}${col.id.slice(1)}` as keyof ResultsTableRow);
+          row[changeKey] = Math.round((currentVal - prevVal) * 10) / 10;
+        }
+      }
+      return row;
+    });
+
+  return { brands: resultRows.map((r) => r.brand), topicColumns, rows: resultRows };
+}
+
 export type MetricType = "AI Brand Score" | "Visibility Score" | "Average Position";
 
 /** Gauge dimensions: Overall + segment columns from CSV. */

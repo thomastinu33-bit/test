@@ -1,5 +1,6 @@
 import {
   getTimelineData,
+  getResultsTableData,
   getTopBrandsByLatestScore,
   getUniqueModels,
   getPorscheScoreBrands,
@@ -46,6 +47,11 @@ export async function GET(request: Request) {
 
   const brandIds = brandsParam.split(",").map((s) => s.trim()).filter(Boolean);
   const modelIds = modelsParam.split(",").map((s) => s.trim()).filter(Boolean);
+  const table = searchParams.get("table") === "1";
+  if (table) {
+    const tableData = getResultsTableData(metric, brandIds, modelIds);
+    return NextResponse.json(tableData);
+  }
   const { dates, series } = getTimelineData(metric, brandIds, modelIds, topic);
   return NextResponse.json({ dates, series });
 }

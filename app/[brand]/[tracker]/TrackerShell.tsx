@@ -231,7 +231,7 @@ export function TrackerShell({
   const tracker = getTracker(brandId, trackerId);
   const [movingAverage, setMovingAverage] = useState("30-Day");
   const [selectedDate, setSelectedDate] = useState(() => {
-    const d = parseDateInput("09/30/2025");
+    const d = parseDateInput("01/15/2025");
     return d ?? new Date();
   });
 

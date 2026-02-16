@@ -31,6 +31,16 @@ interface TimelineSeries {
 
 const AVERAGE_ACROSS_ALL = "__average__";
 
+const MAIN_BRAND = "PORSCHE";
+const COMPETITOR_LIST = ["PORSCHE", "BMW", "BENZ", "VOLVOCARS", "AUDI", "LEXUS"] as const;
+const COMPETITOR_SET = new Set(COMPETITOR_LIST.map((c) => c.toUpperCase()));
+
+function sortBrandsWithMainFirst(brands: string[]): string[] {
+  const main = brands.find((b) => b.toUpperCase() === MAIN_BRAND);
+  const rest = brands.filter((b) => b.toUpperCase() !== MAIN_BRAND);
+  return main ? [main, ...rest] : rest;
+}
+
 type TimelineTopicId = "overall" | "topOfMind" | "perception" | "media" | "process" | "product" | "price";
 
 const TOPIC_OPTIONS: { id: TimelineTopicId; label: string }[] = [
@@ -56,10 +66,26 @@ const CHART_COLORS = [
   "var(--viz-8)",
 ];
 
+const CHART_GRADIENTS = [
+  "linear-gradient(180deg, var(--viz-1-gradient-start) 0%, var(--viz-1) 50%, var(--viz-1-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-2-gradient-start) 0%, var(--viz-2) 50%, var(--viz-2-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-3-gradient-start) 0%, var(--viz-3) 50%, var(--viz-3-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-4-gradient-start) 0%, var(--viz-4) 50%, var(--viz-4-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-5-gradient-start) 0%, var(--viz-5) 50%, var(--viz-5-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-6-gradient-start) 0%, var(--viz-6) 50%, var(--viz-6-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-7-gradient-start) 0%, var(--viz-7) 50%, var(--viz-7-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-8-gradient-start) 0%, var(--viz-8) 50%, var(--viz-8-gradient-end) 100%)",
+];
+
 function getChartColor(colors: readonly string[], index: number): string {
   const i = index % colors.length;
   const base = colors[i]!;
   return index < colors.length ? base : `color-mix(in oklch, ${base} 62%, white)`;
+}
+
+function getChartGradient(gradients: readonly string[], index: number): string {
+  const i = index % gradients.length;
+  return gradients[i]!;
 }
 
 function formatDateLabel(dateStr: string): string {
@@ -68,13 +94,37 @@ function formatDateLabel(dateStr: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
 }
 
-export function TimelineViz() {
-  const [metric, setMetric] = useState<TimelineMetric>("AI Brand Score");
-  const [brandsList, setBrandsList] = useState<string[]>([]);
-  const [modelsList, setModelsList] = useState<ModelOption[]>([]);
-  const [top10Brands, setTop10Brands] = useState<string[]>([]);
-  const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
-  const [selectedModel, setSelectedModel] = useState<string>(AVERAGE_ACROSS_ALL);
+export interface TimelineVizProps {
+  metric?: TimelineMetric;
+  setMetric?: (m: TimelineMetric) => void;
+  selectedBrands?: Set<string>;
+  setSelectedBrands?: (s: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
+  selectedModel?: string;
+  setSelectedModel?: (s: string) => void;
+  brandsList?: string[];
+  modelsList?: ModelOption[];
+  top10Brands?: string[];
+}
+
+export function TimelineViz(props?: TimelineVizProps) {
+  const [internalMetric, setInternalMetric] = useState<TimelineMetric>("AI Brand Score");
+  const [internalBrandsList, setInternalBrandsList] = useState<string[]>([]);
+  const [internalModelsList, setInternalModelsList] = useState<ModelOption[]>([]);
+  const [internalTop10, setInternalTop10] = useState<string[]>([]);
+  const [internalSelectedBrands, setInternalSelectedBrands] = useState<Set<string>>(new Set());
+  const [internalSelectedModel, setInternalSelectedModel] = useState<string>(AVERAGE_ACROSS_ALL);
+  const isControlled =
+    props?.setMetric != null && props?.setSelectedBrands != null && props?.setSelectedModel != null;
+  const metric = isControlled ? (props!.metric ?? internalMetric) : internalMetric;
+  const setMetric = isControlled ? props!.setMetric! : setInternalMetric;
+  const selectedBrands = isControlled ? (props!.selectedBrands ?? internalSelectedBrands) : internalSelectedBrands;
+  const setSelectedBrands = isControlled ? props!.setSelectedBrands! : setInternalSelectedBrands;
+  const selectedModel = isControlled ? (props!.selectedModel ?? internalSelectedModel) : internalSelectedModel;
+  const setSelectedModel = isControlled ? props!.setSelectedModel! : setInternalSelectedModel;
+  const brandsList = isControlled ? (props!.brandsList ?? internalBrandsList) : internalBrandsList;
+  const modelsList = isControlled ? (props!.modelsList ?? internalModelsList) : internalModelsList;
+  const top10Brands = isControlled ? (props!.top10Brands ?? internalTop10) : internalTop10;
+
   const [dates, setDates] = useState<string[]>([]);
   const [series, setSeries] = useState<TimelineSeries[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,19 +145,26 @@ export function TimelineViz() {
     fetch("/api/porsche-timeline")
       .then((res) => res.json())
       .then((data: { brands: string[]; models: ModelOption[]; top10Brands: string[] }) => {
-        setBrandsList(data.brands ?? []);
-        setModelsList(data.models ?? []);
-        setTop10Brands(data.top10Brands ?? []);
-        if (data.top10Brands?.length) {
-          setSelectedBrands(new Set(data.top10Brands));
-        }
+        const brands = data.brands ?? [];
+        setInternalBrandsList(brands);
+        setInternalModelsList(data.models ?? []);
+        setInternalTop10(data.top10Brands ?? []);
+        const defaultBrands = brands.filter((b) => COMPETITOR_SET.has(b.toUpperCase()));
+        setInternalSelectedBrands(new Set(defaultBrands.length ? defaultBrands : (data.top10Brands ?? [])));
       })
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    fetchMeta();
-  }, [fetchMeta]);
+    if (!isControlled) fetchMeta();
+  }, [isControlled, fetchMeta]);
+
+  useEffect(() => {
+    if (!isControlled && brandsList.length > 0 && internalSelectedBrands.size === 0) {
+      const defaultBrands = brandsList.filter((b) => COMPETITOR_SET.has(b.toUpperCase()));
+      setInternalSelectedBrands(new Set(defaultBrands.length ? defaultBrands : top10Brands));
+    }
+  }, [isControlled, brandsList.length, top10Brands, internalSelectedBrands.size]);
 
   useEffect(() => {
     const el = chartContainerRef.current;
@@ -126,12 +183,6 @@ export function TimelineViz() {
     return () => ro.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (top10Brands.length && selectedBrands.size === 0) {
-      setSelectedBrands(new Set(top10Brands));
-    }
-  }, [top10Brands]);
-
   const modelIdsForRequest =
     selectedModel === AVERAGE_ACROSS_ALL
       ? modelsList.map((m) => m.id)
@@ -140,7 +191,7 @@ export function TimelineViz() {
         : [];
 
   useEffect(() => {
-    const brands = Array.from(selectedBrands);
+    const brands = sortBrandsWithMainFirst(Array.from(selectedBrands));
     if (brands.length === 0 || modelIdsForRequest.length === 0) {
       setDates([]);
       setSeries([]);
@@ -181,9 +232,17 @@ export function TimelineViz() {
     setModelDropdownOpen(false);
   };
 
-  const filteredBrands = brandSearchQuery.trim()
-    ? brandsList.filter((b) => b.toLowerCase().includes(brandSearchQuery.trim().toLowerCase()))
-    : brandsList;
+  const competitorOrder = new Map<string, number>(COMPETITOR_LIST.map((c, i) => [c, i]));
+  const competitorBrands = brandsList
+    .filter((b) => COMPETITOR_SET.has(b.toUpperCase()))
+    .sort((a, b) => (competitorOrder.get(a.toUpperCase()) ?? 999) - (competitorOrder.get(b.toUpperCase()) ?? 999));
+  const otherBrands = brandsList.filter((b) => !COMPETITOR_SET.has(b.toUpperCase()));
+
+  const q = brandSearchQuery.trim().toLowerCase();
+  const matchesSearch = (b: string) => !q || b.toLowerCase().includes(q);
+  const filteredCompetitor = competitorBrands.filter(matchesSearch);
+  const filteredOther = otherBrands.filter(matchesSearch);
+  const hasAnyFiltered = filteredCompetitor.length > 0 || filteredOther.length > 0;
 
   const brandsDisplayLabel =
     selectedBrands.size === 0
@@ -255,11 +314,22 @@ export function TimelineViz() {
   const latestDate = dates.length > 0 ? dates[dates.length - 1]! : null;
   const latestScores =
     latestDate != null
-      ? visibleSeries.map((s) => ({
-          brand: s.brand,
-          value: s.data.find((p) => p.date === latestDate)?.value ?? 0,
-          color: getChartColor(CHART_COLORS, series.findIndex((ss) => ss.brand === s.brand)),
-        }))
+      ? visibleSeries.map((s) => {
+          const latestPoint = s.data.find((p) => p.date === latestDate)?.value ?? 0;
+          const last7 = s.data.slice(-7).map((p) => p.value);
+          const avg7d =
+            last7.length > 0
+              ? Math.round((last7.reduce((a, b) => a + b, 0) / last7.length) * 10) / 10
+              : null;
+          const idx = series.findIndex((ss) => ss.brand === s.brand);
+          return {
+            brand: s.brand,
+            value: latestPoint,
+            avg7d,
+            color: getChartColor(CHART_COLORS, idx),
+            gradient: getChartGradient(CHART_GRADIENTS, idx),
+          };
+        })
       : [];
 
   const toggleBrandInLegend = (brand: string) => {
@@ -288,7 +358,7 @@ export function TimelineViz() {
   };
 
   return (
-    <div ref={cardRef} className="w-full rounded-xl border border-[#e5e5e5] bg-white shadow-sm overflow-hidden">
+    <div ref={cardRef} className="w-full rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
         <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
           Brand Scores for Luxury SUVs
@@ -320,7 +390,7 @@ export function TimelineViz() {
               aria-expanded={brandDropdownOpen}
             >
               <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                Brands
+                Select Brands
               </span>
               <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{brandsDisplayLabel}</span>
               <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
@@ -346,20 +416,43 @@ export function TimelineViz() {
                     />
                   </div>
                   <div className="max-h-64 overflow-auto py-1">
-                    {filteredBrands.length === 0 ? (
+                    {!hasAnyFiltered ? (
                       <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
                     ) : (
-                      filteredBrands.map((b) => (
-                        <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
-                          <input
-                            type="checkbox"
-                            checked={selectedBrands.has(b)}
-                            onChange={() => toggleBrand(b)}
-                            className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
-                          />
-                          <span className="truncate">{b}</span>
-                        </label>
-                      ))
+                      <>
+                        <div className="px-3 pt-2 pb-1">
+                          <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">
+                            Competitor &amp; Keywords list
+                          </p>
+                        </div>
+                        {filteredCompetitor.map((b) => (
+                          <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                            <input
+                              type="checkbox"
+                              checked={selectedBrands.has(b)}
+                              onChange={() => toggleBrand(b)}
+                              className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                            />
+                            <span className="truncate">{b}</span>
+                          </label>
+                        ))}
+                        <div className="px-3 pt-3 pb-1 border-t border-[#e5e5e5] mt-1">
+                          <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">
+                            All Other Brands &amp; Keywords
+                          </p>
+                        </div>
+                        {filteredOther.map((b) => (
+                          <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                            <input
+                              type="checkbox"
+                              checked={selectedBrands.has(b)}
+                              onChange={() => toggleBrand(b)}
+                              className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                            />
+                            <span className="truncate">{b}</span>
+                          </label>
+                        ))}
+                      </>
                     )}
                   </div>
                 </div>
@@ -431,7 +524,7 @@ export function TimelineViz() {
               aria-expanded={topicDropdownOpen}
             >
               <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                Topic
+                Select a Topic
               </span>
               <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
               <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
@@ -646,7 +739,7 @@ export function TimelineViz() {
                         <span className="flex items-center gap-1.5 min-w-0">
                           <span
                             className="w-2 h-2 rounded-full shrink-0"
-                            style={{ backgroundColor: getChartColor(CHART_COLORS, idx) }}
+                            style={{ background: getChartGradient(CHART_GRADIENTS, idx) }}
                           />
                           <span className="text-[#525252] truncate">{s.brand}</span>
                         </span>
@@ -676,26 +769,48 @@ export function TimelineViz() {
                 </p>
               )}
               <div className="space-y-2">
-                {latestScores.map(({ brand, value, color }) => {
+                {latestScores.map(({ brand, value, avg7d, color, gradient }) => {
                   const pct = config.max > 0 ? Math.min(1, Math.max(0, value / config.max)) : 0;
+                  const avg7dPct =
+                    avg7d != null && config.max > 0
+                      ? Math.min(1, Math.max(0, avg7d / config.max))
+                      : null;
                   return (
                     <div key={brand} className="flex items-center gap-3">
                       <span className="w-24 shrink-0 flex items-center gap-1.5 min-w-0">
                         <span
                           className="w-2 h-2 rounded-full shrink-0"
-                          style={{ backgroundColor: color }}
+                          style={{ background: gradient }}
                         />
                         <span className="text-xs text-[#525252] truncate">{brand}</span>
                       </span>
-                      <div className="flex-1 min-w-0 h-6 rounded bg-[#f0f0f0] overflow-hidden">
+                      <div className="flex-1 min-w-0 h-6 rounded bg-[#f0f0f0] overflow-hidden relative">
                         <div
                           className="h-full rounded transition-all duration-300"
                           style={{
                             width: `${pct * 100}%`,
-                            backgroundColor: color,
+                            background: gradient,
                             opacity: 0.9,
                           }}
                         />
+                        {avg7dPct != null && (
+                          <>
+                            <span
+                              className="absolute top-0 bottom-0 w-0.5 rounded-full bg-[#525252]"
+                              style={{
+                                left: `${avg7dPct * 100}%`,
+                                transform: "translateX(-50%)",
+                                boxShadow: "0 0 0 0.5px rgba(255,255,255,0.9)",
+                              }}
+                            />
+                            <span
+                              className="absolute top-1/2 -translate-y-1/2 text-[10px] font-medium text-[#525252] whitespace-nowrap"
+                              style={{ left: `calc(${avg7dPct * 100}% + 6px)` }}
+                            >
+                              7D Avg:{formatScore(avg7d!)}
+                            </span>
+                          </>
+                        )}
                       </div>
                       <span className="w-10 shrink-0 text-right text-xs font-medium tabular-nums text-[#262626]">
                         {formatScore(value)}
@@ -708,7 +823,7 @@ export function TimelineViz() {
           )}
 
         {series.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t border-[#e5e5e5] pt-3">
+          <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 border-t border-[#e5e5e5] pt-3">
             {series.map((s, idx) => {
               const isHidden = hiddenBrandsInLegend.has(s.brand);
               return (
@@ -722,7 +837,7 @@ export function TimelineViz() {
                 >
                   <span
                     className="w-3 h-0.5 rounded-full shrink-0"
-                    style={{ backgroundColor: getChartColor(CHART_COLORS, idx) }}
+                    style={{ background: getChartGradient(CHART_GRADIENTS, idx) }}
                   />
                   <span className={`text-xs ${isHidden ? "text-[#999] line-through" : "text-[#525252]"}`}>
                     {s.brand}
