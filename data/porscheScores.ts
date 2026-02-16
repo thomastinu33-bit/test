@@ -416,8 +416,8 @@ export function getResultsTableData(
         const prevV = prevByBrandTopic.get(key);
         if (prevV && prevV.count > 0) {
           const prevVal = Math.round((prevV.sum / prevV.count) * 10) / 10;
-          const changeKey = (`change${col.id.charAt(0).toUpperCase()}${col.id.slice(1)}` as keyof ResultsTableRow);
-          row[changeKey] = Math.round((currentVal - prevVal) * 10) / 10;
+          const changeKey = `change${col.id.charAt(0).toUpperCase()}${col.id.slice(1)}` as keyof ResultsTableRow;
+          (row as unknown as Record<string, number | null>)[changeKey] = Math.round((currentVal - prevVal) * 10) / 10;
         }
       }
       return row;
