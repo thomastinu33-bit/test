@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { OverviewViz } from "./OverviewViz";
+import { TimelineViz } from "./TimelineViz";
 
 const PAGE_CONTENT: Record<string, string> = {
   sources: "Sources content",
@@ -16,17 +18,21 @@ export default function TrackerPagePage() {
 
   if (page === "overview") {
     return (
-      <div className="space-y-2">
-        <h1 className="text-[25px] font-semibold text-[#262626]">Overview</h1>
-        <p className="text-[#71717a]">
-          See AI visibility on custom prompts for your brand vs. competitors.{" "}
-          <Link
-            href="#"
-            className="font-medium text-[var(--primary)] hover:underline no-underline"
-          >
-            Learn More
-          </Link>
-        </p>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-[25px] font-semibold text-[#262626]">Overview</h1>
+          <p className="text-[#71717a]">
+            See AI visibility on custom prompts for your brand vs. competitors.{" "}
+            <Link
+              href="#"
+              className="font-medium text-[var(--primary)] hover:underline no-underline"
+            >
+              Learn More
+            </Link>
+          </p>
+        </div>
+        <OverviewViz />
+        <TimelineViz />
       </div>
     );
   }

@@ -7,6 +7,72 @@
   --primary-gradient-start: color-mix(in srgb, var(--primary) 88%, white);
   --primary-gradient-end: color-mix(in srgb, var(--primary) 92%, black);
   --nav-brand: #7f7f7f;
+
+  /* Design system – color families (Figma: Design-System 428-1398) */
+  /* Coral */
+  --coral-100: #feeeed;
+  --coral-200: #fcc7be;
+  --coral-300: #fa9b94;
+  --coral-400: #f7594e;
+  --coral-500: #e14539;
+  --coral-600: #bd1005;
+  /* Orange */
+  --orange-100: #feebd4;
+  --orange-200: #fcd4a8;
+  --orange-300: #f9b86b;
+  --orange-400: #e8942a;
+  --orange-500: #d67a02;
+  --orange-600: #905101;
+  /* Light Blue */
+  --light-blue-100: #c7fdff;
+  --light-blue-200: #8ef5f7;
+  --light-blue-300: #4edee0;
+  --light-blue-400: #1ab9bc;
+  --light-blue-500: #029a9d;
+  --light-blue-600: #005858;
+  /* Blue */
+  --blue-100: #e0daf6;
+  --blue-200: #b8adf0;
+  --blue-300: #7c6ee8;
+  --blue-350: #00a0f4;
+  --blue-400: #214fd1;
+  --blue-600: #022460;
+  /* Rose */
+  --rose-100: #f6cadc;
+  --rose-200: #ef9bb5;
+  --rose-300: #e86b94;
+  --rose-350: #f83284;
+  --rose-400: #b21b59;
+  --rose-600: #590c2c;
+  /* Orchid */
+  --orchid-100: #ffbcf1;
+  --orchid-200: #f07ade;
+  --orchid-300: #c43bb8;
+  --orchid-400: #9a1a8a;
+  --orchid-500: #6e0057;
+  --orchid-600: #2c0023;
+  /* Greyscale */
+  --greyscale-100: #ffffff;
+  --greyscale-200: #f5f5f5;
+  --greyscale-300: #e5e5e5;
+  --greyscale-400: #b3b3b3;
+  --greyscale-500: #999999;
+  --greyscale-600: #7f7f7f;
+  /* Black */
+  --black-100: #7f7f7f;
+  --black-200: #525252;
+  --black-300: #262626;
+  --black-600: #000000;
+
+  /* Viz palette: Hightouch-style chart colors (lighter, distinct). See https://ui.hightouch.com/foundation/colors */
+  --viz-1: #029a9d;
+  --viz-2: #60a5fa;
+  --viz-3: #facc15;
+  --viz-4: #a78bfa;
+  --viz-5: #34d399;
+  --viz-6: #fb923c;
+  --viz-7: #f472b6;
+  --viz-8: #f87171;
 }
 
 @theme inline {

@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(req: NextRequest) {
-  const USERNAME = process.env.BASIC_AUTH_USER;
-  const PASSWORD = process.env.BASIC_AUTH_PASS;
+const DEFAULT_BASIC_AUTH_USER = "evertune";
+const DEFAULT_BASIC_AUTH_PASS = "evertunedesign2026";
 
-  // Skip Basic Auth if env vars are not set (e.g. local dev without .env)
-  if (!USERNAME || !PASSWORD) {
-    return NextResponse.next();
-  }
+export function middleware(req: NextRequest) {
+  const USERNAME = process.env.BASIC_AUTH_USER ?? DEFAULT_BASIC_AUTH_USER;
+  const PASSWORD = process.env.BASIC_AUTH_PASS ?? DEFAULT_BASIC_AUTH_PASS;
 
   const authHeader = req.headers.get("authorization");
 
