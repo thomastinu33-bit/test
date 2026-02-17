@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
+import { getModelIcon } from "./ModelLogos";
 import { ScoreGauge } from "./ScoreGauge";
 
 export type OverviewMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
@@ -20,11 +21,20 @@ interface DimensionTimelineSeries {
   data: { date: string; value: number }[];
 }
 
+interface ModelScore {
+  id: string;
+  label: string;
+  value: number;
+  change: number | null;
+}
+
 interface OverviewApiResponse {
   models: ModelOption[];
+  brands?: string[];
   dimensions: Record<string, number>;
   dimensionKeys?: string[];
   dimensionLabels?: Record<string, string>;
+  modelScores?: ModelScore[];
   view?: string;
   timeline?: { dates: string[]; series: DimensionTimelineSeries[] };
 }
@@ -33,7 +43,7 @@ const METRIC_CONFIG: Record<
   OverviewMetric,
   { label: string; max: number }
 > = {
-  "AI Brand Score": { label: "AI Brand Index", max: 100 },
+  "AI Brand Score": { label: "AI Brand Score", max: 100 },
   "Visibility Score": { label: "Visibility", max: 100 },
   "Average Position": { label: "Avg. Position", max: 25 },
 };
@@ -58,6 +68,8 @@ const GAUGE_COLORS = [
   "var(--viz-5)",
   "var(--viz-6)",
   "var(--viz-7)",
+  "var(--viz-9)",
+  "var(--viz-10)",
 ];
 
 const GAUGE_GRADIENTS = [
@@ -68,6 +80,8 @@ const GAUGE_GRADIENTS = [
   "linear-gradient(180deg, var(--viz-5-gradient-start) 0%, var(--viz-5) 50%, var(--viz-5-gradient-end) 100%)",
   "linear-gradient(180deg, var(--viz-6-gradient-start) 0%, var(--viz-6) 50%, var(--viz-6-gradient-end) 100%)",
   "linear-gradient(180deg, var(--viz-7-gradient-start) 0%, var(--viz-7) 50%, var(--viz-7-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-9-gradient-start) 0%, var(--viz-9) 50%, var(--viz-9-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-10-gradient-start) 0%, var(--viz-10) 50%, var(--viz-10-gradient-end) 100%)",
 ];
 
 const GAUGE_ARC_GRADIENT_STARTS = [
@@ -78,6 +92,8 @@ const GAUGE_ARC_GRADIENT_STARTS = [
   "var(--viz-5-gauge-start)",
   "var(--viz-6-gauge-start)",
   "var(--viz-7-gauge-start)",
+  "var(--viz-9-gauge-start)",
+  "var(--viz-10-gauge-start)",
 ];
 const GAUGE_ARC_GRADIENT_ENDS = [
   "var(--primary-gauge-end)",
@@ -87,12 +103,45 @@ const GAUGE_ARC_GRADIENT_ENDS = [
   "var(--viz-5-gauge-end)",
   "var(--viz-6-gauge-end)",
   "var(--viz-7-gauge-end)",
+  "var(--viz-9-gauge-end)",
+  "var(--viz-10-gauge-end)",
 ];
+
+/** Model-specific gauge colors use fixed palette (viz-9, viz-10 for AI Mode / Meta AI). */
+const MODEL_GAUGE_OVERRIDES: Record<
+  string,
+  { color: string; gradientStart: string; gradientEnd: string }
+> = {
+  "AI Mode": {
+    color: "var(--viz-9)",
+    gradientStart: "var(--viz-9-gauge-start)",
+    gradientEnd: "var(--viz-9-gauge-end)",
+  },
+  "Meta AI": {
+    color: "var(--viz-10)",
+    gradientStart: "var(--viz-10-gauge-start)",
+    gradientEnd: "var(--viz-10-gauge-end)",
+  },
+};
 
 function getChartColor(colors: readonly string[], index: number): string {
   const i = index % colors.length;
-  const base = colors[i]!;
-  return index < colors.length ? base : `color-mix(in oklch, ${base} 62%, white)`;
+  return colors[i]!;
+}
+
+const MODEL_PALETTE_SIZE = GAUGE_COLORS.length - 1;
+
+function getModelGaugeColors(modelIndex: number): {
+  arcColor: string;
+  arcGradientStart: string;
+  arcGradientEnd: string;
+} {
+  const gi = 1 + (modelIndex % MODEL_PALETTE_SIZE);
+  return {
+    arcColor: GAUGE_COLORS[gi]!,
+    arcGradientStart: GAUGE_ARC_GRADIENT_STARTS[gi]!,
+    arcGradientEnd: GAUGE_ARC_GRADIENT_ENDS[gi]!,
+  };
 }
 
 function getChartGradient(gradients: readonly string[], index: number): string {
@@ -363,22 +412,29 @@ export function OverviewViz() {
   const [timelineData, setTimelineData] = useState<{ dates: string[]; series: DimensionTimelineSeries[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [metric, setMetric] = useState<OverviewMetric>("AI Brand Score");
-  const [modelId, setModelId] = useState<string>(AVERAGE_ACROSS_ALL);
-  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [topicId, setTopicId] = useState<string>("overall");
+  const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [modelScores, setModelScores] = useState<ModelScore[] | null>(null);
   const [overviewView, setOverviewView] = useState<OverviewView>("gauge");
   const [chartWidth, setChartWidth] = useState(600);
 
   const fetchData = () => {
     setLoading(true);
-    const q = new URLSearchParams({ brandId, trackerId, metric, model: modelId });
+    const q = new URLSearchParams({ brandId, trackerId, metric, model: AVERAGE_ACROSS_ALL, topic: topicId });
+    if (selectedBrand) q.set("brand", selectedBrand);
     if (overviewView === "timeline") q.set("view", "timeline");
     fetch(`/api/scores?${q}`)
       .then((res) => res.json())
       .then((json: OverviewApiResponse) => {
         setModels(json.models ?? []);
+        setBrands(json.brands ?? []);
         setDimensions(json.dimensions ?? null);
         setDimensionKeys(json.dimensionKeys ?? DIMENSION_GAUGES.map((g) => g.key));
         setDimensionLabels(json.dimensionLabels ?? Object.fromEntries(DIMENSION_GAUGES.map((g) => [g.key, g.label])));
+        setModelScores(json.modelScores ?? null);
         setTimelineData(json.timeline ?? null);
         setLoading(false);
       })
@@ -387,7 +443,7 @@ export function OverviewViz() {
 
   useEffect(() => {
     fetchData();
-  }, [brandId, trackerId, metric, modelId, overviewView]);
+  }, [brandId, trackerId, metric, topicId, selectedBrand, overviewView]);
 
   useEffect(() => {
     const el = chartRef.current;
@@ -443,21 +499,24 @@ export function OverviewViz() {
       ? value.toFixed(isAvgPosition ? 1 : 0)
       : "—";
 
-  const modelDisplayLabel =
-    modelId === AVERAGE_ACROSS_ALL
-      ? "Avg Across All"
-      : models.find((m) => m.id === modelId)?.label ?? "Model";
+  const topicDisplayLabel = dimensionLabels[topicId] ?? topicId;
+  const brandDisplayLabel = selectedBrand ?? "Default";
 
-  const selectModel = (id: string) => {
-    setModelId(id);
-    setModelDropdownOpen(false);
+  const selectTopic = (id: string) => {
+    setTopicId(id);
+    setTopicDropdownOpen(false);
+  };
+
+  const selectBrand = (b: string | null) => {
+    setSelectedBrand(b);
+    setBrandDropdownOpen(false);
   };
 
   return (
     <div ref={cardRef} className="rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
         <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
-          Brand Score for {brandId === "cetaphil" ? "Cetaphil" : "Porsche"} in {trackerId === "skincare" ? "Skincare" : "Luxury SUV"}
+          Results Across Models
         </h2>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
@@ -476,60 +535,104 @@ export function OverviewViz() {
               </button>
             ))}
           </div>
-          <div className="relative min-w-[10rem]">
-            <button
-              type="button"
-              onClick={() => setModelDropdownOpen((o) => !o)}
-              className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-              aria-label="Select model"
-              aria-expanded={modelDropdownOpen}
-            >
-              <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                Select Model
-              </span>
-              <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{modelDisplayLabel}</span>
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-            </button>
-            {modelDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-10" aria-hidden onClick={() => setModelDropdownOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
-                  <button
-                    type="button"
-                    onClick={() => selectModel(AVERAGE_ACROSS_ALL)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                      modelId === AVERAGE_ACROSS_ALL ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
-                    }`}
-                  >
-                    <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                      {modelId === AVERAGE_ACROSS_ALL && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
-                    </span>
-                    Avg Across All
-                  </button>
-                  <div className="border-t border-[#e5e5e5] my-1" />
-                  {models.map((m) => (
+          {dimensionKeys.length > 0 && (
+            <div className="relative min-w-[10rem]">
+              <button
+                type="button"
+                onClick={() => { setTopicDropdownOpen((o) => !o); setBrandDropdownOpen(false); }}
+                className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
+                aria-label="Select topic"
+                aria-expanded={topicDropdownOpen}
+              >
+                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
+                  Topic
+                </span>
+                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </button>
+              {topicDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => setTopicDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
+                    {dimensionKeys.map((key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => selectTopic(key)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
+                          topicId === key ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
+                        }`}
+                      >
+                        <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
+                          {topicId === key && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
+                        </span>
+                        <span className="truncate">{dimensionLabels[key] ?? key}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          {brands.length > 0 && (
+            <div className="relative min-w-[10rem]">
+              <button
+                type="button"
+                onClick={() => { setBrandDropdownOpen((o) => !o); setTopicDropdownOpen(false); }}
+                className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
+                aria-label="Select brand"
+                aria-expanded={brandDropdownOpen}
+              >
+                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
+                  Brand
+                </span>
+                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{brandDisplayLabel}</span>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </button>
+              {brandDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => setBrandDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
                     <button
-                      key={m.id}
                       type="button"
-                      onClick={() => selectModel(m.id)}
+                      onClick={() => selectBrand(null)}
                       className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                        modelId === m.id ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
+                        selectedBrand === null ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
                       }`}
                     >
                       <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                        {modelId === m.id && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
+                        {selectedBrand === null && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
                       </span>
-                      <span className="truncate">{m.label}</span>
+                      Default
                     </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+                    {brands.map((b) => (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => selectBrand(b)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
+                          selectedBrand === b ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
+                        }`}
+                      >
+                        <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
+                          {selectedBrand === b && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
+                        </span>
+                        <span className="truncate">{b}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <button
             type="button"
             onClick={handleCapture}
@@ -548,31 +651,91 @@ export function OverviewViz() {
       <div className="px-4 pt-6 pb-6 sm:px-6">
         {overviewView === "gauge" && (
           <>
-            <div className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-6">
-              {dimensionKeys.map((key, i) => {
-                const changeKey = `change${key.charAt(0).toUpperCase()}${key.slice(1)}`;
-                const value = dimensions[key] as number;
-                const changeRaw = dimensions[changeKey] as number;
-                const change =
-                  isAvgPosition && changeRaw != null ? -changeRaw : changeRaw;
-                const label = dimensionLabels[key] ?? key;
-                return (
-                  <div key={key} className="flex justify-center">
-                    <ScoreGauge
-                      label={label}
-                      value={value}
-                      max={maxVal}
-                      change={change != null && Number.isFinite(change) ? change : null}
-                      arcColor={getChartColor(GAUGE_COLORS, i)}
-                      arcGradientStart={GAUGE_ARC_GRADIENT_STARTS[i]}
-                      arcGradientEnd={GAUGE_ARC_GRADIENT_ENDS[i]}
-                      valueFormat={(v) => formatValue(v)}
-                      inverse={isAvgPosition}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+            {modelScores && modelScores.length > 0 ? (
+              <div className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-6">
+                {(() => {
+                  const n = modelScores.length;
+                  const avgValue =
+                    n > 0
+                      ? Math.round((modelScores.reduce((s, ms) => s + (Number(ms.value) || 0), 0) / n) * 10) / 10
+                      : 0;
+                  const changes = modelScores
+                    .map((ms) => (ms.change != null && Number.isFinite(ms.change) ? (isAvgPosition ? -ms.change : ms.change) : null))
+                    .filter((c): c is number => c !== null);
+                  const avgChange =
+                    changes.length > 0 ? Math.round((changes.reduce((a, b) => a + b, 0) / changes.length) * 10) / 10 : null;
+                  return (
+                    <>
+                      <div key="average" className="flex justify-center">
+                        <ScoreGauge
+                          label="Average"
+                          value={avgValue}
+                          max={maxVal}
+                          change={avgChange}
+                          arcColor="var(--primary-dark)"
+                          arcGradientStart="var(--primary-dark)"
+                          arcGradientEnd="var(--primary-dark)"
+                          valueFormat={(v) => formatValue(v)}
+                          inverse={isAvgPosition}
+                        />
+                      </div>
+                      {modelScores.map((ms, i) => {
+                        const change =
+                          ms.change != null && Number.isFinite(ms.change)
+                            ? isAvgPosition
+                              ? -ms.change
+                              : ms.change
+                            : null;
+                        const override = MODEL_GAUGE_OVERRIDES[ms.label];
+                        const gaugeColors = getModelGaugeColors(i);
+                        return (
+                          <div key={ms.id} className="flex justify-center">
+                            <ScoreGauge
+                              label={ms.label}
+                              value={ms.value}
+                              max={maxVal}
+                              change={change}
+                              arcColor={override?.color ?? gaugeColors.arcColor}
+                              arcGradientStart={override?.gradientStart ?? gaugeColors.arcGradientStart}
+                              arcGradientEnd={override?.gradientEnd ?? gaugeColors.arcGradientEnd}
+                              valueFormat={(v) => formatValue(v)}
+                              inverse={isAvgPosition}
+                              icon={getModelIcon(ms.label)}
+                            />
+                          </div>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
+              </div>
+            ) : (
+              <div className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-6">
+                {dimensionKeys.map((key, i) => {
+                  const changeKey = `change${key.charAt(0).toUpperCase()}${key.slice(1)}`;
+                  const value = dimensions[key] as number;
+                  const changeRaw = dimensions[changeKey] as number;
+                  const change =
+                    isAvgPosition && changeRaw != null ? -changeRaw : changeRaw;
+                  const label = dimensionLabels[key] ?? key;
+                  return (
+                    <div key={key} className="flex justify-center">
+                      <ScoreGauge
+                        label={label}
+                        value={value}
+                        max={maxVal}
+                        change={change != null && Number.isFinite(change) ? change : null}
+                        arcColor={getChartColor(GAUGE_COLORS, i)}
+                        arcGradientStart={GAUGE_ARC_GRADIENT_STARTS[i]}
+                        arcGradientEnd={GAUGE_ARC_GRADIENT_ENDS[i]}
+                        valueFormat={(v) => formatValue(v)}
+                        inverse={isAvgPosition}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             {isAvgPosition && (
               <p className="mt-4 text-xs text-[#7F7F7F]">
                 Lower is better (e.g. 2.7 = average position 2.7 in rankings).

@@ -186,6 +186,14 @@ export function getSkincareScoreBrands(): string[] {
   return Array.from(new Set(rows.map((r) => r.brand))).sort();
 }
 
+/** Unique brands in the score data. */
+export function getUniqueBrands(): string[] {
+  const rows = getSkincareScores();
+  const seen = new Set<string>();
+  for (const r of rows) seen.add(r.brand);
+  return Array.from(seen).sort();
+}
+
 export function getUniqueModels(): { id: string; label: string }[] {
   const rows = getSkincareScores();
   const seen = new Set<string>();
@@ -299,7 +307,7 @@ export interface DimensionTimelineSeries {
 
 export const SKINCARE_DIM_LABELS: Record<SkincareTopic, string> = {
   overall: "Overall",
-  aiBrandIndex: "AI Brand Index",
+  aiBrandIndex: "AI Brand Score",
   price: "Price",
   brandReputation: "Brand Reputation",
   ingredients: "Ingredients",
@@ -356,7 +364,7 @@ export function getDimensionTimelineData(
 
 export const SKINCARE_TABLE_TOPICS: { id: SkincareTopic; label: string }[] = [
   { id: "overall", label: "Overall" },
-  { id: "aiBrandIndex", label: "AI Brand Index" },
+  { id: "aiBrandIndex", label: "AI Brand Score" },
   { id: "price", label: "Price" },
   { id: "brandReputation", label: "Brand Reputation" },
   { id: "ingredients", label: "Ingredients" },

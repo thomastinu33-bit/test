@@ -4,6 +4,7 @@ import {
   getTopBrandsByLatestScore,
   getUniqueModels,
   getPorscheScoreBrands,
+  getTopicModelScores,
   RESULTS_TABLE_TOPICS as PORSCHE_TOPIC_COLUMNS,
 } from "@/data/porscheScores";
 import type { PorscheScoreRow, TimelineTopic } from "@/data/porscheScores";
@@ -106,6 +107,7 @@ export async function GET(request: Request) {
   }
 
   const topic = parsePorscheTopic(topicParam);
+  const chart = searchParams.get("chart");
 
   if (!brandsParam || !modelsParam) {
     const brands = getPorscheScoreBrands();
@@ -130,6 +132,12 @@ export async function GET(request: Request) {
       modelIds
     );
     return NextResponse.json(tableData);
+  }
+
+  if (chart === "grouped" && brandIds.length > 0) {
+    const brand = brandIds[0]!;
+    const topicModelScores = getTopicModelScores(metric as PorscheScoreRow["metric"], brand);
+    return NextResponse.json({ chart: "grouped", ...topicModelScores });
   }
 
   const { dates, series } = getTimelineData(

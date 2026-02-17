@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
 
@@ -10,7 +11,7 @@ const METRIC_CONFIG: Record<
   TimelineMetric,
   { label: string; max: number }
 > = {
-  "AI Brand Score": { label: "AI Brand Index", max: 100 },
+  "AI Brand Score": { label: "AI Brand Score", max: 100 },
   "Visibility Score": { label: "Visibility", max: 100 },
   "Average Position": { label: "Avg. Position", max: 25 },
 };
@@ -55,7 +56,16 @@ const TOPIC_OPTIONS: { id: TimelineTopicId; label: string }[] = [
   { id: "price", label: "Price" },
 ];
 
-type ChartView = "timeline" | "bar";
+const DEFAULT_TOPIC_COUNT = 5;
+const DEFAULT_TOPIC_IDS = TOPIC_OPTIONS.slice(0, DEFAULT_TOPIC_COUNT).map((t) => t.id);
+
+type ChartView = "grouped" | "timeline";
+
+interface TopicModelScores {
+  topics: { id: string; label: string }[];
+  models: { id: string; label: string; values: number[] }[];
+  averages: number[];
+}
 
 const CHART_COLORS = [
   "var(--viz-1)",
@@ -66,6 +76,8 @@ const CHART_COLORS = [
   "var(--viz-6)",
   "var(--viz-7)",
   "var(--viz-8)",
+  "var(--viz-9)",
+  "var(--viz-10)",
 ];
 
 const CHART_GRADIENTS = [
@@ -77,12 +89,13 @@ const CHART_GRADIENTS = [
   "linear-gradient(180deg, var(--viz-6-gradient-start) 0%, var(--viz-6) 50%, var(--viz-6-gradient-end) 100%)",
   "linear-gradient(180deg, var(--viz-7-gradient-start) 0%, var(--viz-7) 50%, var(--viz-7-gradient-end) 100%)",
   "linear-gradient(180deg, var(--viz-8-gradient-start) 0%, var(--viz-8) 50%, var(--viz-8-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-9-gradient-start) 0%, var(--viz-9) 50%, var(--viz-9-gradient-end) 100%)",
+  "linear-gradient(180deg, var(--viz-10-gradient-start) 0%, var(--viz-10) 50%, var(--viz-10-gradient-end) 100%)",
 ];
 
 function getChartColor(colors: readonly string[], index: number): string {
   const i = index % colors.length;
-  const base = colors[i]!;
-  return index < colors.length ? base : `color-mix(in oklch, ${base} 62%, white)`;
+  return colors[i]!;
 }
 
 function getChartGradient(gradients: readonly string[], index: number): string {
@@ -96,16 +109,301 @@ function formatDateLabel(dateStr: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
 }
 
+const GROUPED_MODEL_COLOR_OVERRIDES: Record<string, string> = {
+  "AI Mode": "var(--viz-9)",
+  "Meta AI": "var(--viz-10)",
+};
+
+/** Palette: 8 model colors (viz-2..7 + viz-9, viz-10). No lightening, just cycle. */
+const GROUPED_MODEL_PALETTE_SIZE = 8;
+const GROUPED_MODEL_COLORS = [
+  "var(--viz-2)",
+  "var(--viz-3)",
+  "var(--viz-4)",
+  "var(--viz-5)",
+  "var(--viz-6)",
+  "var(--viz-7)",
+  "var(--viz-9)",
+  "var(--viz-10)",
+];
+
+function getModelBarColor(label: string, index: number): string {
+  const override = GROUPED_MODEL_COLOR_OVERRIDES[label];
+  if (override) return override;
+  return GROUPED_MODEL_COLORS[index % GROUPED_MODEL_PALETTE_SIZE]!;
+}
+
+function GroupedTopicChart({
+  data,
+  maxVal,
+  isPosition,
+  width,
+  height = 280,
+}: {
+  data: TopicModelScores;
+  maxVal: number;
+  isPosition: boolean;
+  width: number;
+  height?: number;
+}) {
+  const [hoveredTopicIndex, setHoveredTopicIndex] = useState<number | null>(null);
+  const padding = { top: 24, right: 16, bottom: 40, left: 44 };
+  const plotWidth = Math.max(0, width - padding.left - padding.right);
+  const plotHeight = Math.max(0, height - padding.top - padding.bottom);
+  const { topics, models, averages } = data;
+  const numTopics = topics.length;
+  const numModels = models.length;
+  const yMax = maxVal;
+  const yScale = (v: number) =>
+    padding.top + plotHeight - (v / yMax) * plotHeight;
+  const yTicks = isPosition
+    ? [0, 5, 10, 15, 20, 25].filter((v) => v <= yMax)
+    : [0, 20, 40, 60, 80, 100].filter((v) => v <= yMax);
+  const topicGap = 24; // gap between topic groups on x-axis
+  const groupWidth =
+    numTopics > 0
+      ? (plotWidth - (numTopics - 1) * topicGap) / numTopics
+      : 0;
+  const barGroupGap = 12;
+  const barGap = 2;
+  const totalBarsPerGroup = numModels;
+  const barWidth =
+    totalBarsPerGroup > 0
+      ? Math.max(2, (groupWidth - barGroupGap - (totalBarsPerGroup - 1) * barGap) / totalBarsPerGroup)
+      : 0;
+  const topCornerRadius = Math.min(8, barWidth / 2);
+  const xGroupCenter = (topicIndex: number) =>
+    padding.left + topicIndex * (groupWidth + topicGap) + groupWidth / 2;
+  const xBarCenter = (topicIndex: number, modelIndex: number) =>
+    padding.left +
+    topicIndex * (groupWidth + topicGap) +
+    barGroupGap / 2 +
+    barWidth / 2 +
+    modelIndex * (barWidth + barGap);
+  const plotBottom = padding.top + plotHeight;
+  const plotLeft = padding.left;
+  const plotRight = width - padding.right;
+  const formatScore = (v: number) => (isPosition ? v.toFixed(1) : Math.round(v).toString());
+  const TOOLTIP_MAX_WIDTH = 224;
+  const TOOLTIP_GAP = 12;
+
+  return (
+    <div className="w-full min-w-0 relative">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3">
+        <span className="flex items-center gap-2 text-xs text-[#525252]">
+          <span className="inline-block w-6 h-0.5 rounded-full bg-[var(--primary-dark)]" />
+          Average
+        </span>
+        {models.map((m, idx) => (
+          <span key={m.id} className="flex items-center gap-2 text-xs text-[#525252]">
+            <span
+              className="inline-block w-3 h-3 rounded-sm shrink-0"
+              style={{ backgroundColor: getModelBarColor(m.label, idx) }}
+            />
+            {m.label}
+          </span>
+        ))}
+      </div>
+      <svg width={width} height={height} className="block" aria-hidden>
+        {yTicks.map((v) => (
+          <text
+            key={v}
+            x={padding.left - 8}
+            y={yScale(v)}
+            textAnchor="end"
+            className="fill-[#525252] text-[11px]"
+          >
+            {isPosition ? v.toFixed(0) : v}
+          </text>
+        ))}
+        {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
+          <line
+            key={i}
+            x1={plotLeft}
+            x2={plotRight}
+            y1={yScale(pct * yMax)}
+            y2={yScale(pct * yMax)}
+            stroke="#e5e5e5"
+            strokeWidth={1}
+            strokeDasharray="4 2"
+          />
+        ))}
+        {numTopics > 1 && Array.from({ length: numTopics - 1 }, (_, i) => i + 1).map((ti) => (
+          <line
+            key={`divider-${ti}`}
+            x1={padding.left + ti * (groupWidth + topicGap)}
+            x2={padding.left + ti * (groupWidth + topicGap)}
+            y1={padding.top}
+            y2={plotBottom}
+            stroke="#d4d4d4"
+            strokeWidth={1}
+          />
+        ))}
+        {topics.map((t, ti) => (
+          <text
+            key={t.id}
+            x={xGroupCenter(ti)}
+            y={height - 12}
+            textAnchor="middle"
+            className="fill-[#525252] text-xs"
+          >
+            {t.label}
+          </text>
+        ))}
+        {/* Invisible rects for topic hover – expanded to include gaps and full chart height */}
+        {topics.map((t, ti) => {
+          const hoverPaddingX = topicGap / 2; // extend into gap on each side
+          const groupLeft = padding.left + ti * (groupWidth + topicGap);
+          const hoverX = Math.max(0, groupLeft - hoverPaddingX);
+          const hoverWidth =
+            ti === 0
+              ? groupWidth + hoverPaddingX
+              : ti === numTopics - 1
+                ? groupWidth + hoverPaddingX
+                : groupWidth + topicGap;
+          return (
+            <rect
+              key={`hover-${t.id}`}
+              x={hoverX}
+              y={0}
+              width={hoverWidth}
+              height={height}
+              fill="transparent"
+              onMouseEnter={() => setHoveredTopicIndex(ti)}
+              onMouseLeave={() => setHoveredTopicIndex(null)}
+              className="cursor-default"
+            />
+          );
+        })}
+        {/* Highlight column and bars when a topic is hovered */}
+        {hoveredTopicIndex !== null && (
+          <rect
+            x={padding.left + hoveredTopicIndex * (groupWidth + topicGap)}
+            y={padding.top}
+            width={groupWidth}
+            height={plotHeight}
+            fill="var(--primary)"
+            fillOpacity={0.08}
+            pointerEvents="none"
+            style={{ transition: "fill-opacity 0.15s ease-out" }}
+          />
+        )}
+        {topics.map((t, ti) =>
+          models.map((m, mi) => {
+            const value = m.values[ti] ?? 0;
+            const x = xBarCenter(ti, mi);
+            const barX = x - barWidth / 2;
+            const barY = yScale(value);
+            const barBottom = plotBottom;
+            const barHeight = Math.max(0, barBottom - barY);
+            const r = topCornerRadius;
+            const pathD =
+              r > 0 && barHeight >= r
+                ? `M ${barX} ${barY + r} Q ${barX} ${barY} ${barX + r} ${barY} L ${barX + barWidth - r} ${barY} Q ${barX + barWidth} ${barY} ${barX + barWidth} ${barY + r} L ${barX + barWidth} ${barBottom} L ${barX} ${barBottom} L ${barX} ${barY + r} Z`
+                : `M ${barX} ${barY} L ${barX + barWidth} ${barY} L ${barX + barWidth} ${barBottom} L ${barX} ${barBottom} Z`;
+            const isHovered = hoveredTopicIndex !== null && hoveredTopicIndex === ti;
+            const dimmed = hoveredTopicIndex !== null && hoveredTopicIndex !== ti;
+            return (
+              <path
+                key={`${t.id}-${m.id}`}
+                d={pathD}
+                fill={getModelBarColor(m.label, mi)}
+                opacity={dimmed ? 0.45 : 1}
+                stroke={isHovered ? "rgba(0,0,0,0.12)" : "none"}
+                strokeWidth={isHovered ? 1 : 0}
+                pointerEvents="none"
+                style={{ transition: "opacity 0.15s ease-out" }}
+              />
+            );
+          })
+        )}
+        {averages.length === numTopics && (
+          <polyline
+            pointerEvents="none"
+            points={topics
+              .map((_, ti) => `${xGroupCenter(ti)},${yScale(averages[ti]!)}`)
+              .join(" ")}
+            fill="none"
+            stroke="var(--primary-dark)"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+        {averages.map((avg, ti) => (
+          <circle
+            key={ti}
+            cx={xGroupCenter(ti)}
+            cy={yScale(avg)}
+            r={4}
+            fill="var(--primary-dark)"
+            stroke="white"
+            strokeWidth={2}
+            pointerEvents="none"
+          />
+        ))}
+      </svg>
+      {/* Tooltip on topic hover: scores across models for this topic */}
+      {hoveredTopicIndex !== null && topics[hoveredTopicIndex] && (
+        <div
+          className="absolute z-10 pointer-events-none rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-2 px-3 min-w-[10rem] max-w-[14rem] will-change-[left]"
+          style={{
+            left: Math.max(
+              TOOLTIP_GAP,
+              Math.min(
+                xGroupCenter(hoveredTopicIndex) - 112,
+                width - TOOLTIP_MAX_WIDTH - TOOLTIP_GAP
+              )
+            ),
+            top: TOOLTIP_GAP,
+            transition: "left 0.15s ease-out, top 0.15s ease-out",
+          }}
+        >
+          <p className="text-xs font-semibold text-[#262626] mb-2 border-b border-[#e5e5e5] pb-1.5 text-left">
+            {topics[hoveredTopicIndex]!.label}
+          </p>
+          <div className="space-y-1">
+            {models.map((m, mi) => {
+              const value = m.values[hoveredTopicIndex] ?? 0;
+              return (
+                <div
+                  key={m.id}
+                  className="flex items-center justify-between gap-4 text-xs w-full"
+                >
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className="w-2 h-2 rounded-sm shrink-0"
+                      style={{ backgroundColor: getModelBarColor(m.label, mi) }}
+                    />
+                    <span className="text-[#525252] truncate">{m.label}</span>
+                  </span>
+                  <span className="font-medium tabular-nums text-[#262626] shrink-0">
+                    {formatScore(value)}
+                  </span>
+                </div>
+              );
+            })}
+            {averages[hoveredTopicIndex] != null && (
+              <div className="flex items-center justify-between gap-4 text-xs w-full pt-1 mt-1 border-t border-[#e5e5e5]">
+                <span className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full shrink-0 bg-[var(--primary-dark)]" />
+                  <span className="text-[#525252]">Average</span>
+                </span>
+                <span className="font-medium tabular-nums text-[#262626] shrink-0">
+                  {formatScore(averages[hoveredTopicIndex]!)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export interface TimelineVizProps {
   metric?: TimelineMetric;
   setMetric?: (m: TimelineMetric) => void;
-  selectedBrands?: Set<string>;
-  setSelectedBrands?: (s: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
-  selectedModel?: string;
-  setSelectedModel?: (s: string) => void;
-  brandsList?: string[];
-  modelsList?: ModelOption[];
-  top10Brands?: string[];
 }
 
 export function TimelineViz(props?: TimelineVizProps) {
@@ -124,35 +422,37 @@ export function TimelineViz(props?: TimelineVizProps) {
   const [internalModelsList, setInternalModelsList] = useState<ModelOption[]>([]);
   const [internalTop10, setInternalTop10] = useState<string[]>([]);
   const [topicColumns, setTopicColumns] = useState<{ id: string; label: string }[]>(TOPIC_OPTIONS);
-  const [internalSelectedBrands, setInternalSelectedBrands] = useState<Set<string>>(new Set());
+  const [selectedBrand, setSelectedBrand] = useState<string>(mainBrand);
   const [internalSelectedModel, setInternalSelectedModel] = useState<string>(AVERAGE_ACROSS_ALL);
-  const [selectedTopic, setSelectedTopic] = useState<string>("overall");
-  const isControlled =
-    props?.setMetric != null && props?.setSelectedBrands != null && props?.setSelectedModel != null;
-  const metric = isControlled ? (props!.metric ?? internalMetric) : internalMetric;
-  const setMetric = isControlled ? props!.setMetric! : setInternalMetric;
-  const selectedBrands = isControlled ? (props!.selectedBrands ?? internalSelectedBrands) : internalSelectedBrands;
-  const setSelectedBrands = isControlled ? props!.setSelectedBrands! : setInternalSelectedBrands;
-  const selectedModel = isControlled ? (props!.selectedModel ?? internalSelectedModel) : internalSelectedModel;
-  const setSelectedModel = isControlled ? props!.setSelectedModel! : setInternalSelectedModel;
-  const brandsList = isControlled ? (props!.brandsList ?? internalBrandsList) : internalBrandsList;
-  const modelsList = isControlled ? (props!.modelsList ?? internalModelsList) : internalModelsList;
-  const top10Brands = isControlled ? (props!.top10Brands ?? internalTop10) : internalTop10;
+  const [selectedTopics, setSelectedTopics] = useState<Set<string>>(
+    () => new Set(DEFAULT_TOPIC_IDS)
+  );
+  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
+  const [brandSearchQuery, setBrandSearchQuery] = useState("");
+  const metric = props?.metric ?? internalMetric;
+  const setMetric = props?.setMetric ?? setInternalMetric;
+  const brandsList = internalBrandsList;
+  const modelsList = internalModelsList;
+  const top10Brands = internalTop10;
+  const selectedModel = internalSelectedModel;
 
   const [dates, setDates] = useState<string[]>([]);
   const [series, setSeries] = useState<TimelineSeries[]>([]);
   const [loading, setLoading] = useState(true);
-  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
-  const [brandSearchQuery, setBrandSearchQuery] = useState("");
-  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
-  const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const brandTriggerRef = useRef<HTMLButtonElement>(null);
+  const [brandDropdownRect, setBrandDropdownRect] = useState<{ top: number; left: number } | null>(null);
+  const topicTriggerRef = useRef<HTMLButtonElement>(null);
+  const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
+  const [topicDropdownRect, setTopicDropdownRect] = useState<{ top: number; left: number } | null>(null);
   const [chartWidth, setChartWidth] = useState(600);
   const [hoveredDateIndex, setHoveredDateIndex] = useState<number | null>(null);
   const [hiddenBrandsInLegend, setHiddenBrandsInLegend] = useState<Set<string>>(new Set());
-  const [chartView, setChartView] = useState<ChartView>("timeline");
+  const [chartView, setChartView] = useState<ChartView>("grouped");
+  const [topicModelScores, setTopicModelScores] = useState<TopicModelScores | null>(null);
+  const [groupedLoading, setGroupedLoading] = useState(false);
 
   const fetchMeta = useCallback(() => {
     const q = new URLSearchParams({ brandId, trackerId });
@@ -166,24 +466,39 @@ export function TimelineViz(props?: TimelineVizProps) {
         const cols = data.topicColumns ?? TOPIC_OPTIONS;
         setTopicColumns(cols);
         if (cols.length > 0) {
-          setSelectedTopic((prev) => (cols.some((c) => c.id === prev) ? prev : cols[0]!.id));
+          setSelectedTopics((prev) => {
+            const validIds = new Set(cols.map((c) => String(c.id)));
+            const next = new Set<string>();
+            prev.forEach((id) => {
+              if (validIds.has(String(id))) next.add(String(id));
+            });
+            if (next.size === 0) {
+              const overallFirst = cols.find((c) => String(c.id) === "overall");
+              const rest = cols.filter((c) => String(c.id) !== "overall").slice(0, DEFAULT_TOPIC_COUNT - 1);
+              (overallFirst ? [overallFirst, ...rest] : cols.slice(0, DEFAULT_TOPIC_COUNT))
+                .forEach((c) => next.add(String(c.id)));
+            }
+            return next;
+          });
         }
-        const defaultBrands = brands.filter((b) => competitorSet.has(b.toUpperCase()));
-        setInternalSelectedBrands(new Set(defaultBrands.length ? defaultBrands : (data.top10Brands ?? [])));
+        const defaultBrand = brands.find((b) => b.toUpperCase() === mainBrand) ?? (data.top10Brands ?? [])[0] ?? brands[0];
+        if (defaultBrand) {
+          setSelectedBrand((prev) => (brands.some((b) => b.toUpperCase() === prev.toUpperCase()) ? prev : defaultBrand));
+        }
       })
       .catch(() => {});
-  }, [brandId, trackerId]);
+  }, [brandId, trackerId, mainBrand]);
 
   useEffect(() => {
-    if (!isControlled) fetchMeta();
-  }, [isControlled, fetchMeta]);
+    fetchMeta();
+  }, [fetchMeta]);
 
   useEffect(() => {
-    if (!isControlled && brandsList.length > 0 && internalSelectedBrands.size === 0) {
-      const defaultBrands = brandsList.filter((b) => competitorSet.has(b.toUpperCase()));
-      setInternalSelectedBrands(new Set(defaultBrands.length ? defaultBrands : top10Brands));
+    if (brandsList.length > 0 && !brandsList.some((b) => b.toUpperCase() === selectedBrand.toUpperCase())) {
+      const defaultBrand = brandsList.find((b) => b.toUpperCase() === mainBrand) ?? top10Brands[0] ?? brandsList[0];
+      if (defaultBrand) setSelectedBrand(defaultBrand);
     }
-  }, [isControlled, brandsList.length, top10Brands, internalSelectedBrands.size, competitorSet]);
+  }, [brandsList, top10Brands, mainBrand, selectedBrand]);
 
   useEffect(() => {
     const el = chartContainerRef.current;
@@ -210,8 +525,7 @@ export function TimelineViz(props?: TimelineVizProps) {
         : [];
 
   useEffect(() => {
-    const brands = sortBrandsWithMainFirst(Array.from(selectedBrands), mainBrand);
-    if (brands.length === 0 || modelIdsForRequest.length === 0) {
+    if (!selectedBrand || modelIdsForRequest.length === 0) {
       setDates([]);
       setSeries([]);
       setLoading(false);
@@ -222,9 +536,9 @@ export function TimelineViz(props?: TimelineVizProps) {
       brandId,
       trackerId,
       metric,
-      brands: brands.join(","),
+      brands: selectedBrand,
       models: modelIdsForRequest.join(","),
-      topic: selectedTopic,
+      topic: Array.from(selectedTopics)[0] ?? "overall",
     });
     fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
@@ -237,54 +551,108 @@ export function TimelineViz(props?: TimelineVizProps) {
         setSeries([]);
       })
       .finally(() => setLoading(false));
-  }, [brandId, trackerId, metric, selectedBrands, selectedModel, selectedTopic, modelIdsForRequest.join(",")]);
+  }, [brandId, trackerId, metric, selectedBrand, selectedModel, selectedTopics, modelIdsForRequest.join(",")]);
 
-  const toggleBrand = (b: string) => {
-    setSelectedBrands((prev) => {
+  useEffect(() => {
+    if (chartView !== "grouped") {
+      setTopicModelScores(null);
+      return;
+    }
+    if (!selectedBrand) {
+      setTopicModelScores(null);
+      setGroupedLoading(false);
+      return;
+    }
+    setGroupedLoading(true);
+    const params = new URLSearchParams({
+      brandId,
+      trackerId,
+      metric,
+      brands: selectedBrand,
+      models: modelsList.map((m) => m.id).join(","),
+      chart: "grouped",
+    });
+    fetch(`/api/timeline?${params}`)
+      .then((res) => res.json())
+      .then((data: TopicModelScores & { chart?: string }) => {
+        if (data.chart === "grouped" && data.topics && data.models && data.averages) {
+          setTopicModelScores({
+            topics: data.topics,
+            models: data.models,
+            averages: data.averages,
+          });
+        } else {
+          setTopicModelScores(null);
+        }
+      })
+      .catch(() => setTopicModelScores(null))
+      .finally(() => setGroupedLoading(false));
+  }, [chartView, brandId, trackerId, metric, selectedBrand, modelsList]);
+
+  const brandSearchLower = brandSearchQuery.trim().toLowerCase();
+  const filteredBrands = sortBrandsWithMainFirst(
+    brandsList.filter((b) => !brandSearchLower || b.toLowerCase().includes(brandSearchLower)),
+    mainBrand
+  );
+
+  const openBrandDropdown = useCallback(() => {
+    setBrandSearchQuery("");
+    const el = brandTriggerRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const w = 224; // 14rem
+      setBrandDropdownRect({
+        top: rect.bottom + 4,
+        left: Math.max(8, rect.right - w),
+      });
+    } else {
+      setBrandDropdownRect({ top: 100, left: 16 });
+    }
+    setBrandDropdownOpen(true);
+  }, []);
+
+  const closeBrandDropdown = useCallback(() => {
+    setBrandDropdownOpen(false);
+    setBrandSearchQuery("");
+    setBrandDropdownRect(null);
+  }, []);
+
+  const toggleTopic = useCallback((id: string) => {
+    const idStr = String(id);
+    setSelectedTopics((prev) => {
       const next = new Set(prev);
-      if (next.has(b)) next.delete(b);
-      else next.add(b);
+      if (next.has(idStr)) next.delete(idStr);
+      else next.add(idStr);
       return next;
     });
-  };
+  }, []);
 
-  const selectModel = (id: string) => {
-    setSelectedModel(id);
-    setModelDropdownOpen(false);
-  };
+  const openTopicDropdown = useCallback(() => {
+    const el = topicTriggerRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const w = 224;
+      setTopicDropdownRect({
+        top: rect.bottom + 4,
+        left: Math.max(8, rect.right - w),
+      });
+    } else {
+      setTopicDropdownRect({ top: 100, left: 16 });
+    }
+    setTopicDropdownOpen(true);
+  }, []);
 
-  const competitorOrder = new Map<string, number>(
-    (brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE).map((c, i) => [c, i])
-  );
-  const competitorBrands = brandsList
-    .filter((b) => competitorSet.has(b.toUpperCase()))
-    .sort((a, b) => (competitorOrder.get(a.toUpperCase()) ?? 999) - (competitorOrder.get(b.toUpperCase()) ?? 999));
-  const otherBrands = brandsList.filter((b) => !competitorSet.has(b.toUpperCase()));
-
-  const q = brandSearchQuery.trim().toLowerCase();
-  const matchesSearch = (b: string) => !q || b.toLowerCase().includes(q);
-  const filteredCompetitor = competitorBrands.filter(matchesSearch);
-  const filteredOther = otherBrands.filter(matchesSearch);
-  const hasAnyFiltered = filteredCompetitor.length > 0 || filteredOther.length > 0;
-
-  const brandsDisplayLabel =
-    selectedBrands.size === 0
-      ? "None selected"
-      : selectedBrands.size === 1
-        ? Array.from(selectedBrands)[0]
-        : `${selectedBrands.size} selected`;
-
-  const modelDisplayLabel =
-    selectedModel === AVERAGE_ACROSS_ALL
-      ? "Avg Across All"
-      : modelsList.find((m) => m.id === selectedModel)?.label ?? "Model";
-
-  const topicDisplayLabel = topicColumns.find((t) => t.id === selectedTopic)?.label ?? "Overall";
-
-  const selectTopic = (id: string) => {
-    setSelectedTopic(id);
+  const closeTopicDropdown = useCallback(() => {
     setTopicDropdownOpen(false);
-  };
+    setTopicDropdownRect(null);
+  }, []);
+
+  const topicDisplayLabel =
+    selectedTopics.size === 0
+      ? "Select topics"
+      : selectedTopics.size === 1
+        ? (topicColumns.find((t) => String(t.id) === Array.from(selectedTopics)[0])?.label ?? "1 topic")
+        : `${selectedTopics.size} topics`;
 
   const config = METRIC_CONFIG[metric];
   const isPosition = metric === "Average Position";
@@ -381,12 +749,12 @@ export function TimelineViz(props?: TimelineVizProps) {
   };
 
   return (
-    <div ref={cardRef} className="w-full rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
+    <div ref={cardRef} className="rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-visible">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
         <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
-          Brand Scores for {trackerId === "skincare" ? "Skincare" : "Luxury SUVs"}
+          Results Across Topics
         </h2>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
             {(Object.keys(METRIC_CONFIG) as TimelineMetric[]).map((m) => (
               <button
@@ -404,150 +772,103 @@ export function TimelineViz(props?: TimelineVizProps) {
             ))}
           </div>
 
-          <div className="relative min-w-[10rem]">
+          <div className="relative min-w-[10rem] overflow-visible z-10">
             <button
+              ref={brandTriggerRef}
               type="button"
-              onClick={() => { setBrandDropdownOpen((o) => !o); setModelDropdownOpen(false); setBrandSearchQuery(""); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (brandDropdownOpen) closeBrandDropdown();
+                else openBrandDropdown();
+              }}
               className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-              aria-label="Select brands"
+              aria-label="Select brand"
               aria-expanded={brandDropdownOpen}
             >
-              <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                Select Brands
+              <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">
+                Brand
               </span>
-              <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{brandsDisplayLabel}</span>
+              <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{selectedBrand || "Select brand"}</span>
               <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </span>
             </button>
-            {brandDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-10" aria-hidden onClick={() => { setBrandDropdownOpen(false); setBrandSearchQuery(""); }} />
-                <div className="absolute right-0 top-full mt-1 z-20 w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden">
-                  <div className="p-2 border-b border-[#e5e5e5] bg-[#fafafa]">
-                    <input
-                      type="search"
-                      value={brandSearchQuery}
-                      onChange={(e) => setBrandSearchQuery(e.target.value)}
-                      placeholder="Search brands…"
-                      className="w-full rounded-md border border-[#e5e5e5] bg-white px-2.5 py-1.5 text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#262626]/20"
-                      autoFocus
-                      aria-label="Search brands"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                  <div className="max-h-64 overflow-auto py-1">
-                    {!hasAnyFiltered ? (
-                      <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
-                    ) : (
-                      <>
-                        <div className="px-3 pt-2 pb-1">
-                          <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">
-                            Competitor &amp; Keywords list
-                          </p>
-                        </div>
-                        {filteredCompetitor.map((b) => (
-                          <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
-                            <input
-                              type="checkbox"
-                              checked={selectedBrands.has(b)}
-                              onChange={() => toggleBrand(b)}
-                              className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
-                            />
-                            <span className="truncate">{b}</span>
-                          </label>
-                        ))}
-                        <div className="px-3 pt-3 pb-1 border-t border-[#e5e5e5] mt-1">
-                          <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">
-                            All Other Brands &amp; Keywords
-                          </p>
-                        </div>
-                        {filteredOther.map((b) => (
-                          <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
-                            <input
-                              type="checkbox"
-                              checked={selectedBrands.has(b)}
-                              onChange={() => toggleBrand(b)}
-                              className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
-                            />
-                            <span className="truncate">{b}</span>
-                          </label>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="relative min-w-[10rem]">
-            <button
-              type="button"
-              onClick={() => { setModelDropdownOpen((o) => !o); setBrandDropdownOpen(false); }}
-              className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-              aria-label="Select model"
-              aria-expanded={modelDropdownOpen}
-            >
-              <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                Select Model
-              </span>
-              <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{modelDisplayLabel}</span>
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-            </button>
-            {modelDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-10" aria-hidden onClick={() => setModelDropdownOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
-                  <button
-                    type="button"
-                    onClick={() => selectModel(AVERAGE_ACROSS_ALL)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                      selectedModel === AVERAGE_ACROSS_ALL ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
-                    }`}
+            {brandDropdownOpen &&
+              brandDropdownRect &&
+              typeof document !== "undefined" &&
+              createPortal(
+                <>
+                  <div
+                    className="fixed inset-0 z-[100]"
+                    aria-hidden
+                    onClick={closeBrandDropdown}
+                  />
+                  <div
+                    className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden"
+                    style={{ top: brandDropdownRect.top, left: brandDropdownRect.left }}
+                    onClick={(ev) => ev.stopPropagation()}
                   >
-                    <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                      {selectedModel === AVERAGE_ACROSS_ALL && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
-                    </span>
-                    Avg Across All
-                  </button>
-                  <div className="border-t border-[#e5e5e5] my-1" />
-                  {modelsList.map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => selectModel(m.id)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                        selectedModel === m.id ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
-                      }`}
-                    >
-                      <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                        {selectedModel === m.id && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
-                      </span>
-                      <span className="truncate">{m.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+                    <div className="p-2 border-b border-[#e5e5e5] bg-white">
+                      <input
+                        type="search"
+                        value={brandSearchQuery}
+                        onChange={(e) => setBrandSearchQuery(e.target.value)}
+                        placeholder="Search brands…"
+                        className="w-full rounded-md border border-[#e5e5e5] bg-[#fafafa] px-2.5 py-1.5 text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#262626]/20"
+                        autoFocus
+                        aria-label="Search brands"
+                      />
+                    </div>
+                    <div className="max-h-64 overflow-auto py-1">
+                      {filteredBrands.length === 0 ? (
+                        <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
+                      ) : (
+                        filteredBrands.map((b) => {
+                          const isSelected = b.toUpperCase() === selectedBrand.toUpperCase();
+                          return (
+                            <button
+                              key={b}
+                              type="button"
+                              onClick={() => {
+                                setSelectedBrand(b);
+                                closeBrandDropdown();
+                              }}
+                              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
+                                isSelected ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
+                              }`}
+                            >
+                              <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
+                                {isSelected && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
+                              </span>
+                              <span className="truncate">{b}</span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </>,
+                document.body
+              )}
           </div>
 
-          <div className="relative min-w-[10rem]">
+          <div className="relative min-w-[10rem] overflow-visible z-10">
             <button
+              ref={topicTriggerRef}
               type="button"
-              onClick={() => { setTopicDropdownOpen((o) => !o); setBrandDropdownOpen(false); setModelDropdownOpen(false); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (topicDropdownOpen) closeTopicDropdown();
+                else openTopicDropdown();
+              }}
               className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-              aria-label="Select topic"
+              aria-label="Select topics"
               aria-expanded={topicDropdownOpen}
             >
-              <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                Select a Topic
+              <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">
+                Topic
               </span>
               <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
               <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
@@ -556,35 +877,52 @@ export function TimelineViz(props?: TimelineVizProps) {
                 </svg>
               </span>
             </button>
-            {topicDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-10" aria-hidden onClick={() => setTopicDropdownOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
-                  {topicColumns.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => selectTopic(t.id)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                        selectedTopic === t.id ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
-                      }`}
-                    >
-                      <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                        {selectedTopic === t.id && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
-                      </span>
-                      <span className="truncate">{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            {topicDropdownOpen &&
+              topicDropdownRect &&
+              typeof document !== "undefined" &&
+              createPortal(
+                <>
+                  <div
+                    className="fixed inset-0 z-[100]"
+                    aria-hidden
+                    onClick={closeTopicDropdown}
+                  />
+                  <div
+                    className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden"
+                    style={{ top: topicDropdownRect.top, left: topicDropdownRect.left }}
+                    onClick={(ev) => ev.stopPropagation()}
+                  >
+                    <div className="max-h-64 overflow-auto py-1">
+                      {topicColumns.map((t) => {
+                        const idStr = String(t.id);
+                        const isSelected = selectedTopics.has(idStr);
+                        return (
+                          <label
+                            key={t.id}
+                            className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleTopic(idStr)}
+                              className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                            />
+                            <span className="truncate">{t.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>,
+                document.body
+              )}
           </div>
 
           <button
             type="button"
             onClick={handleCapture}
             className="flex items-center justify-center w-9 h-9 rounded-lg border border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] hover:text-[#262626] transition-colors"
-            aria-label={`Download screenshot of Brand Scores for ${trackerId === "skincare" ? "Skincare" : "Luxury SUVs"}`}
+            aria-label="Download screenshot of Results Across Topics"
             title="Download screenshot"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -595,17 +933,61 @@ export function TimelineViz(props?: TimelineVizProps) {
         </div>
       </div>
 
-      <div className="px-4 py-4 sm:px-6">
+      <div className="px-4 pt-6 pb-6 sm:px-6">
         <div ref={chartContainerRef} className="w-full min-w-0">
-          {loading ? (
+          {chartView === "grouped" ? (
+            groupedLoading ? (
+              <div className="h-[300px] flex items-center justify-center text-sm text-[#7F7F7F]">
+                Loading…
+              </div>
+            ) : !topicModelScores || !selectedBrand ? (
+              <div className="h-[300px] flex items-center justify-center text-sm text-[#7F7F7F]">
+                Select a brand to see the chart.
+              </div>
+            ) : (() => {
+              const selected =
+                selectedTopics.size > 0
+                  ? selectedTopics
+                  : new Set(topicColumns.slice(0, DEFAULT_TOPIC_COUNT).map((c) => String(c.id)));
+              const topicIdToIndex = new Map(topicModelScores.topics.map((t, i) => [String(t.id), i]));
+              const orderIds = topicColumns.map((c) => String(c.id)).filter((id) => selected.has(id));
+              const indices = orderIds
+                .map((id) => ({ id, i: topicIdToIndex.get(id) }))
+                .filter((x): x is { id: string; i: number } => x.i !== undefined)
+                .map(({ id, i }) => ({ topic: topicModelScores.topics[i]!, i }));
+              const filteredData =
+                indices.length > 0
+                  ? {
+                      topics: indices.map(({ topic }) => topic),
+                      models: topicModelScores.models.map((m) => ({
+                        ...m,
+                        values: indices.map(({ i }) => m.values[i] ?? 0),
+                      })),
+                      averages: indices.map(({ i }) => topicModelScores.averages[i] ?? 0),
+                    }
+                  : null;
+              return filteredData ? (
+                <GroupedTopicChart
+                  data={filteredData}
+                  maxVal={config.max}
+                  isPosition={isPosition}
+                  width={chartWidth}
+                />
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-sm text-[#7F7F7F]">
+                  Select at least one topic.
+                </div>
+              );
+            })()
+          ) : loading ? (
             <div className="h-[300px] flex items-center justify-center text-sm text-[#7F7F7F]">
               Loading…
             </div>
           ) : dates.length === 0 || series.length === 0 ? (
             <div className="h-[300px] flex items-center justify-center text-sm text-[#7F7F7F]">
-              Select at least one brand and one model to see the timeline.
+              Select a brand to see the timeline.
             </div>
-          ) : chartView === "timeline" ? (
+          ) : (
             <div className="relative">
             <svg
               ref={svgRef}
@@ -784,68 +1166,9 @@ export function TimelineViz(props?: TimelineVizProps) {
               </div>
             )}
             </div>
-          ) : (
-            <div className="min-h-[280px]">
-              {latestDate && (
-                <p className="text-xs text-[#7F7F7F] mb-3">
-                  Latest scores as of {formatDateLabel(latestDate)}
-                </p>
-              )}
-              <div className="space-y-2">
-                {latestScores.map(({ brand, value, avg7d, color, gradient }) => {
-                  const pct = config.max > 0 ? Math.min(1, Math.max(0, value / config.max)) : 0;
-                  const avg7dPct =
-                    avg7d != null && config.max > 0
-                      ? Math.min(1, Math.max(0, avg7d / config.max))
-                      : null;
-                  return (
-                    <div key={brand} className="flex items-center gap-3">
-                      <span className="w-24 shrink-0 flex items-center gap-1.5 min-w-0">
-                        <span
-                          className="w-2 h-2 rounded-full shrink-0"
-                          style={{ background: gradient }}
-                        />
-                        <span className="text-xs text-[#525252] truncate">{brand}</span>
-                      </span>
-                      <div className="flex-1 min-w-0 h-6 rounded bg-[#f0f0f0] overflow-hidden relative">
-                        <div
-                          className="h-full rounded transition-all duration-300"
-                          style={{
-                            width: `${pct * 100}%`,
-                            background: gradient,
-                            opacity: 0.9,
-                          }}
-                        />
-                        {avg7dPct != null && (
-                          <>
-                            <span
-                              className="absolute top-0 bottom-0 w-0.5 rounded-full bg-[#525252]"
-                              style={{
-                                left: `${avg7dPct * 100}%`,
-                                transform: "translateX(-50%)",
-                                boxShadow: "0 0 0 0.5px rgba(255,255,255,0.9)",
-                              }}
-                            />
-                            <span
-                              className="absolute top-1/2 -translate-y-1/2 text-[10px] font-medium text-[#525252] whitespace-nowrap"
-                              style={{ left: `calc(${avg7dPct * 100}% + 6px)` }}
-                            >
-                              7D Avg:{formatScore(avg7d!)}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      <span className="w-10 shrink-0 text-right text-xs font-medium tabular-nums text-[#262626]">
-                        {formatScore(value)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           )}
 
-        {series.length > 0 && (
+        {chartView === "timeline" && series.length > 0 && (
           <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 border-t border-[#e5e5e5] pt-3">
             {series.map((s, idx) => {
               const isHidden = hiddenBrandsInLegend.has(s.brand);
@@ -880,6 +1203,23 @@ export function TimelineViz(props?: TimelineVizProps) {
         <div className="mt-6 pt-4 border-t border-[#e5e5e5] flex items-center justify-center gap-1">
           <button
             type="button"
+            onClick={() => setChartView("grouped")}
+            className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
+              chartView === "grouped"
+                ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]"
+                : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"
+            }`}
+            aria-label="Grouped column chart"
+            title="Topics by model (grouped columns)"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="20" x2="12" y2="10" />
+              <line x1="18" y1="20" x2="18" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="16" />
+            </svg>
+          </button>
+          <button
+            type="button"
             onClick={() => setChartView("timeline")}
             className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
               chartView === "timeline"
@@ -891,23 +1231,6 @@ export function TimelineViz(props?: TimelineVizProps) {
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setChartView("bar")}
-            className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
-              chartView === "bar"
-                ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]"
-                : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"
-            }`}
-            aria-label="Bar chart view"
-            title="Latest scores (bar chart)"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="20" x2="12" y2="10" />
-              <line x1="18" y1="20" x2="18" y2="4" />
-              <line x1="6" y1="20" x2="6" y2="16" />
             </svg>
           </button>
         </div>

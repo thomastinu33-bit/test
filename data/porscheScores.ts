@@ -90,6 +90,98 @@ function addMockHistory(baseRows: PorscheScoreRow[]): PorscheScoreRow[] {
   return out;
 }
 
+/** Model keys that should get synthetic values when their data is all zeros. */
+const MODELS_TO_FILL = new Set([
+  "ChatGPT Search|ChatGPT Search",
+  "Copilot|Copilot",
+  "Gemini Search|Gemini Search",
+  "Google AI Mode|Google AI Mode",
+]);
+
+/** Fill synthetic values for models that have only zeros, using averages from other models. */
+function fillSyntheticForZeroModels(rows: PorscheScoreRow[]): void {
+  const modelKey = (r: PorscheScoreRow) => `${r.modelMaker}|${r.model}`;
+  const zeroModels = new Set<string>();
+  const byKey = new Map<string, PorscheScoreRow[]>();
+  for (const r of rows) {
+    const key = modelKey(r);
+    if (!byKey.has(key)) byKey.set(key, []);
+    byKey.get(key)!.push(r);
+  }
+  for (const [key, list] of byKey) {
+    if (!MODELS_TO_FILL.has(key)) continue;
+    const allZero = list.every((r) => r.overall === 0);
+    if (!allZero) continue;
+    zeroModels.add(key);
+  }
+  if (zeroModels.size === 0) return;
+
+  type Ref = { overall: number; topOfMind: number; perception: number; media: number; process: number; product: number; price: number };
+  const refKey = (r: PorscheScoreRow) => `${r.reportDate}|${r.brand}|${r.metric}`;
+  const refSums = new Map<string, Ref & { count: number }>();
+  for (const r of rows) {
+    if (zeroModels.has(modelKey(r))) continue;
+    const key = refKey(r);
+    const cur = refSums.get(key) ?? {
+      overall: 0,
+      topOfMind: 0,
+      perception: 0,
+      media: 0,
+      process: 0,
+      product: 0,
+      price: 0,
+      count: 0,
+    };
+    cur.overall += r.overall;
+    cur.topOfMind += r.topOfMind;
+    cur.perception += r.perception;
+    cur.media += r.media;
+    cur.process += r.process;
+    cur.product += r.product;
+    cur.price += r.price;
+    cur.count += 1;
+    refSums.set(key, cur);
+  }
+
+  const scaleByModel: Record<string, number> = {
+    "ChatGPT Search|ChatGPT Search": 0.88,
+    "Copilot|Copilot": 0.82,
+    "Gemini Search|Gemini Search": 0.85,
+    "Google AI Mode|Google AI Mode": 0.8,
+  };
+  const round = (v: number) => Math.round(Math.max(0, v) * 10) / 10;
+
+  for (const r of rows) {
+    const key = modelKey(r);
+    if (!zeroModels.has(key)) continue;
+    const refKeyStr = refKey(r);
+    const ref = refSums.get(refKeyStr);
+    const scale = scaleByModel[key] ?? 0.85;
+    if (ref && ref.count > 0) {
+      const n = ref.count;
+      const isPosition = r.metric === "Average Position";
+      const cap = isPosition ? 30 : 100;
+      r.overall = round(Math.min(cap, (ref.overall / n) * scale));
+      r.topOfMind = round(Math.min(100, (ref.topOfMind / n) * scale));
+      r.perception = round(Math.min(100, (ref.perception / n) * scale));
+      r.media = round(Math.min(100, (ref.media / n) * scale));
+      r.process = round(Math.min(100, (ref.process / n) * scale));
+      r.product = round(Math.min(100, (ref.product / n) * scale));
+      r.price = round(Math.min(100, (ref.price / n) * scale));
+    } else {
+      const isPosition = r.metric === "Average Position";
+      const mid = isPosition ? 12 : 35;
+      r.overall = round(mid * scale);
+      r.topOfMind = round(mid * scale);
+      r.perception = round(mid * scale);
+      r.media = round(mid * scale);
+      r.process = round(mid * scale);
+      r.product = round(mid * scale);
+      r.price = round(mid * scale);
+    }
+  }
+}
+
 export function getPorscheScores(): PorscheScoreRow[] {
   if (cached) return cached;
   const filePath = path.join(process.cwd(), "data", "Porsche_Scores.csv");
@@ -121,6 +213,7 @@ export function getPorscheScores(): PorscheScoreRow[] {
       price: values.length > 12 ? num(12) : num(6),
     });
   }
+  fillSyntheticForZeroModels(rows);
   cached = addMockHistory(rows);
   return cached;
 }
@@ -159,6 +252,22 @@ export function getPorscheScoresByBrand(
   );
 }
 
+/** Display names for model labels (short names in UI). */
+const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  "OpenAI ChatGPT": "ChatGPT",
+  "Anthropic Claude": "Claude",
+  "Meta Meta AI": "Meta AI",
+  "Google Gemini": "Gemini",
+  "Google AI Mode": "AI Mode",
+};
+
+/** Sort key for model list: "Gemini" before "Gemini Search". */
+function modelSortKey(label: string): string {
+  if (label === "Gemini") return "Gemini ";
+  if (label === "AI Mode") return "Gemini Search "; // after Gemini Search
+  return label;
+}
+
 /** Unique model labels (modelMaker === model ? model : "modelMaker model"). */
 export function getUniqueModels(): { id: string; label: string }[] {
   const rows = getPorscheScores();
@@ -168,10 +277,19 @@ export function getUniqueModels(): { id: string; label: string }[] {
     const id = `${r.modelMaker}|${r.model}`;
     if (seen.has(id)) continue;
     seen.add(id);
-    const label = r.modelMaker === r.model ? r.model : `${r.modelMaker} ${r.model}`;
+    const rawLabel = r.modelMaker === r.model ? r.model : `${r.modelMaker} ${r.model}`;
+    const label = MODEL_DISPLAY_NAMES[rawLabel] ?? rawLabel;
     list.push({ id, label });
   }
-  return list.sort((a, b) => a.label.localeCompare(b.label));
+  return list.sort((a, b) => modelSortKey(a.label).localeCompare(modelSortKey(b.label)));
+}
+
+/** Unique brands in the score data. */
+export function getUniqueBrands(): string[] {
+  const rows = getPorscheScores();
+  const seen = new Set<string>();
+  for (const r of rows) seen.add(r.brand);
+  return Array.from(seen).sort();
 }
 
 /** Top N brands by latest-date aggregate score for the given metric (average of overall across models). */
@@ -530,6 +648,38 @@ export function getGaugeDimensionsForModelWithChange(
 
 export { GAUGE_DIMENSION_KEYS };
 
+/** Topic × model scores for grouped column chart (one brand, latest date). */
+export interface TopicModelScores {
+  topics: { id: keyof GaugeDimensions; label: string }[];
+  models: { id: string; label: string; values: number[] }[];
+  averages: number[];
+}
+
+export function getTopicModelScores(
+  metric: PorscheScoreRow["metric"],
+  brand = "PORSCHE"
+): TopicModelScores {
+  const models = getUniqueModels();
+  const topicColumns = RESULTS_TABLE_TOPICS;
+  const topicIds = topicColumns.map((t) => t.id);
+  const modelData = models.map((m) => {
+    const dims = getGaugeDimensionsForModelWithChange(metric, m.id, brand);
+    const values = topicIds.map((id) => dims[id] ?? 0);
+    return { id: m.id, label: m.label, values };
+  });
+  const averages = topicIds.map((topicId, ti) => {
+    const sum = modelData.reduce((s, m) => s + (m.values[ti] ?? 0), 0);
+    return modelData.length > 0
+      ? Math.round((sum / modelData.length) * 10) / 10
+      : 0;
+  });
+  return {
+    topics: topicColumns,
+    models: modelData,
+    averages,
+  };
+}
+
 export interface PorscheScoreByModel {
   modelLabel: string;
   aiBrandScore: number;
@@ -560,11 +710,16 @@ function aggregateByDate(rows: PorscheScoreRow[]): PorscheScoreByModel[] {
   }
   const result: PorscheScoreByModel[] = [];
   let sumAi = 0, sumVis = 0, sumPos = 0;
-  const entries = Array.from(byModel.entries()).sort((a, b) =>
-    (labels.get(a[0]) ?? "").localeCompare(labels.get(b[0]) ?? "")
-  );
+  const entries = Array.from(byModel.entries()).sort((a, b) => {
+    const rawA = labels.get(a[0]) ?? "";
+    const rawB = labels.get(b[0]) ?? "";
+    const displayA = MODEL_DISPLAY_NAMES[rawA] ?? rawA;
+    const displayB = MODEL_DISPLAY_NAMES[rawB] ?? rawB;
+    return modelSortKey(displayA).localeCompare(modelSortKey(displayB));
+  });
   for (const [key, v] of entries) {
-    const modelLabel = labels.get(key) ?? key;
+    const rawLabel = labels.get(key) ?? key;
+    const modelLabel = MODEL_DISPLAY_NAMES[rawLabel] ?? rawLabel;
     result.push({
       modelLabel,
       aiBrandScore: v.ai,

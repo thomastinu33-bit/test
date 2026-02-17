@@ -13,7 +13,7 @@ const METRIC_CONFIG: Record<
   TimelineMetric,
   { label: string; max: number }
 > = {
-  "AI Brand Score": { label: "AI Brand Index", max: 100 },
+  "AI Brand Score": { label: "AI Brand Score", max: 100 },
   "Visibility Score": { label: "Visibility", max: 100 },
   "Average Position": { label: "Avg. Position", max: 25 },
 };
@@ -43,7 +43,7 @@ const TOPIC_LABELS: Record<string, string> = {
   process: "Process",
   product: "Product",
   price: "Price",
-  aiBrandIndex: "AI Brand Index",
+  aiBrandIndex: "AI Brand Score",
   brandReputation: "Brand Reputation",
   ingredients: "Ingredients",
   dermatologistRecommendation: "Dermatologist Recommendation",

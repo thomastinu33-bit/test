@@ -203,7 +203,7 @@ const defaultNavItems: NavItem[] = [
         icon: "barChart",
         children: [
           { id: "word-association", label: "Word Association", icon: "wordAssociation" },
-          { id: "ai-brand-index", label: "AI Brand Index", icon: "aiBrandIndex" },
+          { id: "ai-brand-index", label: "AI Brand Score", icon: "aiBrandIndex" },
           { id: "consumer-preferences", label: "Consumer Preferences", icon: "consumerPreferences" },
         ],
       },
