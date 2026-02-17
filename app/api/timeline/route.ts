@@ -1,5 +1,6 @@
 import {
   getTimelineData,
+  getDimensionTimelineData,
   getResultsTableData,
   getTopBrandsByLatestScore,
   getUniqueModels,
@@ -10,6 +11,7 @@ import {
 import type { PorscheScoreRow, TimelineTopic } from "@/data/porscheScores";
 import {
   getTimelineData as getSkincareTimelineData,
+  getDimensionTimelineData as getSkincareDimensionTimelineData,
   getResultsTableData as getSkincareResultsTableData,
   getTopBrandsByLatestScore as getSkincareTopBrands,
   getUniqueModels as getSkincareModels,
@@ -97,6 +99,24 @@ export async function GET(request: Request) {
       return NextResponse.json(tableData);
     }
 
+    const chart = searchParams.get("chart");
+    const topicsParam = searchParams.get("topics");
+    if (chart === "timeline" && brandIds.length === 1 && modelIds.length > 0) {
+      const brand = brandIds[0]!;
+      const modelId = modelIds[0]!;
+      const { dates, series: dimSeries } = getSkincareDimensionTimelineData(
+        metric as SkincareScoreRow["metric"],
+        modelId,
+        brand
+      );
+      const topicIds = topicsParam ? new Set(topicsParam.split(",").map((s) => s.trim()).filter(Boolean)) : null;
+      const series = (topicIds ? dimSeries.filter((s) => topicIds.has(s.dimension)) : dimSeries).map((s) => ({
+        brand: s.label,
+        data: s.data,
+      }));
+      return NextResponse.json({ dates, series });
+    }
+
     const { dates, series } = getSkincareTimelineData(
       metric as SkincareScoreRow["metric"],
       brandIds,
@@ -138,6 +158,23 @@ export async function GET(request: Request) {
     const brand = brandIds[0]!;
     const topicModelScores = getTopicModelScores(metric as PorscheScoreRow["metric"], brand);
     return NextResponse.json({ chart: "grouped", ...topicModelScores });
+  }
+
+  const topicsParam = searchParams.get("topics");
+  if (chart === "timeline" && brandIds.length === 1 && modelIds.length > 0) {
+    const brand = brandIds[0]!;
+    const modelId = modelIds[0]!;
+    const { dates, series: dimSeries } = getDimensionTimelineData(
+      metric as PorscheScoreRow["metric"],
+      modelId,
+      brand
+    );
+    const topicIds = topicsParam ? new Set(topicsParam.split(",").map((s) => s.trim()).filter(Boolean)) : null;
+    const series = (topicIds ? dimSeries.filter((s) => topicIds.has(s.dimension)) : dimSeries).map((s) => ({
+      brand: s.label,
+      data: s.data,
+    }));
+    return NextResponse.json({ dates, series });
   }
 
   const { dates, series } = getTimelineData(

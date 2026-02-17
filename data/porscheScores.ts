@@ -651,8 +651,14 @@ export { GAUGE_DIMENSION_KEYS };
 /** Topic × model scores for grouped column chart (one brand, latest date). */
 export interface TopicModelScores {
   topics: { id: keyof GaugeDimensions; label: string }[];
-  models: { id: string; label: string; values: number[] }[];
+  models: { id: string; label: string; values: number[]; changes?: number[] }[];
   averages: number[];
+  averageChanges?: number[];
+}
+
+function changeKeyForTopic(topicId: string): keyof GaugeDimensionsWithChange {
+  const key = "change" + topicId.charAt(0).toUpperCase() + topicId.slice(1);
+  return key as keyof GaugeDimensionsWithChange;
 }
 
 export function getTopicModelScores(
@@ -665,10 +671,17 @@ export function getTopicModelScores(
   const modelData = models.map((m) => {
     const dims = getGaugeDimensionsForModelWithChange(metric, m.id, brand);
     const values = topicIds.map((id) => dims[id] ?? 0);
-    return { id: m.id, label: m.label, values };
+    const changes = topicIds.map((id) => (dims[changeKeyForTopic(id)] as number) ?? 0);
+    return { id: m.id, label: m.label, values, changes };
   });
   const averages = topicIds.map((topicId, ti) => {
     const sum = modelData.reduce((s, m) => s + (m.values[ti] ?? 0), 0);
+    return modelData.length > 0
+      ? Math.round((sum / modelData.length) * 10) / 10
+      : 0;
+  });
+  const averageChanges = topicIds.map((_, ti) => {
+    const sum = modelData.reduce((s, m) => s + (m.changes?.[ti] ?? 0), 0);
     return modelData.length > 0
       ? Math.round((sum / modelData.length) * 10) / 10
       : 0;
@@ -677,6 +690,7 @@ export function getTopicModelScores(
     topics: topicColumns,
     models: modelData,
     averages,
+    averageChanges,
   };
 }
 

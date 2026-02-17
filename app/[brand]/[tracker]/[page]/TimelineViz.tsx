@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
+import { GroupedTopicTooltip } from "./GroupedTopicTooltip";
 
 export type TimelineMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
 
@@ -63,8 +64,9 @@ type ChartView = "grouped" | "timeline";
 
 interface TopicModelScores {
   topics: { id: string; label: string }[];
-  models: { id: string; label: string; values: number[] }[];
+  models: { id: string; label: string; values: number[]; changes?: number[] }[];
   averages: number[];
+  averageChanges?: number[];
 }
 
 const CHART_COLORS = [
@@ -345,8 +347,15 @@ function GroupedTopicChart({
       </svg>
       {/* Tooltip on topic hover: scores across models for this topic */}
       {hoveredTopicIndex !== null && topics[hoveredTopicIndex] && (
-        <div
-          className="absolute z-10 pointer-events-none rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-2 px-3 min-w-[10rem] max-w-[14rem] will-change-[left]"
+        <GroupedTopicTooltip
+          topicLabel={topics[hoveredTopicIndex]!.label}
+          topicIndex={hoveredTopicIndex}
+          models={models}
+          averages={averages}
+          averageChanges={data.averageChanges}
+          isPosition={isPosition}
+          formatScore={formatScore}
+          getModelBarColor={getModelBarColor}
           style={{
             left: Math.max(
               TOOLTIP_GAP,
@@ -358,44 +367,7 @@ function GroupedTopicChart({
             top: TOOLTIP_GAP,
             transition: "left 0.15s ease-out, top 0.15s ease-out",
           }}
-        >
-          <p className="text-xs font-semibold text-[#262626] mb-2 border-b border-[#e5e5e5] pb-1.5 text-left">
-            {topics[hoveredTopicIndex]!.label}
-          </p>
-          <div className="space-y-1">
-            {models.map((m, mi) => {
-              const value = m.values[hoveredTopicIndex] ?? 0;
-              return (
-                <div
-                  key={m.id}
-                  className="flex items-center justify-between gap-4 text-xs w-full"
-                >
-                  <span className="flex items-center gap-1.5 min-w-0">
-                    <span
-                      className="w-2 h-2 rounded-sm shrink-0"
-                      style={{ backgroundColor: getModelBarColor(m.label, mi) }}
-                    />
-                    <span className="text-[#525252] truncate">{m.label}</span>
-                  </span>
-                  <span className="font-medium tabular-nums text-[#262626] shrink-0">
-                    {formatScore(value)}
-                  </span>
-                </div>
-              );
-            })}
-            {averages[hoveredTopicIndex] != null && (
-              <div className="flex items-center justify-between gap-4 text-xs w-full pt-1 mt-1 border-t border-[#e5e5e5]">
-                <span className="flex items-center gap-1.5 min-w-0">
-                  <span className="w-2 h-2 rounded-full shrink-0 bg-[var(--primary-dark)]" />
-                  <span className="text-[#525252]">Average</span>
-                </span>
-                <span className="font-medium tabular-nums text-[#262626] shrink-0">
-                  {formatScore(averages[hoveredTopicIndex]!)}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+        />
       )}
     </div>
   );
@@ -525,6 +497,12 @@ export function TimelineViz(props?: TimelineVizProps) {
         : [];
 
   useEffect(() => {
+    if (chartView !== "timeline") {
+      setDates([]);
+      setSeries([]);
+      setLoading(false);
+      return;
+    }
     if (!selectedBrand || modelIdsForRequest.length === 0) {
       setDates([]);
       setSeries([]);
@@ -538,7 +516,8 @@ export function TimelineViz(props?: TimelineVizProps) {
       metric,
       brands: selectedBrand,
       models: modelIdsForRequest.join(","),
-      topic: Array.from(selectedTopics)[0] ?? "overall",
+      chart: "timeline",
+      ...(selectedTopics.size > 0 && { topics: Array.from(selectedTopics).join(",") }),
     });
     fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
@@ -551,7 +530,7 @@ export function TimelineViz(props?: TimelineVizProps) {
         setSeries([]);
       })
       .finally(() => setLoading(false));
-  }, [brandId, trackerId, metric, selectedBrand, selectedModel, selectedTopics, modelIdsForRequest.join(",")]);
+  }, [chartView, brandId, trackerId, metric, selectedBrand, selectedModel, selectedTopics, modelIdsForRequest.join(",")]);
 
   useEffect(() => {
     if (chartView !== "grouped") {
@@ -962,8 +941,14 @@ export function TimelineViz(props?: TimelineVizProps) {
                       models: topicModelScores.models.map((m) => ({
                         ...m,
                         values: indices.map(({ i }) => m.values[i] ?? 0),
+                        ...(m.changes && {
+                          changes: indices.map(({ i }) => m.changes![i] ?? 0),
+                        }),
                       })),
                       averages: indices.map(({ i }) => topicModelScores.averages[i] ?? 0),
+                      ...(topicModelScores.averageChanges && {
+                        averageChanges: indices.map(({ i }) => topicModelScores.averageChanges![i] ?? 0),
+                      }),
                     }
                   : null;
               return filteredData ? (
