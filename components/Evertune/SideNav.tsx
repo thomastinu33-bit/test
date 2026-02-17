@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "./Button";
@@ -8,7 +8,7 @@ import { Button } from "./Button";
 // Icons
 const ChevronLeftIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15 18l-6-6 6-6" stroke="#262626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -20,34 +20,34 @@ const PlusIcon = () => (
 
 const PersonIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const BarChartIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18 20V10M12 20V4M6 20v-6" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const AiBrandIndexIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3 3v16a2 2 0 0 0 2 2h16" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <rect x="15" y="5" width="4" height="12" rx="1" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <rect x="7" y="8" width="4" height="9" rx="1" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 3v16a2 2 0 0 0 2 2h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="15" y="5" width="4" height="12" rx="1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <rect x="7" y="8" width="4" height="9" rx="1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const TagIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const WordAssociationIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
-      stroke="#262626"
+      stroke="currentColor"
       strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -58,45 +58,45 @@ const WordAssociationIcon = () => (
 
 const ConsumerPreferencesIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 8h4" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M12 21v-9" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M12 8V3" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M17 16h4" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M19 12V3" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M19 21v-5" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 14h4" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M5 10V3" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M5 21v-7" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 21v-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 8V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M17 16h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M19 12V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M19 21v-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 10V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 21v-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const ChevronDownIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M6 9l6 6 6-6" stroke="#262626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const MinusIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5 12h14" stroke="#262626" strokeWidth="2" strokeLinecap="round" />
+    <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
 const GlobeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 0 1 9-9" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 0 1 9-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const MonitorIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18 8H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2zM2 12h20M8 22h8" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M18 8H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2zM2 12h20M8 22h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const SettingsIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -114,31 +114,31 @@ const ListIcon = () => (
 
 const GaugeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="m12 14 4-4" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3.34 19a10 10 0 1 1 17.32 0" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="m12 14 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3.34 19a10 10 0 1 1 17.32 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const LibraryIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="8" height="18" x="3" y="3" rx="1" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M7 3v18" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <rect width="8" height="18" x="3" y="3" rx="1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7 3v18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M20.4 18.9c.2.5-.1 1.1-.6 1.3l-1.9.7c-.5.2-1.1-.1-1.3-.6L11.1 5.1c-.2-.5.1-1.1.6-1.3l1.9-.7c.5-.2 1.1.1 1.3.6Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const BookOpenIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 7v14" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 7v14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
 const DatabaseIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="12" cy="5" rx="9" ry="3" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 5V19A9 3 0 0 0 21 19V5" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 12A9 3 0 0 0 21 12" stroke="#262626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <ellipse cx="12" cy="5" rx="9" ry="3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 5V19A9 3 0 0 0 21 19V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3 12A9 3 0 0 0 21 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -192,6 +192,13 @@ const defaultNavItems: NavItem[] = [
     children: [],
   },
   {
+    id: "cetaphil",
+    label: "Cetaphil",
+    children: [
+      { id: "cetaphil-skincare", label: "Skincare", icon: "list", href: "/cetaphil/skincare" },
+    ],
+  },
+  {
     id: "porsche",
     label: "Porsche",
     children: [
@@ -229,7 +236,31 @@ export function SideNav({
   const pathname = usePathname();
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const collapsed = controlledCollapsed ?? internalCollapsed;
-  const isManageAccountActive = pathname === "/manage-account";
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  function findItemByHref(items: NavItem[], href: string): NavItem | null {
+    for (const item of items) {
+      if (item.href === href) return item;
+      if (item.children) {
+        const found = findItemByHref(item.children, href);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  useEffect(() => {
+    if (pathname === "/manage-account") {
+      setSelectedId("manage-account");
+      return;
+    }
+    const allItems = [...defaultNavItems, ...bottomNavItems];
+    const found = findItemByHref(allItems, pathname);
+    setSelectedId(found ? found.id : null);
+  }, [pathname]);
+
+  const isManageAccountActive = selectedId === "manage-account";
 
   const handleCollapseToggle = () => {
     onCollapseToggle?.();
@@ -261,11 +292,11 @@ export function SideNav({
   const renderNavItem = (item: NavItem, depth: number = 0, parentId?: string) => {
     const hasChildren = Array.isArray(item.children);
     const isExpanded = expandedIds.has(item.id);
-    const isActive = Boolean(item.href && pathname === item.href);
+    const isActive = item.id === selectedId;
 
     const paddingLeft = depth === 0 ? "pl-4" : depth === 1 ? "pl-8" : "pl-12";
     const activeStyles = isActive
-      ? "bg-[#E0F3FE] text-[#262626]"
+      ? "bg-[#e6f7f7] text-[var(--primary)]"
       : "text-[#262626] hover:bg-[#f6f6f6]";
 
     const content = (
@@ -293,6 +324,7 @@ export function SideNav({
         {item.href && !hasChildren ? (
           <Link
             href={item.href}
+            onClick={() => setSelectedId(item.id)}
             className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors rounded-r-md no-underline ${activeStyles}`}
           >
             {content}
@@ -301,6 +333,7 @@ export function SideNav({
           <button
             type="button"
             onClick={() => {
+              setSelectedId(item.id);
               if (hasChildren) {
                 toggleExpand(item.id);
               } else {
@@ -370,9 +403,9 @@ export function SideNav({
       <div className="py-2 border-t border-[#eeeeee] flex-shrink-0">
         <Link
           href="/manage-account"
-          onClick={() => onNavigate?.("manage-account")}
+          onClick={() => setSelectedId("manage-account")}
           className={`w-full flex items-center gap-3 py-2.5 pl-4 pr-4 text-left text-sm font-normal rounded-r-md transition-colors no-underline ${
-            isManageAccountActive ? "bg-[#E0F3FE] text-[#262626]" : "text-[#262626] hover:bg-[#f6f6f6]"
+            isManageAccountActive ? "bg-[#e6f7f7] text-[var(--primary)]" : "text-[#262626] hover:bg-[#f6f6f6]"
           }`}
         >
           <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
 import { ScoreGauge } from "./ScoreGauge";
-import type { GaugeDimensionsWithChange } from "@/data/porscheScores";
 
 export type OverviewMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
 
@@ -22,7 +22,9 @@ interface DimensionTimelineSeries {
 
 interface OverviewApiResponse {
   models: ModelOption[];
-  dimensions: GaugeDimensionsWithChange;
+  dimensions: Record<string, number>;
+  dimensionKeys?: string[];
+  dimensionLabels?: Record<string, string>;
   view?: string;
   timeline?: { dates: string[]; series: DimensionTimelineSeries[] };
 }
@@ -36,7 +38,7 @@ const METRIC_CONFIG: Record<
   "Average Position": { label: "Avg. Position", max: 25 },
 };
 
-const DIMENSION_GAUGES: { key: keyof GaugeDimensionsWithChange; changeKey: keyof GaugeDimensionsWithChange; label: string }[] = [
+const DIMENSION_GAUGES: { key: string; changeKey: string; label: string }[] = [
   { key: "overall", changeKey: "changeOverall", label: "Overall" },
   { key: "topOfMind", changeKey: "changeTopOfMind", label: "Top of Mind" },
   { key: "perception", changeKey: "changePerception", label: "Perception" },
@@ -346,10 +348,18 @@ function OverviewTimelineChart({
 }
 
 export function OverviewViz() {
+  const params = useParams();
+  const brandId = (params?.brand as string) ?? "porsche";
+  const trackerId = (params?.tracker as string) ?? "luxury-suvs";
+
   const cardRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const [models, setModels] = useState<ModelOption[]>([]);
-  const [dimensions, setDimensions] = useState<GaugeDimensionsWithChange | null>(null);
+  const [dimensions, setDimensions] = useState<Record<string, number> | null>(null);
+  const [dimensionKeys, setDimensionKeys] = useState<string[]>(DIMENSION_GAUGES.map((g) => g.key));
+  const [dimensionLabels, setDimensionLabels] = useState<Record<string, string>>(
+    Object.fromEntries(DIMENSION_GAUGES.map((g) => [g.key, g.label]))
+  );
   const [timelineData, setTimelineData] = useState<{ dates: string[]; series: DimensionTimelineSeries[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [metric, setMetric] = useState<OverviewMetric>("AI Brand Score");
@@ -360,13 +370,15 @@ export function OverviewViz() {
 
   const fetchData = () => {
     setLoading(true);
-    const params = new URLSearchParams({ metric, model: modelId });
-    if (overviewView === "timeline") params.set("view", "timeline");
-    fetch(`/api/porsche-scores?${params}`)
+    const q = new URLSearchParams({ brandId, trackerId, metric, model: modelId });
+    if (overviewView === "timeline") q.set("view", "timeline");
+    fetch(`/api/scores?${q}`)
       .then((res) => res.json())
       .then((json: OverviewApiResponse) => {
         setModels(json.models ?? []);
         setDimensions(json.dimensions ?? null);
+        setDimensionKeys(json.dimensionKeys ?? DIMENSION_GAUGES.map((g) => g.key));
+        setDimensionLabels(json.dimensionLabels ?? Object.fromEntries(DIMENSION_GAUGES.map((g) => [g.key, g.label])));
         setTimelineData(json.timeline ?? null);
         setLoading(false);
       })
@@ -375,7 +387,7 @@ export function OverviewViz() {
 
   useEffect(() => {
     fetchData();
-  }, [metric, modelId, overviewView]);
+  }, [brandId, trackerId, metric, modelId, overviewView]);
 
   useEffect(() => {
     const el = chartRef.current;
@@ -398,7 +410,7 @@ export function OverviewViz() {
         scale: 2,
       });
       const link = document.createElement("a");
-      link.download = "brand-score-porsche-luxury-suv.png";
+      link.download = `brand-score-${brandId}-${trackerId}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch {
@@ -445,7 +457,7 @@ export function OverviewViz() {
     <div ref={cardRef} className="rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
         <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
-          Brand Score for Porsche in Luxury SUV
+          Brand Score for {brandId === "cetaphil" ? "Cetaphil" : "Porsche"} in {trackerId === "skincare" ? "Skincare" : "Luxury SUV"}
         </h2>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
@@ -536,14 +548,16 @@ export function OverviewViz() {
       <div className="px-4 pt-6 pb-6 sm:px-6">
         {overviewView === "gauge" && (
           <>
-            <div className="flex w-full flex-wrap justify-between gap-4 sm:gap-6">
-              {DIMENSION_GAUGES.map(({ key, changeKey, label }, i) => {
+            <div className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-6">
+              {dimensionKeys.map((key, i) => {
+                const changeKey = `change${key.charAt(0).toUpperCase()}${key.slice(1)}`;
                 const value = dimensions[key] as number;
                 const changeRaw = dimensions[changeKey] as number;
                 const change =
                   isAvgPosition && changeRaw != null ? -changeRaw : changeRaw;
+                const label = dimensionLabels[key] ?? key;
                 return (
-                  <div key={key} className="flex flex-1 min-w-[100px] basis-[100px] justify-center sm:min-w-0 sm:basis-0">
+                  <div key={key} className="flex justify-center">
                     <ScoreGauge
                       label={label}
                       value={value}

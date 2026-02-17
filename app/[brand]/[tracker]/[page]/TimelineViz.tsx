@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
 
 export type TimelineMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
@@ -31,13 +32,14 @@ interface TimelineSeries {
 
 const AVERAGE_ACROSS_ALL = "__average__";
 
-const MAIN_BRAND = "PORSCHE";
-const COMPETITOR_LIST = ["PORSCHE", "BMW", "BENZ", "VOLVOCARS", "AUDI", "LEXUS"] as const;
-const COMPETITOR_SET = new Set(COMPETITOR_LIST.map((c) => c.toUpperCase()));
+const MAIN_BRAND_PORSCHE = "PORSCHE";
+const MAIN_BRAND_CETAPHIL = "CETAPHIL";
+const COMPETITOR_LIST_PORSCHE = ["PORSCHE", "BMW", "BENZ", "VOLVOCARS", "AUDI", "LEXUS"] as const;
+const COMPETITOR_LIST_CETAPHIL = ["CETAPHIL", "NEUTROGENA", "DRUNK ELEPHANT", "ORDINARY", "SKINCEUTICALS", "ELTAMD"] as const;
 
-function sortBrandsWithMainFirst(brands: string[]): string[] {
-  const main = brands.find((b) => b.toUpperCase() === MAIN_BRAND);
-  const rest = brands.filter((b) => b.toUpperCase() !== MAIN_BRAND);
+function sortBrandsWithMainFirst(brands: string[], mainBrand: string): string[] {
+  const main = brands.find((b) => b.toUpperCase() === mainBrand);
+  const rest = brands.filter((b) => b.toUpperCase() !== mainBrand);
   return main ? [main, ...rest] : rest;
 }
 
@@ -107,12 +109,24 @@ export interface TimelineVizProps {
 }
 
 export function TimelineViz(props?: TimelineVizProps) {
+  const params = useParams();
+  const brandId = (params?.brand as string) ?? "porsche";
+  const trackerId = (params?.tracker as string) ?? "luxury-suvs";
+  const mainBrand = brandId === "cetaphil" ? MAIN_BRAND_CETAPHIL : MAIN_BRAND_PORSCHE;
+  const competitorSet = new Set(
+    brandId === "cetaphil"
+      ? COMPETITOR_LIST_CETAPHIL.map((c) => c.toUpperCase())
+      : COMPETITOR_LIST_PORSCHE.map((c) => c.toUpperCase())
+  );
+
   const [internalMetric, setInternalMetric] = useState<TimelineMetric>("AI Brand Score");
   const [internalBrandsList, setInternalBrandsList] = useState<string[]>([]);
   const [internalModelsList, setInternalModelsList] = useState<ModelOption[]>([]);
   const [internalTop10, setInternalTop10] = useState<string[]>([]);
+  const [topicColumns, setTopicColumns] = useState<{ id: string; label: string }[]>(TOPIC_OPTIONS);
   const [internalSelectedBrands, setInternalSelectedBrands] = useState<Set<string>>(new Set());
   const [internalSelectedModel, setInternalSelectedModel] = useState<string>(AVERAGE_ACROSS_ALL);
+  const [selectedTopic, setSelectedTopic] = useState<string>("overall");
   const isControlled =
     props?.setMetric != null && props?.setSelectedBrands != null && props?.setSelectedModel != null;
   const metric = isControlled ? (props!.metric ?? internalMetric) : internalMetric;
@@ -132,7 +146,6 @@ export function TimelineViz(props?: TimelineVizProps) {
   const [brandSearchQuery, setBrandSearchQuery] = useState("");
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState<TimelineTopicId>("overall");
   const cardRef = useRef<HTMLDivElement>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -142,18 +155,24 @@ export function TimelineViz(props?: TimelineVizProps) {
   const [chartView, setChartView] = useState<ChartView>("timeline");
 
   const fetchMeta = useCallback(() => {
-    fetch("/api/porsche-timeline")
+    const q = new URLSearchParams({ brandId, trackerId });
+    fetch(`/api/timeline?${q}`)
       .then((res) => res.json())
-      .then((data: { brands: string[]; models: ModelOption[]; top10Brands: string[] }) => {
+      .then((data: { brands: string[]; models: ModelOption[]; top10Brands: string[]; topicColumns?: { id: string; label: string }[] }) => {
         const brands = data.brands ?? [];
         setInternalBrandsList(brands);
         setInternalModelsList(data.models ?? []);
         setInternalTop10(data.top10Brands ?? []);
-        const defaultBrands = brands.filter((b) => COMPETITOR_SET.has(b.toUpperCase()));
+        const cols = data.topicColumns ?? TOPIC_OPTIONS;
+        setTopicColumns(cols);
+        if (cols.length > 0) {
+          setSelectedTopic((prev) => (cols.some((c) => c.id === prev) ? prev : cols[0]!.id));
+        }
+        const defaultBrands = brands.filter((b) => competitorSet.has(b.toUpperCase()));
         setInternalSelectedBrands(new Set(defaultBrands.length ? defaultBrands : (data.top10Brands ?? [])));
       })
       .catch(() => {});
-  }, []);
+  }, [brandId, trackerId]);
 
   useEffect(() => {
     if (!isControlled) fetchMeta();
@@ -161,10 +180,10 @@ export function TimelineViz(props?: TimelineVizProps) {
 
   useEffect(() => {
     if (!isControlled && brandsList.length > 0 && internalSelectedBrands.size === 0) {
-      const defaultBrands = brandsList.filter((b) => COMPETITOR_SET.has(b.toUpperCase()));
+      const defaultBrands = brandsList.filter((b) => competitorSet.has(b.toUpperCase()));
       setInternalSelectedBrands(new Set(defaultBrands.length ? defaultBrands : top10Brands));
     }
-  }, [isControlled, brandsList.length, top10Brands, internalSelectedBrands.size]);
+  }, [isControlled, brandsList.length, top10Brands, internalSelectedBrands.size, competitorSet]);
 
   useEffect(() => {
     const el = chartContainerRef.current;
@@ -191,7 +210,7 @@ export function TimelineViz(props?: TimelineVizProps) {
         : [];
 
   useEffect(() => {
-    const brands = sortBrandsWithMainFirst(Array.from(selectedBrands));
+    const brands = sortBrandsWithMainFirst(Array.from(selectedBrands), mainBrand);
     if (brands.length === 0 || modelIdsForRequest.length === 0) {
       setDates([]);
       setSeries([]);
@@ -200,12 +219,14 @@ export function TimelineViz(props?: TimelineVizProps) {
     }
     setLoading(true);
     const params = new URLSearchParams({
+      brandId,
+      trackerId,
       metric,
       brands: brands.join(","),
       models: modelIdsForRequest.join(","),
       topic: selectedTopic,
     });
-    fetch(`/api/porsche-timeline?${params}`)
+    fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
       .then((data: { dates: string[]; series: TimelineSeries[] }) => {
         setDates(data.dates ?? []);
@@ -216,7 +237,7 @@ export function TimelineViz(props?: TimelineVizProps) {
         setSeries([]);
       })
       .finally(() => setLoading(false));
-  }, [metric, selectedBrands, selectedModel, selectedTopic, modelIdsForRequest.join(",")]);
+  }, [brandId, trackerId, metric, selectedBrands, selectedModel, selectedTopic, modelIdsForRequest.join(",")]);
 
   const toggleBrand = (b: string) => {
     setSelectedBrands((prev) => {
@@ -232,11 +253,13 @@ export function TimelineViz(props?: TimelineVizProps) {
     setModelDropdownOpen(false);
   };
 
-  const competitorOrder = new Map<string, number>(COMPETITOR_LIST.map((c, i) => [c, i]));
+  const competitorOrder = new Map<string, number>(
+    (brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE).map((c, i) => [c, i])
+  );
   const competitorBrands = brandsList
-    .filter((b) => COMPETITOR_SET.has(b.toUpperCase()))
+    .filter((b) => competitorSet.has(b.toUpperCase()))
     .sort((a, b) => (competitorOrder.get(a.toUpperCase()) ?? 999) - (competitorOrder.get(b.toUpperCase()) ?? 999));
-  const otherBrands = brandsList.filter((b) => !COMPETITOR_SET.has(b.toUpperCase()));
+  const otherBrands = brandsList.filter((b) => !competitorSet.has(b.toUpperCase()));
 
   const q = brandSearchQuery.trim().toLowerCase();
   const matchesSearch = (b: string) => !q || b.toLowerCase().includes(q);
@@ -256,9 +279,9 @@ export function TimelineViz(props?: TimelineVizProps) {
       ? "Avg Across All"
       : modelsList.find((m) => m.id === selectedModel)?.label ?? "Model";
 
-  const topicDisplayLabel = TOPIC_OPTIONS.find((t) => t.id === selectedTopic)?.label ?? "Overall";
+  const topicDisplayLabel = topicColumns.find((t) => t.id === selectedTopic)?.label ?? "Overall";
 
-  const selectTopic = (id: TimelineTopicId) => {
+  const selectTopic = (id: string) => {
     setSelectedTopic(id);
     setTopicDropdownOpen(false);
   };
@@ -361,7 +384,7 @@ export function TimelineViz(props?: TimelineVizProps) {
     <div ref={cardRef} className="w-full rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
         <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
-          Brand Scores for Luxury SUVs
+          Brand Scores for {trackerId === "skincare" ? "Skincare" : "Luxury SUVs"}
         </h2>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
@@ -537,7 +560,7 @@ export function TimelineViz(props?: TimelineVizProps) {
               <>
                 <div className="fixed inset-0 z-10" aria-hidden onClick={() => setTopicDropdownOpen(false)} />
                 <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
-                  {TOPIC_OPTIONS.map((t) => (
+                  {topicColumns.map((t) => (
                     <button
                       key={t.id}
                       type="button"
@@ -561,7 +584,7 @@ export function TimelineViz(props?: TimelineVizProps) {
             type="button"
             onClick={handleCapture}
             className="flex items-center justify-center w-9 h-9 rounded-lg border border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] hover:text-[#262626] transition-colors"
-            aria-label="Download screenshot of Brand Scores for Luxury SUVs"
+            aria-label={`Download screenshot of Brand Scores for ${trackerId === "skincare" ? "Skincare" : "Luxury SUVs"}`}
             title="Download screenshot"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>

@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
 const AVERAGE_ACROSS_ALL = "__average__";
-const MAIN_BRAND = "PORSCHE";
-const COMPETITOR_LIST = ["PORSCHE", "BMW", "BENZ", "VOLVOCARS", "AUDI", "LEXUS"] as const;
-const COMPETITOR_SET = new Set(COMPETITOR_LIST.map((c) => c.toUpperCase()));
+const MAIN_BRAND_PORSCHE = "PORSCHE";
+const MAIN_BRAND_CETAPHIL = "CETAPHIL";
+const COMPETITOR_LIST_PORSCHE = ["PORSCHE", "BMW", "BENZ", "VOLVOCARS", "AUDI", "LEXUS"] as const;
+const COMPETITOR_LIST_CETAPHIL = ["CETAPHIL", "NEUTROGENA", "DRUNK ELEPHANT", "ORDINARY", "SKINCEUTICALS", "ELTAMD"] as const;
 
 const METRIC_CONFIG: Record<
   TimelineMetric,
@@ -32,7 +34,7 @@ const SortNoneIcon = () => (
   </svg>
 );
 
-const ALL_TOPIC_IDS = ["overall", "topOfMind", "perception", "media", "process", "product", "price"] as const;
+const PORSCHE_TOPIC_IDS = ["overall", "topOfMind", "perception", "media", "process", "product", "price"] as const;
 const TOPIC_LABELS: Record<string, string> = {
   overall: "Overall",
   topOfMind: "Top of Mind",
@@ -41,6 +43,16 @@ const TOPIC_LABELS: Record<string, string> = {
   process: "Process",
   product: "Product",
   price: "Price",
+  aiBrandIndex: "AI Brand Index",
+  brandReputation: "Brand Reputation",
+  ingredients: "Ingredients",
+  dermatologistRecommendation: "Dermatologist Recommendation",
+  skinTypeCompatibility: "Skin Type Compatibility",
+  effectiveness: "Effectiveness",
+  sustainability: "Sustainability",
+  quality: "Quality",
+  packaging: "Packaging",
+  safety: "Safety",
 };
 
 const PlusIcon = () => (
@@ -49,9 +61,9 @@ const PlusIcon = () => (
   </svg>
 );
 
-function sortBrandsWithMainFirst(brands: string[]): string[] {
-  const main = brands.find((b) => b.toUpperCase() === MAIN_BRAND);
-  const rest = brands.filter((b) => b.toUpperCase() !== MAIN_BRAND);
+function sortBrandsWithMainFirst(brands: string[], mainBrand: string): string[] {
+  const main = brands.find((b) => b.toUpperCase() === mainBrand);
+  const rest = brands.filter((b) => b.toUpperCase() !== mainBrand);
   return main ? [main, ...rest] : rest;
 }
 
@@ -63,6 +75,16 @@ interface ModelOption {
 }
 
 export function ResultsTableCard() {
+  const params = useParams();
+  const brandId = (params?.brand as string) ?? "porsche";
+  const trackerId = (params?.tracker as string) ?? "luxury-suvs";
+  const mainBrand = brandId === "cetaphil" ? MAIN_BRAND_CETAPHIL : MAIN_BRAND_PORSCHE;
+  const competitorSet = new Set(
+    brandId === "cetaphil"
+      ? COMPETITOR_LIST_CETAPHIL.map((c) => c.toUpperCase())
+      : COMPETITOR_LIST_PORSCHE.map((c) => c.toUpperCase())
+  );
+
   const [metric, setMetric] = useState<TimelineMetric>("AI Brand Score");
   const [brandsList, setBrandsList] = useState<string[]>([]);
   const [modelsList, setModelsList] = useState<ModelOption[]>([]);
@@ -72,23 +94,7 @@ export function ResultsTableCard() {
   const [tableData, setTableData] = useState<{
     brands: string[];
     topicColumns: { id: string; label: string }[];
-    rows: {
-      brand: string;
-      overall: number;
-      topOfMind: number;
-      perception: number;
-      media: number;
-      process: number;
-      product: number;
-      price: number;
-      changeOverall?: number | null;
-      changeTopOfMind?: number | null;
-      changePerception?: number | null;
-      changeMedia?: number | null;
-      changeProcess?: number | null;
-      changeProduct?: number | null;
-      changePrice?: number | null;
-    }[];
+    rows: { brand: string; [k: string]: unknown }[];
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
@@ -96,7 +102,7 @@ export function ResultsTableCard() {
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [sortBy, setSortBy] = useState<string>("brand");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => new Set(ALL_TOPIC_IDS));
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => new Set(PORSCHE_TOPIC_IDS));
   const [columnsDropdownOpen, setColumnsDropdownOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -125,18 +131,19 @@ export function ResultsTableCard() {
   };
 
   const fetchMeta = useCallback(() => {
-    fetch("/api/porsche-timeline")
+    const q = new URLSearchParams({ brandId, trackerId });
+    fetch(`/api/timeline?${q}`)
       .then((res) => res.json())
       .then((data: { brands: string[]; models: ModelOption[]; top10Brands: string[] }) => {
         const brands = data.brands ?? [];
         setBrandsList(brands);
         setModelsList(data.models ?? []);
         setTop10Brands(data.top10Brands ?? []);
-        const defaultBrands = brands.filter((b) => COMPETITOR_SET.has(b.toUpperCase()));
+        const defaultBrands = brands.filter((b) => competitorSet.has(b.toUpperCase()));
         setSelectedBrands(new Set(defaultBrands.length ? defaultBrands : (data.top10Brands ?? [])));
       })
       .catch(() => {});
-  }, []);
+  }, [brandId, trackerId]);
 
   useEffect(() => {
     fetchMeta();
@@ -144,10 +151,10 @@ export function ResultsTableCard() {
 
   useEffect(() => {
     if (brandsList.length > 0 && selectedBrands.size === 0) {
-      const defaultBrands = brandsList.filter((b) => COMPETITOR_SET.has(b.toUpperCase()));
+      const defaultBrands = brandsList.filter((b) => competitorSet.has(b.toUpperCase()));
       setSelectedBrands(new Set(defaultBrands.length ? defaultBrands : top10Brands));
     }
-  }, [brandsList, top10Brands, selectedBrands.size]);
+  }, [brandsList, top10Brands, selectedBrands.size, competitorSet]);
 
   const modelIdsForRequest =
     selectedModel === AVERAGE_ACROSS_ALL
@@ -156,11 +163,13 @@ export function ResultsTableCard() {
         ? [selectedModel]
         : [];
 
-  const competitorOrder = new Map<string, number>(COMPETITOR_LIST.map((c, i) => [c, i]));
+  const competitorOrder = new Map<string, number>(
+    (brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE).map((c, i) => [c, i])
+  );
   const competitorBrands = brandsList
-    .filter((b) => COMPETITOR_SET.has(b.toUpperCase()))
+    .filter((b) => competitorSet.has(b.toUpperCase()))
     .sort((a, b) => (competitorOrder.get(a.toUpperCase()) ?? 999) - (competitorOrder.get(b.toUpperCase()) ?? 999));
-  const otherBrands = brandsList.filter((b) => !COMPETITOR_SET.has(b.toUpperCase()));
+  const otherBrands = brandsList.filter((b) => !competitorSet.has(b.toUpperCase()));
   const q = brandSearchQuery.trim().toLowerCase();
   const matchesSearch = (b: string) => !q || b.toLowerCase().includes(q);
   const filteredCompetitor = competitorBrands.filter(matchesSearch);
@@ -201,7 +210,7 @@ export function ResultsTableCard() {
   }, [tableData?.rows?.length, pageSize]);
 
   useEffect(() => {
-    const brands = sortBrandsWithMainFirst(Array.from(selectedBrands));
+    const brands = sortBrandsWithMainFirst(Array.from(selectedBrands), mainBrand);
     if (brands.length === 0 || modelIdsForRequest.length === 0) {
       setTableData(null);
       setLoading(false);
@@ -209,24 +218,35 @@ export function ResultsTableCard() {
     }
     setLoading(true);
     const params = new URLSearchParams({
+      brandId,
+      trackerId,
       metric,
       brands: brands.join(","),
       models: modelIdsForRequest.join(","),
       table: "1",
     });
-    fetch(`/api/porsche-timeline?${params}`)
+    fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
-      .then((data: { brands?: string[]; topicColumns?: { id: string; label: string }[]; rows?: { brand: string; overall: number; topOfMind: number; perception: number; media: number; process: number; product: number; price: number }[] }) => {
+      .then((data: { brands?: string[]; topicColumns?: { id: string; label: string }[]; rows?: Record<string, unknown>[] }) => {
+        const topicColumns = data.topicColumns ?? [];
         setTableData({
           brands: data.brands ?? [],
-          topicColumns: data.topicColumns ?? [],
-          rows: data.rows ?? [],
+          topicColumns,
+          rows: (data.rows ?? []) as { brand: string; [k: string]: unknown }[],
+        });
+        setVisibleColumns((prev) => {
+          const ids = new Set(topicColumns.map((c) => c.id));
+          if (ids.size === 0) return prev;
+          const next = new Set(prev);
+          for (const id of ids) next.add(id);
+          for (const id of next) if (!ids.has(id)) next.delete(id);
+          return next.size ? next : ids;
         });
         setPage(1);
       })
       .catch(() => setTableData(null))
       .finally(() => setLoading(false));
-  }, [metric, selectedBrands, selectedModel, modelIdsForRequest.join(",")]);
+  }, [brandId, trackerId, mainBrand, metric, selectedBrands, selectedModel, modelIdsForRequest.join(",")]);
 
   return (
     <div className="w-full rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
@@ -396,13 +416,15 @@ export function ResultsTableCard() {
           const maxVal = METRIC_CONFIG[metric].max;
           const visibleTopicColumns = tableData.topicColumns.filter((col) => visibleColumns.has(col.id));
           const sortedRows = [...tableData.rows].sort((a, b) => {
+            const rowA = a as { brand: string; [k: string]: unknown };
+            const rowB = b as { brand: string; [k: string]: unknown };
             if (sortBy === "brand") {
-              const aa = a.brand.toUpperCase();
-              const bb = b.brand.toUpperCase();
+              const aa = rowA.brand.toUpperCase();
+              const bb = rowB.brand.toUpperCase();
               return sortDir === "asc" ? aa.localeCompare(bb) : bb.localeCompare(aa);
             }
-            const aVal = a[sortBy as keyof typeof a];
-            const bVal = b[sortBy as keyof typeof b];
+            const aVal = rowA[sortBy];
+            const bVal = rowB[sortBy];
             const aNum = typeof aVal === "number" ? aVal : 0;
             const bNum = typeof bVal === "number" ? bVal : 0;
             return sortDir === "asc" ? aNum - bNum : bNum - aNum;
@@ -462,19 +484,19 @@ export function ResultsTableCard() {
                             <p className="px-3 py-1.5 text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">
                               Columns
                             </p>
-                            {ALL_TOPIC_IDS.map((id) => (
+                            {tableData.topicColumns.map((col) => (
                               <label
-                                key={id}
+                                key={col.id}
                                 className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm text-[#262626]"
                               >
                                 <input
                                   type="checkbox"
-                                  checked={visibleColumns.has(id)}
-                                  onChange={() => toggleColumn(id)}
-                                  disabled={visibleColumns.has(id) && visibleColumns.size <= 1}
+                                  checked={visibleColumns.has(col.id)}
+                                  onChange={() => toggleColumn(col.id)}
+                                  disabled={visibleColumns.has(col.id) && visibleColumns.size <= 1}
                                   className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
                                 />
-                                <span>{TOPIC_LABELS[id] ?? id}</span>
+                                <span>{col.label}</span>
                               </label>
                             ))}
                           </div>
@@ -485,16 +507,18 @@ export function ResultsTableCard() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedRows.map((row) => (
+                {paginatedRows.map((r) => {
+                  const row = r as { brand: string; [k: string]: unknown };
+                  return (
                   <tr key={row.brand} className="border-b border-[#e5e5e5] last:border-b-0 hover:bg-[#fafafa]">
                     <td className="sticky left-0 z-10 bg-[#f5f5f5] py-3 px-4 font-medium text-[#262626] border-r border-[#e5e5e5] whitespace-nowrap hover:bg-[#eeeeee]">
                       {row.brand.toUpperCase()}
                     </td>
                     {visibleTopicColumns.map((col) => {
-                      const score = row[col.id as keyof typeof row];
+                      const score = row[col.id];
                       const num = typeof score === "number" ? score : 0;
                       const pct = maxVal > 0 ? Math.min(1, Math.max(0, num / maxVal)) : 0;
-                      const changeKey = `change${col.id.charAt(0).toUpperCase()}${col.id.slice(1)}` as keyof typeof row;
+                      const changeKey = `change${col.id.charAt(0).toUpperCase()}${col.id.slice(1)}`;
                       const change = row[changeKey];
                       const changeNum = typeof change === "number" && Number.isFinite(change) ? change : null;
                       const changePositive = changeNum != null && changeNum > 0;
@@ -520,7 +544,7 @@ export function ResultsTableCard() {
                                 </span>
                               )}
                             </div>
-                            <div className="h-2 w-full rounded-full bg-[#f0f0f0] overflow-hidden">
+                            <div className="h-2 w-[120px] rounded-full bg-[#f0f0f0] overflow-hidden shrink-0">
                               <div
                                 className="h-full rounded-full bg-[var(--primary-dark)] transition-all duration-300"
                                 style={{ width: `${pct * 100}%` }}
@@ -532,7 +556,8 @@ export function ResultsTableCard() {
                     })}
                     <td className="py-3 px-3 bg-[#fafafa] border-b border-[#e5e5e5] last:border-b-0 w-12" />
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

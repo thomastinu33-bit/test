@@ -1,0 +1,448 @@
+Report Date,Target Brand,Model Maker,Model,Brand,Metric,Overall,AI Brand Index,Price,Brand Reputation,Ingredients,Dermatologist Recommendation,Skin Type Compatibility,Effectiveness,Sustainability,Quality,Packaging,Safety
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CETAPHIL,AI Brand Score,16.0,12.0,13.0,19.0,0.0,47.0,15.0,11.0,0.0,1.0,0.0,28.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CETAPHIL,Visibility Score,26.0,23.0,22.0,44.0,1.0,73.0,20.0,18.0,0.0,2.0,0.0,34.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CETAPHIL,Average Position,6.9,9.3,6.4,10.2,9.0,5.9,4.6,6.7,0.0,7.0,0.0,3.3
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NEUTROGENA,AI Brand Score,14.0,16.0,8.0,33.0,4.0,16.0,8.0,29.0,0.0,1.0,0.0,7.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NEUTROGENA,Visibility Score,23.0,30.0,16.0,62.0,6.0,24.0,14.0,40.0,0.0,2.0,0.0,10.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NEUTROGENA,Average Position,6.6,8.8,8.3,8.0,4.0,5.7,7.1,4.8,0.0,7.3,0.0,5.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ULTRA VIOLETTE,AI Brand Score,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ULTRA VIOLETTE,Visibility Score,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ULTRA VIOLETTE,Average Position,10.8,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,10.8,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLE DE PEAU BEAUTE,AI Brand Score,1.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLE DE PEAU BEAUTE,Visibility Score,2.0,6.0,0.0,1.0,0.0,0.0,0.0,1.0,0.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLE DE PEAU BEAUTE,Average Position,17.1,15.6,0.0,17.0,0.0,0.0,0.0,24.0,0.0,0.0,12.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ROC,AI Brand Score,1.0,0.0,0.0,0.0,0.0,4.0,0.0,1.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ROC,Visibility Score,2.0,0.0,0.0,0.0,1.0,6.0,1.0,2.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ROC,Average Position,10.0,0.0,0.0,0.0,8.0,7.1,12.0,13.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ACTIVIST SKINCARE,AI Brand Score,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ACTIVIST SKINCARE,Visibility Score,8.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,14.0,0.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ACTIVIST SKINCARE,Average Position,10.7,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.4,0.0,16.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PHILOSOPHY,AI Brand Score,2.0,0.0,0.0,2.0,0.0,0.0,0.0,0.0,6.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PHILOSOPHY,Visibility Score,4.0,1.0,0.0,6.0,1.0,0.0,0.0,0.0,13.0,0.0,1.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PHILOSOPHY,Average Position,12.3,25.0,0.0,14.0,10.0,0.0,0.0,0.0,8.9,0.0,8.0,8.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINCEUTICALS,AI Brand Score,15.0,9.0,0.0,52.0,5.0,14.0,2.0,16.0,0.0,16.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINCEUTICALS,Visibility Score,25.0,23.0,0.0,82.0,6.0,25.0,5.0,29.0,0.0,30.0,0.0,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINCEUTICALS,Average Position,8.3,12.8,0.0,6.2,4.6,7.8,10.0,7.4,0.0,8.8,0.0,8.6
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CAUDALIE,AI Brand Score,1.0,0.0,0.0,2.0,0.0,0.0,0.0,0.0,1.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CAUDALIE,Visibility Score,2.0,0.0,0.0,6.0,0.0,0.0,0.0,1.0,2.0,1.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CAUDALIE,Average Position,11.7,0.0,0.0,16.2,0.0,0.0,0.0,15.0,11.0,7.0,9.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BYRDIE,AI Brand Score,2.0,3.0,0.0,4.0,2.0,1.0,1.0,6.0,4.0,1.0,1.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BYRDIE,Visibility Score,6.0,10.0,0.0,18.0,3.0,3.0,1.0,11.0,8.0,2.0,2.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BYRDIE,Average Position,10.4,16.4,0.0,17.7,9.0,11.8,5.0,10.6,9.7,9.0,7.5,7.8
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AESTURA,AI Brand Score,2.0,1.0,0.0,1.0,5.0,1.0,2.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AESTURA,Visibility Score,3.0,3.0,0.0,2.0,9.0,2.0,3.0,1.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AESTURA,Average Position,10.9,14.6,0.0,16.3,7.2,10.5,7.8,9.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DR. DENNIS GROSS,AI Brand Score,3.0,2.0,0.0,8.0,0.0,1.0,1.0,5.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DR. DENNIS GROSS,Visibility Score,8.0,6.0,0.0,21.0,0.0,2.0,1.0,10.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DR. DENNIS GROSS,Average Position,9.6,13.6,0.0,12.9,0.0,7.0,4.0,10.5,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,EMBRYOLISSE,AI Brand Score,1.0,0.0,0.0,0.0,0.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,EMBRYOLISSE,Visibility Score,2.0,2.0,0.0,0.0,1.0,0.0,7.0,1.0,0.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,EMBRYOLISSE,Average Position,11.4,23.5,0.0,0.0,7.0,0.0,8.6,11.0,0.0,0.0,0.0,7.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DERMSTORE,AI Brand Score,11.0,6.0,0.0,33.0,1.0,13.0,20.0,4.0,0.0,7.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DERMSTORE,Visibility Score,18.0,12.0,0.0,53.0,2.0,25.0,27.0,6.0,0.0,14.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DERMSTORE,Average Position,7.6,9.0,0.0,6.5,7.0,8.2,5.7,6.1,0.0,9.3,0.0,9.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VEXX SKINCARE,AI Brand Score,1.0,0.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VEXX SKINCARE,Visibility Score,3.0,1.0,0.0,6.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VEXX SKINCARE,Average Position,9.6,10.7,0.0,8.1,0.0,0.0,0.0,10.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DRIPTU,AI Brand Score,2.0,2.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DRIPTU,Visibility Score,4.0,4.0,0.0,6.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DRIPTU,Average Position,12.9,10.4,0.0,10.6,0.0,0.0,0.0,0.0,0.0,17.5,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INSTYLE,AI Brand Score,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INSTYLE,Visibility Score,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,10.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INSTYLE,Average Position,9.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.5,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ETHIQUE,AI Brand Score,14.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,28.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ETHIQUE,Visibility Score,28.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,54.0,0.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ETHIQUE,Average Position,9.6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8.7,0.0,10.5,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HENUA,AI Brand Score,2.0,1.0,0.0,1.0,0.0,0.0,0.0,0.0,2.0,0.0,6.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HENUA,Visibility Score,6.0,4.0,0.0,7.0,0.0,0.0,0.0,1.0,6.0,0.0,14.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HENUA,Average Position,16.9,22.1,0.0,19.8,0.0,0.0,0.0,15.0,16.2,0.0,11.4,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GLIMMER GODDESS,AI Brand Score,2.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,0.0,0.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GLIMMER GODDESS,Visibility Score,3.0,0.0,0.0,0.0,1.0,0.0,6.0,0.0,1.0,0.0,0.0,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GLIMMER GODDESS,Average Position,10.3,0.0,0.0,0.0,9.0,0.0,10.3,0.0,18.0,0.0,0.0,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,STICKI,AI Brand Score,9.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,STICKI,Visibility Score,14.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,14.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,STICKI,Average Position,5.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.9,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ELTAMD,AI Brand Score,12.0,6.0,0.0,47.0,1.0,14.0,1.0,11.0,0.0,6.0,0.0,9.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ELTAMD,Visibility Score,21.0,13.0,0.0,77.0,2.0,30.0,1.0,19.0,0.0,16.0,0.0,14.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ELTAMD,Average Position,7.7,10.1,0.0,6.8,5.5,9.5,4.0,7.6,0.0,11.6,0.0,6.4
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BEAUTY OF JOSEON,AI Brand Score,4.0,1.0,0.0,1.0,0.0,0.0,5.0,3.0,0.0,0.0,12.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BEAUTY OF JOSEON,Visibility Score,10.0,5.0,0.0,6.0,0.0,0.0,9.0,7.0,0.0,0.0,25.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BEAUTY OF JOSEON,Average Position,13.8,18.4,0.0,19.1,0.0,0.0,8.5,13.6,0.0,0.0,9.5,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,URSA MAJOR,AI Brand Score,3.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,14.0,3.0,1.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,URSA MAJOR,Visibility Score,5.0,0.0,0.0,1.0,1.0,0.0,0.0,2.0,22.0,5.0,1.0,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,URSA MAJOR,Average Position,7.4,0.0,0.0,10.0,6.0,0.0,0.0,12.0,6.3,8.0,5.0,4.8
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HALE COSMECEUTICALS,AI Brand Score,43.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,43.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HALE COSMECEUTICALS,Visibility Score,60.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,60.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HALE COSMECEUTICALS,Average Position,4.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.9,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DRUNK ELEPHANT,AI Brand Score,16.0,17.0,0.0,23.0,16.0,1.0,9.0,11.0,0.0,25.0,53.0,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DRUNK ELEPHANT,Visibility Score,27.0,40.0,0.0,64.0,24.0,2.0,14.0,19.0,1.0,36.0,69.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DRUNK ELEPHANT,Average Position,8.6,11.3,0.0,12.8,5.2,7.3,6.1,8.3,20.0,5.3,4.4,4.9
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ORDINARY,AI Brand Score,50.0,68.0,84.0,41.0,85.0,40.0,46.0,69.0,3.0,48.0,40.0,25.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ORDINARY,Visibility Score,68.0,89.0,98.0,82.0,91.0,61.0,69.0,87.0,5.0,64.0,61.0,37.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ORDINARY,Average Position,5.1,4.4,2.8,9.2,1.8,5.9,5.9,4.0,6.7,4.3,6.0,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SCHWEIGER DERMATOLOGY GROUP,AI Brand Score,6.0,2.0,0.0,0.0,1.0,16.0,1.0,11.0,0.0,5.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SCHWEIGER DERMATOLOGY GROUP,Visibility Score,8.0,2.0,0.0,0.0,2.0,20.0,2.0,15.0,0.0,11.0,0.0,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SCHWEIGER DERMATOLOGY GROUP,Average Position,6.3,5.5,0.0,0.0,4.5,3.8,8.5,6.0,0.0,10.3,0.0,5.5
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WISEMEN ACADEMY,AI Brand Score,2.0,2.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WISEMEN ACADEMY,Visibility Score,4.0,5.0,0.0,7.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WISEMEN ACADEMY,Average Position,11.8,10.9,0.0,10.4,0.0,0.0,0.0,14.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BYOMA,AI Brand Score,15.0,14.0,37.0,1.0,22.0,0.0,27.0,8.0,0.0,10.0,15.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BYOMA,Visibility Score,26.0,28.0,65.0,2.0,32.0,0.0,45.0,16.0,0.0,17.0,26.0,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BYOMA,Average Position,7.4,10.3,7.2,10.0,5.1,0.0,6.7,8.0,0.0,7.0,7.2,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FIRST AID BEAUTY,AI Brand Score,2.0,1.0,0.0,1.0,1.0,0.0,12.0,1.0,0.0,1.0,2.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FIRST AID BEAUTY,Visibility Score,5.0,4.0,0.0,4.0,2.0,1.0,20.0,2.0,0.0,3.0,3.0,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FIRST AID BEAUTY,Average Position,10.1,11.2,0.0,17.0,7.0,8.0,7.1,12.3,0.0,9.2,8.8,10.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BABOR,AI Brand Score,2.0,1.0,0.0,1.0,0.0,0.0,0.0,4.0,0.0,0.0,0.0,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BABOR,Visibility Score,3.0,2.0,0.0,1.0,1.0,0.0,0.0,7.0,0.0,0.0,0.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BABOR,Average Position,8.3,17.8,0.0,4.0,8.0,0.0,0.0,6.9,0.0,0.0,0.0,4.9
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,OSEA,AI Brand Score,8.0,1.0,0.0,1.0,4.0,0.0,2.0,2.0,41.0,4.0,7.0,15.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,OSEA,Visibility Score,13.0,3.0,0.0,3.0,7.0,0.0,4.0,4.0,54.0,8.0,10.0,26.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,OSEA,Average Position,8.9,11.4,0.0,14.8,8.2,0.0,9.0,9.8,4.3,9.9,5.8,7.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,UPCIRCLE BEAUTY,AI Brand Score,22.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,22.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,UPCIRCLE BEAUTY,Visibility Score,42.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,42.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,UPCIRCLE BEAUTY,Average Position,8.8,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8.8,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WATTS BEAUTY USA,AI Brand Score,7.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WATTS BEAUTY USA,Visibility Score,12.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,12.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WATTS BEAUTY USA,Average Position,6.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,6.5,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLINIQUE,AI Brand Score,11.0,10.0,1.0,11.0,2.0,26.0,23.0,11.0,0.0,17.0,2.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLINIQUE,Visibility Score,20.0,23.0,2.0,25.0,3.0,48.0,39.0,22.0,0.0,28.0,5.0,10.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLINIQUE,Average Position,8.7,11.3,10.0,10.8,7.8,7.5,6.8,9.4,0.0,7.2,8.8,7.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HERBIVORE,AI Brand Score,7.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,29.0,0.0,14.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HERBIVORE,Visibility Score,13.0,2.0,0.0,1.0,0.0,0.0,0.0,1.0,53.0,1.0,26.0,7.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HERBIVORE,Average Position,14.0,18.8,0.0,24.0,0.0,0.0,0.0,18.0,7.9,11.0,9.2,9.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LA MER,AI Brand Score,8.0,7.0,0.0,14.0,0.0,0.0,0.0,2.0,0.0,19.0,8.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LA MER,Visibility Score,16.0,19.0,0.0,37.0,1.0,0.0,0.0,4.0,0.0,26.0,13.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LA MER,Average Position,9.6,14.2,0.0,13.2,8.0,0.0,0.0,10.6,0.0,4.8,6.8,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SK-II,AI Brand Score,8.0,8.0,0.0,11.0,0.0,0.0,0.0,2.0,0.0,23.0,4.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SK-II,Visibility Score,16.0,21.0,0.0,25.0,0.0,1.0,0.0,4.0,0.0,36.0,6.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SK-II,Average Position,9.3,12.4,0.0,11.0,0.0,9.0,0.0,10.6,0.0,6.3,6.6,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,OCEANLY,AI Brand Score,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,OCEANLY,Visibility Score,4.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,OCEANLY,Average Position,7.6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.0,0.0,0.0,10.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VANICREAM,AI Brand Score,10.0,7.0,6.0,4.0,3.0,38.0,2.0,9.0,0.0,0.0,0.0,18.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VANICREAM,Visibility Score,19.0,14.0,10.0,11.0,6.0,71.0,4.0,21.0,0.0,1.0,0.0,30.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VANICREAM,Average Position,8.7,8.6,7.3,13.2,8.3,7.9,7.6,10.5,0.0,8.0,0.0,6.6
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DIFFERIN,AI Brand Score,2.0,1.0,0.0,0.0,0.0,4.0,0.0,2.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DIFFERIN,Visibility Score,4.0,3.0,0.0,0.0,0.0,8.0,0.0,5.0,0.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DIFFERIN,Average Position,12.5,17.3,0.0,0.0,0.0,9.2,0.0,10.5,0.0,0.0,0.0,13.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SPOCKET,AI Brand Score,5.0,3.0,0.0,16.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SPOCKET,Visibility Score,8.0,6.0,0.0,25.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SPOCKET,Average Position,9.1,10.3,0.0,7.2,0.0,0.0,0.0,16.0,0.0,0.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VICHY,AI Brand Score,5.0,3.0,0.0,11.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VICHY,Visibility Score,16.0,10.0,0.0,33.0,0.0,0.0,0.0,4.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VICHY,Average Position,15.7,18.8,0.0,13.8,0.0,0.0,0.0,14.4,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FENTY,AI Brand Score,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FENTY,Visibility Score,7.0,1.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,18.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FENTY,Average Position,16.3,19.7,0.0,18.0,0.0,0.0,0.0,0.0,0.0,0.0,11.1,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CERAVE,AI Brand Score,49.0,49.0,64.0,74.0,24.0,86.0,47.0,36.0,0.0,12.0,0.0,53.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CERAVE,Visibility Score,66.0,65.0,98.0,90.0,32.0,99.0,64.0,44.0,0.0,26.0,0.0,72.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CERAVE,Average Position,4.9,4.7,5.9,3.4,4.6,2.9,4.9,3.4,0.0,9.7,0.0,4.7
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NIVEA,AI Brand Score,8.0,10.0,0.0,7.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NIVEA,Visibility Score,19.0,19.0,0.0,18.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NIVEA,Average Position,10.8,9.0,0.0,12.6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,EMINENCE,AI Brand Score,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,EMINENCE,Visibility Score,5.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,15.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,EMINENCE,Average Position,9.8,0.0,0.0,0.0,11.0,0.0,0.0,0.0,8.6,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TIMELESS SKINCARE,AI Brand Score,3.0,1.0,0.0,0.0,7.0,1.0,0.0,1.0,0.0,3.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TIMELESS SKINCARE,Visibility Score,3.0,1.0,0.0,0.0,8.0,1.0,0.0,2.0,0.0,5.0,0.0,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TIMELESS SKINCARE,Average Position,4.4,3.5,0.0,0.0,2.9,5.0,0.0,3.5,0.0,4.7,0.0,7.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GOOD MOLECULES,AI Brand Score,10.0,2.0,50.0,1.0,13.0,11.0,12.0,3.0,1.0,6.0,5.0,9.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GOOD MOLECULES,Visibility Score,17.0,4.0,74.0,3.0,18.0,19.0,26.0,6.0,2.0,13.0,10.0,15.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GOOD MOLECULES,Average Position,8.9,10.8,5.3,14.8,5.4,7.1,9.2,11.5,8.5,9.4,9.7,6.7
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,REN,AI Brand Score,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,10.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,REN,Visibility Score,19.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,19.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,REN,Average Position,9.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CARBO EUROPE,AI Brand Score,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8.0,0.0,3.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CARBO EUROPE,Visibility Score,9.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,13.0,0.0,6.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CARBO EUROPE,Average Position,7.7,0.0,0.0,0.0,0.0,0.0,0.0,0.0,6.7,0.0,8.7,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LUMINLI,AI Brand Score,4.0,1.0,0.0,0.0,0.0,15.0,0.0,1.0,0.0,1.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LUMINLI,Visibility Score,8.0,2.0,0.0,0.0,0.0,28.0,0.0,1.0,0.0,2.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LUMINLI,Average Position,9.0,13.8,0.0,0.0,0.0,7.7,0.0,4.0,0.0,10.5,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WHO WHAT WEAR,AI Brand Score,6.0,3.0,6.0,7.0,6.0,3.0,1.0,5.0,13.0,1.0,0.0,10.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WHO WHAT WEAR,Visibility Score,11.0,11.0,12.0,17.0,9.0,6.0,3.0,10.0,21.0,2.0,0.0,14.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WHO WHAT WEAR,Average Position,9.4,16.7,8.4,12.0,6.1,10.0,9.2,12.0,7.3,7.0,0.0,5.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LUSSOPACK,AI Brand Score,7.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LUSSOPACK,Visibility Score,12.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,12.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LUSSOPACK,Average Position,8.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8.1,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VERSED,AI Brand Score,2.0,0.0,5.0,0.0,0.0,0.0,0.0,0.0,4.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VERSED,Visibility Score,5.0,1.0,11.0,1.0,0.0,0.0,0.0,2.0,13.0,0.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,VERSED,Average Position,15.3,26.0,10.4,16.0,0.0,0.0,0.0,13.5,12.6,0.0,13.5,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FRESH,AI Brand Score,3.0,1.0,1.0,0.0,0.0,0.0,1.0,1.0,0.0,7.0,16.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FRESH,Visibility Score,6.0,3.0,2.0,1.0,1.0,0.0,2.0,1.0,2.0,10.0,34.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FRESH,Average Position,9.4,10.1,10.0,14.0,8.0,0.0,9.3,4.0,14.0,4.8,9.3,10.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PRETTY TRENDIE,AI Brand Score,7.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,11.0,0.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PRETTY TRENDIE,Visibility Score,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,18.0,0.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PRETTY TRENDIE,Average Position,6.6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.9,0.0,0.0,7.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ELF,AI Brand Score,11.0,4.0,67.0,0.0,2.0,0.0,3.0,1.0,0.0,0.0,7.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ELF,Visibility Score,16.0,7.0,96.0,2.0,2.0,0.0,5.0,2.0,0.0,0.0,10.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ELF,Average Position,7.1,6.8,5.0,17.5,3.7,0.0,5.7,8.3,0.0,0.0,5.2,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KIEHL'S,AI Brand Score,18.0,19.0,4.0,20.0,31.0,28.0,22.0,26.0,0.0,37.0,4.0,8.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KIEHL'S,Visibility Score,29.0,32.0,8.0,44.0,42.0,47.0,34.0,38.0,1.0,54.0,7.0,12.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KIEHL'S,Average Position,7.1,7.5,7.2,10.8,4.3,6.6,6.1,5.5,12.0,5.6,6.2,5.9
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,POND'S,AI Brand Score,3.0,0.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,POND'S,Visibility Score,5.0,1.0,8.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,POND'S,Average Position,12.0,17.3,6.7,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ZO SKIN HEALTH,AI Brand Score,1.0,0.0,0.0,0.0,1.0,4.0,0.0,1.0,0.0,1.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ZO SKIN HEALTH,Visibility Score,3.0,2.0,0.0,0.0,2.0,10.0,1.0,2.0,0.0,2.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ZO SKIN HEALTH,Average Position,10.4,18.0,0.0,0.0,7.0,9.9,6.0,14.7,0.0,9.0,0.0,8.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ATTITUDE,AI Brand Score,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ATTITUDE,Visibility Score,4.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,0.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ATTITUDE,Average Position,8.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,6.7,0.0,0.0,9.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVEENO,AI Brand Score,6.0,9.0,0.0,11.0,0.0,2.0,1.0,10.0,0.0,0.0,0.0,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVEENO,Visibility Score,13.0,21.0,0.0,28.0,0.0,5.0,2.0,18.0,0.0,0.0,0.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVEENO,Average Position,9.2,11.6,0.0,11.7,0.0,11.5,6.0,7.9,0.0,0.0,0.0,6.3
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ILIA,AI Brand Score,4.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,6.0,0.0,1.0,12.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ILIA,Visibility Score,6.0,2.0,0.0,2.0,2.0,0.0,0.0,0.0,10.0,0.0,2.0,18.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ILIA,Average Position,6.6,5.2,0.0,5.5,6.0,0.0,0.0,0.0,7.5,0.0,10.0,5.3
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COSMETIFY,AI Brand Score,2.0,2.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COSMETIFY,Visibility Score,5.0,5.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COSMETIFY,Average Position,11.0,14.5,0.0,7.6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MYREMIH,AI Brand Score,80.0,0.0,80.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MYREMIH,Visibility Score,91.0,0.0,91.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MYREMIH,Average Position,2.9,0.0,2.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INKEY LIST,AI Brand Score,5.0,4.0,31.0,1.0,1.0,3.0,2.0,4.0,0.0,3.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INKEY LIST,Visibility Score,7.0,9.0,45.0,1.0,1.0,6.0,2.0,6.0,0.0,4.0,1.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INKEY LIST,Average Position,7.8,15.3,5.0,3.0,3.0,6.6,6.0,5.1,0.0,3.2,22.0,9.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AESOP,AI Brand Score,3.0,3.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,9.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AESOP,Visibility Score,9.0,12.0,0.0,4.0,0.0,0.0,0.0,0.0,2.0,0.0,20.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AESOP,Average Position,13.7,16.3,0.0,19.6,0.0,0.0,0.0,0.0,8.5,0.0,10.4,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ESTEE LAUDER,AI Brand Score,16.0,20.0,0.0,29.0,3.0,3.0,2.0,32.0,0.0,36.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ESTEE LAUDER,Visibility Score,24.0,36.0,0.0,53.0,5.0,6.0,5.0,38.0,0.0,44.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ESTEE LAUDER,Average Position,7.7,8.7,0.0,9.0,7.0,9.4,11.8,3.1,0.0,3.8,9.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HEALTHY LIVING AND BEAUTY,AI Brand Score,2.0,0.0,0.0,6.0,0.0,2.0,0.0,1.0,0.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HEALTHY LIVING AND BEAUTY,Visibility Score,6.0,2.0,0.0,16.0,0.0,5.0,0.0,3.0,0.0,0.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HEALTHY LIVING AND BEAUTY,Average Position,12.0,17.4,0.0,12.4,0.0,10.5,0.0,11.8,0.0,0.0,0.0,7.7
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ALLURE,AI Brand Score,2.0,1.0,0.0,0.0,0.0,1.0,3.0,1.0,0.0,4.0,0.0,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ALLURE,Visibility Score,3.0,2.0,0.0,1.0,1.0,4.0,6.0,2.0,0.0,5.0,1.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ALLURE,Average Position,10.2,4.8,0.0,25.0,11.0,13.2,10.5,3.0,0.0,3.5,15.0,5.8
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BIODERMA,AI Brand Score,4.0,7.0,0.0,7.0,0.0,0.0,2.0,1.0,0.0,0.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BIODERMA,Visibility Score,11.0,18.0,0.0,22.0,0.0,0.0,3.0,4.0,0.0,0.0,0.0,7.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BIODERMA,Average Position,10.7,12.0,0.0,13.2,0.0,0.0,6.5,12.4,0.0,0.0,0.0,9.7
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COCOKIND,AI Brand Score,16.0,0.0,1.0,0.0,6.0,0.0,0.0,3.0,81.0,3.0,0.0,30.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COCOKIND,Visibility Score,19.0,1.0,1.0,0.0,7.0,0.0,1.0,4.0,94.0,6.0,0.0,41.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COCOKIND,Average Position,5.7,10.5,5.0,0.0,3.3,0.0,6.0,5.6,2.6,7.3,0.0,4.8
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MAD HIPPIE,AI Brand Score,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,15.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MAD HIPPIE,Visibility Score,6.0,4.0,0.0,2.0,1.0,0.0,0.0,0.0,24.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MAD HIPPIE,Average Position,14.6,26.3,0.0,24.0,8.0,0.0,0.0,0.0,6.4,0.0,0.0,8.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVOCADU,AI Brand Score,4.0,1.0,0.0,8.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVOCADU,Visibility Score,6.0,1.0,0.0,13.0,0.0,1.0,0.0,6.0,0.0,0.0,0.0,11.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVOCADU,Average Position,7.9,5.7,0.0,7.2,0.0,9.0,0.0,9.6,0.0,0.0,0.0,7.9
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NORTHWESTERN MEDICINE,AI Brand Score,6.0,0.0,0.0,0.0,28.0,2.0,1.0,2.0,0.0,1.0,0.0,10.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NORTHWESTERN MEDICINE,Visibility Score,9.0,1.0,0.0,0.0,38.0,5.0,1.0,5.0,0.0,1.0,0.0,11.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NORTHWESTERN MEDICINE,Average Position,6.0,8.5,0.0,0.0,5.2,9.5,2.0,13.0,0.0,1.0,0.0,2.5
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BODY SHOP,AI Brand Score,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,10.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BODY SHOP,Visibility Score,20.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,20.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BODY SHOP,Average Position,9.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.2,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INDIE LEE,AI Brand Score,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INDIE LEE,Visibility Score,3.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,7.0,0.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INDIE LEE,Average Position,8.1,0.0,0.0,0.0,7.0,0.0,0.0,0.0,8.0,0.0,0.0,9.3
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MURAD,AI Brand Score,1.0,1.0,0.0,2.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MURAD,Visibility Score,4.0,6.0,0.0,5.0,1.0,0.0,0.0,3.0,3.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MURAD,Average Position,13.2,22.1,0.0,13.3,8.0,0.0,0.0,10.5,12.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SHISEIDO,AI Brand Score,4.0,3.0,0.0,2.0,1.0,0.0,0.0,2.0,0.0,15.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SHISEIDO,Visibility Score,7.0,10.0,0.0,5.0,2.0,0.0,0.0,4.0,0.0,22.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SHISEIDO,Average Position,9.0,13.7,0.0,10.8,5.5,0.0,0.0,11.2,0.0,5.3,7.7,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,L'OREAL PARIS,AI Brand Score,2.0,6.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,L'OREAL PARIS,Visibility Score,4.0,8.0,1.0,9.0,0.0,1.0,2.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,L'OREAL PARIS,Average Position,10.9,5.4,10.0,10.3,0.0,14.0,15.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINGLEAM,AI Brand Score,48.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,48.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINGLEAM,Visibility Score,73.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,73.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINGLEAM,Average Position,5.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.9,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DR. JART+,AI Brand Score,2.0,3.0,0.0,2.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DR. JART+,Visibility Score,6.0,15.0,0.0,10.0,0.0,0.0,2.0,2.0,0.0,0.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DR. JART+,Average Position,13.5,20.8,0.0,17.8,0.0,0.0,4.0,17.5,0.0,0.0,0.0,7.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DOVE,AI Brand Score,4.0,5.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DOVE,Visibility Score,9.0,11.0,0.0,8.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DOVE,Average Position,13.0,11.8,0.0,14.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,YOUTH TO THE PEOPLE,AI Brand Score,14.0,11.0,0.0,4.0,29.0,0.0,19.0,10.0,27.0,13.0,16.0,12.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,YOUTH TO THE PEOPLE,Visibility Score,25.0,24.0,0.0,10.0,46.0,1.0,38.0,22.0,36.0,28.0,30.0,20.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,YOUTH TO THE PEOPLE,Average Position,8.9,9.9,0.0,13.0,6.2,11.0,8.8,9.7,4.6,9.7,8.3,7.4
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HEALTHLINE,AI Brand Score,7.0,6.0,0.0,0.0,1.0,0.0,18.0,0.0,0.0,3.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HEALTHLINE,Visibility Score,12.0,8.0,0.0,0.0,2.0,0.0,32.0,0.0,0.0,7.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HEALTHLINE,Average Position,8.1,4.7,0.0,0.0,10.5,0.0,8.2,0.0,0.0,9.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TULA,AI Brand Score,1.0,3.0,0.0,2.0,1.0,0.0,3.0,1.0,0.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TULA,Visibility Score,3.0,7.0,1.0,4.0,2.0,0.0,5.0,2.0,2.0,1.0,2.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TULA,Average Position,11.7,15.6,12.0,10.4,8.0,0.0,7.5,7.3,17.0,13.0,11.3,15.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ALPYN BEAUTY,AI Brand Score,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ALPYN BEAUTY,Visibility Score,3.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,8.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ALPYN BEAUTY,Average Position,12.3,0.0,0.0,0.0,0.0,0.0,0.0,17.0,11.0,0.0,0.0,9.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BIOSSANCE,AI Brand Score,12.0,0.0,0.0,1.0,27.0,0.0,0.0,1.0,51.0,0.0,3.0,17.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BIOSSANCE,Visibility Score,18.0,2.0,0.0,3.0,36.0,0.0,1.0,2.0,71.0,0.0,5.0,22.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BIOSSANCE,Average Position,10.4,22.2,0.0,17.2,4.3,0.0,12.0,12.0,5.1,0.0,6.3,4.1
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLARINS,AI Brand Score,7.0,4.0,0.0,12.0,1.0,0.0,0.0,8.0,0.0,12.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLARINS,Visibility Score,17.0,12.0,0.0,38.0,2.0,0.0,0.0,14.0,0.0,18.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLARINS,Average Position,10.6,15.2,0.0,14.1,9.0,0.0,0.0,9.1,0.0,5.9,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COSRX,AI Brand Score,2.0,3.0,1.0,3.0,4.0,0.0,2.0,4.0,0.0,2.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COSRX,Visibility Score,6.0,11.0,1.0,10.0,6.0,0.0,4.0,7.0,0.0,3.0,5.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COSRX,Average Position,10.3,17.9,5.0,16.8,5.6,0.0,9.0,8.8,0.0,5.8,13.8,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CULT BEAUTY,AI Brand Score,2.0,1.0,6.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CULT BEAUTY,Visibility Score,3.0,1.0,8.0,0.0,2.0,0.0,1.0,0.0,0.0,2.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CULT BEAUTY,Average Position,7.2,8.3,4.3,0.0,4.5,0.0,14.0,0.0,0.0,8.3,3.7,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BOOTS,AI Brand Score,4.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BOOTS,Visibility Score,7.0,0.0,0.0,0.0,0.0,0.0,14.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BOOTS,Average Position,9.7,0.0,0.0,0.0,0.0,0.0,9.7,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KORRES,AI Brand Score,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KORRES,Visibility Score,6.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,6.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KORRES,Average Position,13.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,13.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,EQUATE BEAUTY,AI Brand Score,5.0,0.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,EQUATE BEAUTY,Visibility Score,10.0,0.0,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,EQUATE BEAUTY,Average Position,7.6,0.0,7.6,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HADA LABO,AI Brand Score,2.0,3.0,0.0,7.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HADA LABO,Visibility Score,10.0,13.0,0.0,30.0,0.0,0.0,0.0,6.0,2.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HADA LABO,Average Position,15.3,19.5,0.0,16.7,0.0,0.0,0.0,15.4,12.0,0.0,13.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLEAN & CLEAR,AI Brand Score,2.0,2.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLEAN & CLEAR,Visibility Score,5.0,6.0,4.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CLEAN & CLEAR,Average Position,11.3,14.6,8.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,RHODE,AI Brand Score,10.0,12.0,0.0,6.0,14.0,0.0,0.0,4.0,0.0,15.0,30.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,RHODE,Visibility Score,19.0,23.0,0.0,22.0,20.0,0.0,2.0,8.0,0.0,30.0,47.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,RHODE,Average Position,9.7,9.8,0.0,14.7,5.5,0.0,16.5,8.5,0.0,8.7,6.2,8.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SIMPLE,AI Brand Score,20.0,24.0,42.0,8.0,9.0,14.0,19.0,15.0,8.0,8.0,39.0,30.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SIMPLE,Visibility Score,36.0,43.0,73.0,21.0,17.0,27.0,38.0,30.0,15.0,18.0,70.0,50.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SIMPLE,Average Position,8.7,8.6,7.3,12.3,8.1,8.7,9.1,9.2,7.8,9.7,7.7,7.1
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DERMALOGICA,AI Brand Score,37.0,37.0,0.0,12.0,41.0,53.0,46.0,42.0,0.0,55.0,21.0,29.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DERMALOGICA,Visibility Score,56.0,52.0,0.0,18.0,60.0,82.0,68.0,63.0,0.0,82.0,31.0,46.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DERMALOGICA,Average Position,5.6,5.3,0.0,5.8,5.1,5.7,5.9,5.5,0.0,5.4,5.2,5.9
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BUBBLE,AI Brand Score,15.0,12.0,46.0,1.0,10.0,0.0,33.0,7.0,0.0,3.0,8.0,11.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BUBBLE,Visibility Score,24.0,26.0,68.0,3.0,18.0,0.0,53.0,11.0,0.0,7.0,14.0,16.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BUBBLE,Average Position,8.2,11.1,5.2,14.0,7.2,0.0,6.3,6.2,0.0,10.0,7.9,5.8
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LANEIGE,AI Brand Score,6.0,5.0,0.0,4.0,0.0,0.0,0.0,1.0,0.0,0.0,21.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LANEIGE,Visibility Score,16.0,22.0,0.0,18.0,0.0,0.0,1.0,3.0,0.0,0.0,36.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LANEIGE,Average Position,15.2,18.9,0.0,19.0,0.0,0.0,15.0,15.5,0.0,0.0,7.5,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HIPPIE SKIN,AI Brand Score,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HIPPIE SKIN,Visibility Score,6.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,12.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,HIPPIE SKIN,Average Position,6.3,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.6,0.0,0.0,8.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GLOW RECIPE,AI Brand Score,27.0,38.0,0.0,6.0,32.0,8.0,38.0,34.0,3.0,50.0,58.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GLOW RECIPE,Visibility Score,40.0,57.0,0.0,11.0,48.0,16.0,60.0,55.0,5.0,74.0,74.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GLOW RECIPE,Average Position,6.3,6.0,0.0,7.2,5.5,9.2,6.4,6.9,5.0,5.4,4.3,7.5
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AUGUSTINUS BADER,AI Brand Score,3.0,1.0,0.0,4.0,1.0,0.0,0.0,0.0,0.0,6.0,4.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AUGUSTINUS BADER,Visibility Score,6.0,3.0,0.0,10.0,2.0,0.0,0.0,1.0,0.0,12.0,6.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AUGUSTINUS BADER,Average Position,12.4,15.8,0.0,13.6,7.5,0.0,0.0,21.0,0.0,10.0,6.2,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVEDA,AI Brand Score,9.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVEDA,Visibility Score,18.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,18.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVEDA,Average Position,9.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.2,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,OLAY,AI Brand Score,4.0,8.0,1.0,14.0,1.0,1.0,0.0,1.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,OLAY,Visibility Score,12.0,23.0,2.0,39.0,1.0,2.0,0.0,5.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,OLAY,Average Position,10.3,14.7,11.0,12.6,3.0,4.0,0.0,16.8,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TONYMOLY,AI Brand Score,4.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TONYMOLY,Visibility Score,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,20.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TONYMOLY,Average Position,11.8,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,11.8,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KULANI SPA,AI Brand Score,4.0,3.0,0.0,0.0,0.0,0.0,10.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KULANI SPA,Visibility Score,9.0,7.0,0.0,0.0,0.0,0.0,19.0,0.0,0.0,1.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KULANI SPA,Average Position,10.9,9.8,0.0,0.0,0.0,0.0,8.9,0.0,0.0,14.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ULTA BEAUTY,AI Brand Score,25.0,26.0,44.0,4.0,31.0,50.0,22.0,23.0,3.0,23.0,17.0,29.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ULTA BEAUTY,Visibility Score,35.0,36.0,63.0,7.0,43.0,64.0,35.0,32.0,4.0,36.0,24.0,38.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ULTA BEAUTY,Average Position,5.0,4.8,4.9,6.9,4.6,3.8,6.4,4.3,4.6,6.0,4.6,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TATA HARPER,AI Brand Score,3.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,14.0,0.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TATA HARPER,Visibility Score,7.0,5.0,0.0,2.0,0.0,0.0,0.0,2.0,25.0,0.0,3.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TATA HARPER,Average Position,14.7,24.3,0.0,25.0,0.0,0.0,0.0,9.0,8.0,0.0,7.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SULWHASOO,AI Brand Score,2.0,2.0,0.0,4.0,0.0,0.0,0.0,1.0,0.0,2.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SULWHASOO,Visibility Score,8.0,13.0,0.0,19.0,0.0,0.0,0.0,2.0,0.0,4.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SULWHASOO,Average Position,14.5,20.7,0.0,19.1,0.0,0.0,0.0,13.0,0.0,9.6,10.3,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COSMOSENTIALS,AI Brand Score,4.0,0.0,0.0,0.0,0.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COSMOSENTIALS,Visibility Score,7.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,COSMOSENTIALS,Average Position,9.0,0.0,0.0,0.0,0.0,0.0,9.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LA PRAIRIE,AI Brand Score,3.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,1.0,8.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LA PRAIRIE,Visibility Score,6.0,3.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,1.0,17.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LA PRAIRIE,Average Position,9.0,14.9,0.0,0.0,0.0,0.0,0.0,8.0,0.0,4.0,9.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PAI,AI Brand Score,2.0,0.0,0.0,0.0,0.0,0.0,0.0,4.0,2.0,0.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PAI,Visibility Score,5.0,2.0,0.0,0.0,0.0,0.0,0.0,6.0,5.0,0.0,0.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PAI,Average Position,11.2,16.2,0.0,0.0,0.0,0.0,0.0,6.6,13.2,0.0,0.0,9.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PAULA'S CHOICE,AI Brand Score,12.0,13.0,2.0,23.0,10.0,12.0,12.0,17.0,11.0,5.0,0.0,13.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PAULA'S CHOICE,Visibility Score,22.0,30.0,4.0,46.0,14.0,23.0,21.0,30.0,23.0,8.0,0.0,20.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PAULA'S CHOICE,Average Position,7.7,12.4,6.4,9.3,4.1,8.4,7.6,7.9,9.2,5.5,0.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ORIGINS,AI Brand Score,2.0,2.0,0.0,2.0,1.0,0.0,0.0,1.0,2.0,1.0,7.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ORIGINS,Visibility Score,5.0,7.0,0.0,6.0,3.0,0.0,1.0,2.0,5.0,2.0,12.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ORIGINS,Average Position,12.4,18.8,0.0,14.9,10.0,0.0,15.0,13.0,11.5,8.3,7.4,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVENE,AI Brand Score,3.0,1.0,0.0,2.0,0.0,1.0,4.0,0.0,0.0,0.0,0.0,9.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVENE,Visibility Score,6.0,2.0,0.0,3.0,0.0,2.0,8.0,1.0,0.0,0.0,0.0,18.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,AVENE,Average Position,9.0,7.8,0.0,10.5,0.0,10.5,8.3,9.0,0.0,0.0,0.0,8.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PEACH & LILY,AI Brand Score,16.0,20.0,6.0,0.0,21.0,0.0,34.0,14.0,0.0,28.0,26.0,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PEACH & LILY,Visibility Score,23.0,28.0,9.0,1.0,30.0,0.0,51.0,22.0,1.0,44.0,38.0,9.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PEACH & LILY,Average Position,6.3,4.9,5.6,11.0,4.8,0.0,6.0,6.1,6.0,5.9,4.9,7.6
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SIVO,AI Brand Score,5.0,2.0,0.0,17.0,0.0,3.0,0.0,2.0,0.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SIVO,Visibility Score,11.0,4.0,0.0,42.0,0.0,4.0,0.0,3.0,0.0,0.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SIVO,Average Position,10.2,13.6,0.0,10.9,0.0,5.4,0.0,10.0,0.0,0.0,0.0,11.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ALIBABA,AI Brand Score,8.0,15.0,5.0,9.0,0.0,3.0,0.0,13.0,0.0,12.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ALIBABA,Visibility Score,12.0,23.0,8.0,22.0,1.0,7.0,0.0,22.0,0.0,13.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ALIBABA,Average Position,7.4,6.8,7.0,11.1,10.0,9.0,0.0,7.5,0.0,1.6,0.0,6.5
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BEAUTY MAGNETISM,AI Brand Score,9.0,11.0,0.0,8.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BEAUTY MAGNETISM,Visibility Score,17.0,17.0,0.0,16.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BEAUTY MAGNETISM,Average Position,9.4,8.0,0.0,10.8,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,4S2 TRENDLINE,AI Brand Score,22.0,20.0,0.0,48.0,0.0,49.0,4.0,18.0,0.0,12.0,0.0,25.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,4S2 TRENDLINE,Visibility Score,25.0,25.0,0.0,52.0,1.0,55.0,5.0,19.0,0.0,14.0,0.0,33.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,4S2 TRENDLINE,Average Position,3.5,3.8,0.0,2.0,7.0,2.6,2.5,2.1,0.0,2.9,0.0,4.7
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NATURA,AI Brand Score,4.0,0.0,0.0,0.0,7.0,0.0,0.0,1.0,3.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NATURA,Visibility Score,5.0,0.0,0.0,0.0,10.0,0.0,0.0,1.0,6.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,NATURA,Average Position,4.9,0.0,0.0,0.0,4.4,0.0,0.0,1.0,9.4,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,RODAN + FIELDS,AI Brand Score,2.0,0.0,0.0,4.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,RODAN + FIELDS,Visibility Score,7.0,2.0,0.0,13.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,RODAN + FIELDS,Average Position,22.9,29.4,0.0,16.3,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ECO RESIDE,AI Brand Score,28.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,49.0,0.0,0.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ECO RESIDE,Visibility Score,42.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,71.0,0.0,0.0,12.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ECO RESIDE,Average Position,7.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,5.4,0.0,0.0,9.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LA ROCHE-POSAY,AI Brand Score,32.0,44.0,3.0,71.0,14.0,56.0,36.0,32.0,0.0,11.0,0.0,55.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LA ROCHE-POSAY,Visibility Score,44.0,63.0,5.0,94.0,18.0,75.0,55.0,42.0,0.0,23.0,1.0,68.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LA ROCHE-POSAY,Average Position,6.4,5.5,8.5,4.3,4.0,4.4,6.0,4.1,0.0,9.8,14.0,3.4
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ONE LOVE ORGANICS,AI Brand Score,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,6.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ONE LOVE ORGANICS,Visibility Score,7.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,13.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,ONE LOVE ORGANICS,Average Position,10.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8.9,0.0,12.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WALGREENS,AI Brand Score,8.0,1.0,13.0,1.0,3.0,16.0,6.0,5.0,0.0,0.0,0.0,23.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WALGREENS,Visibility Score,10.0,1.0,19.0,1.0,3.0,22.0,9.0,7.0,0.0,1.0,0.0,27.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,WALGREENS,Average Position,4.5,4.0,5.0,5.0,3.0,4.1,5.1,4.3,0.0,7.0,0.0,2.9
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FARMACY,AI Brand Score,9.0,1.0,0.0,4.0,6.0,0.0,1.0,0.0,35.0,4.0,26.0,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FARMACY,Visibility Score,15.0,4.0,0.0,14.0,9.0,0.0,2.0,1.0,54.0,6.0,39.0,8.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,FARMACY,Average Position,8.7,17.1,0.0,16.9,5.7,0.0,4.5,8.0,6.1,7.6,5.4,6.7
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DIOR,AI Brand Score,1.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,4.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DIOR,Visibility Score,3.0,2.0,0.0,2.0,0.0,0.0,0.0,0.0,0.0,1.0,7.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,DIOR,Average Position,9.1,14.2,0.0,8.0,0.0,0.0,0.0,0.0,0.0,7.0,7.2,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TRUE BOTANICALS,AI Brand Score,7.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,22.0,0.0,0.0,5.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TRUE BOTANICALS,Visibility Score,11.0,1.0,0.0,0.0,0.0,0.0,0.0,1.0,32.0,0.0,0.0,10.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TRUE BOTANICALS,Average Position,12.8,21.0,0.0,0.0,0.0,0.0,0.0,17.0,5.1,0.0,0.0,8.2
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KORA,AI Brand Score,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KORA,Visibility Score,10.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,18.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,KORA,Average Position,16.5,0.0,0.0,24.0,0.0,0.0,0.0,0.0,9.1,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINFIX,AI Brand Score,1.0,1.0,0.0,0.0,0.0,1.0,2.0,0.0,0.0,0.0,1.0,4.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINFIX,Visibility Score,3.0,2.0,0.0,2.0,0.0,2.0,3.0,0.0,0.0,0.0,1.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINFIX,Average Position,8.6,8.0,0.0,18.5,0.0,6.3,8.0,0.0,0.0,0.0,5.0,5.6
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,REVELA,AI Brand Score,3.0,0.0,0.0,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,REVELA,Visibility Score,7.0,0.0,0.0,7.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,REVELA,Average Position,11.4,0.0,0.0,11.4,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MEOW MEOW TWEET,AI Brand Score,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MEOW MEOW TWEET,Visibility Score,4.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MEOW MEOW TWEET,Average Position,10.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0,16.0,0.0,5.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GLOSSIER,AI Brand Score,10.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,19.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GLOSSIER,Visibility Score,16.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,31.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,GLOSSIER,Average Position,7.3,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.3,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINBETTER SCIENCE,AI Brand Score,1.0,0.0,0.0,0.0,0.0,3.0,1.0,2.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINBETTER SCIENCE,Visibility Score,3.0,0.0,0.0,2.0,0.0,5.0,1.0,6.0,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SKINBETTER SCIENCE,Average Position,10.3,0.0,0.0,17.5,0.0,7.5,4.0,12.1,0.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,RITUALS,AI Brand Score,1.0,2.0,0.0,4.0,0.0,0.0,0.0,0.0,1.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,RITUALS,Visibility Score,5.0,8.0,0.0,11.0,0.0,0.0,0.0,2.0,1.0,0.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,RITUALS,Average Position,12.5,16.4,0.0,14.8,0.0,0.0,0.0,17.5,5.0,0.0,9.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INNISFREE,AI Brand Score,2.0,2.0,0.0,1.0,2.0,0.0,1.0,0.0,0.0,0.0,6.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INNISFREE,Visibility Score,7.0,13.0,1.0,4.0,3.0,0.0,2.0,0.0,0.0,0.0,17.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,INNISFREE,Average Position,13.2,20.7,7.0,20.8,5.2,0.0,12.5,0.0,0.0,0.0,12.8,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SUNDAY RILEY,AI Brand Score,7.0,4.0,0.0,3.0,13.0,4.0,4.0,9.0,0.0,15.0,2.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SUNDAY RILEY,Visibility Score,12.0,10.0,0.0,8.0,18.0,8.0,8.0,14.0,0.0,22.0,3.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,SUNDAY RILEY,Average Position,8.8,14.0,0.0,12.0,4.6,8.4,9.9,7.5,0.0,6.0,8.2,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LANCÔME,AI Brand Score,5.0,7.0,0.0,6.0,1.0,3.0,0.0,2.0,0.0,13.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LANCÔME,Visibility Score,8.0,12.0,0.0,11.0,2.0,5.0,0.0,2.0,0.0,18.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LANCÔME,Average Position,6.6,7.9,0.0,8.5,5.0,7.7,0.0,5.7,0.0,5.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LUSH,AI Brand Score,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LUSH,Visibility Score,6.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,6.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,LUSH,Average Position,9.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.2,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CNP LABORATORY,AI Brand Score,1.0,0.0,0.0,1.0,0.0,0.0,0.0,2.0,0.0,0.0,0.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CNP LABORATORY,Visibility Score,3.0,0.0,0.0,2.0,0.0,0.0,0.0,6.0,0.0,0.0,0.0,2.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,CNP LABORATORY,Average Position,13.1,0.0,0.0,15.3,0.0,0.0,0.0,15.0,0.0,0.0,0.0,9.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PRIMALLY PURE,AI Brand Score,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,3.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PRIMALLY PURE,Visibility Score,9.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,13.0,0.0,0.0,6.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,PRIMALLY PURE,Average Position,6.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,6.9
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BYBI,AI Brand Score,3.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BYBI,Visibility Score,7.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,7.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,BYBI,Average Position,11.7,0.0,0.0,0.0,0.0,0.0,0.0,0.0,11.7,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TATCHA,AI Brand Score,33.0,37.0,0.0,21.0,29.0,6.0,31.0,39.0,0.0,66.0,69.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TATCHA,Visibility Score,50.0,68.0,0.0,46.0,42.0,12.0,48.0,60.0,0.0,83.0,90.0,1.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,TATCHA,Average Position,7.5,8.9,0.0,11.5,5.1,7.9,6.0,6.4,0.0,3.7,4.4,14.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MEDIK8,AI Brand Score,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,8.0,0.0,0.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MEDIK8,Visibility Score,4.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0,17.0,0.0,1.0,0.0
+02/15/2026,CETAPHIL,ChatGPT Search,ChatGPT Search,MEDIK8,Average Position,13.3,0.0,0.0,19.0,0.0,0.0,0.0,14.0,9.3,0.0,11.0,0.0
