@@ -76,12 +76,6 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
-const MinusIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
-
 const GlobeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 0 1 9-9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -250,14 +244,65 @@ export function SideNav({
     return null;
   }
 
+  /** Find the nav item that matches the current pathname (exact or prefix for tracker subpages). */
+  function findItemByPathname(items: NavItem[], pathname: string): NavItem | null {
+    let best: NavItem | null = null;
+    let bestHrefLen = 0;
+    function walk(list: NavItem[]) {
+      for (const item of list) {
+        if (item.href) {
+          const exact = pathname === item.href;
+          const prefix = pathname.startsWith(item.href + "/");
+          if ((exact || prefix) && item.href.length > bestHrefLen) {
+            best = item;
+            bestHrefLen = item.href.length;
+          }
+        }
+        if (item.children) walk(item.children);
+      }
+    }
+    walk(items);
+    return best;
+  }
+
+  function findPathToItem(items: NavItem[], targetId: string, path: string[] = []): string[] | null {
+    for (const item of items) {
+      if (item.id === targetId) return [...path, item.id];
+      if (item.children) {
+        const found = findPathToItem(item.children, targetId, [...path, item.id]);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  function hasDescendantSelected(item: NavItem, selectedId: string | null): boolean {
+    if (!selectedId) return false;
+    if (item.id === selectedId) return true;
+    if (item.children) return item.children.some((c) => hasDescendantSelected(c, selectedId));
+    return false;
+  }
+
   useEffect(() => {
     if (pathname === "/manage-account") {
       setSelectedId("manage-account");
       return;
     }
     const allItems = [...defaultNavItems, ...bottomNavItems];
-    const found = findItemByHref(allItems, pathname);
-    setSelectedId(found ? found.id : null);
+    const found = findItemByPathname(allItems, pathname);
+    if (found) {
+      setSelectedId(found.id);
+      const path = findPathToItem(defaultNavItems, found.id);
+      const ancestors = path ? path.slice(0, -1) : [];
+      setExpandedIds((prev) => {
+        const next = new Set(prev);
+        topLevelBrandIds.forEach((bid) => next.delete(bid));
+        ancestors.forEach((id) => next.add(id));
+        return next;
+      });
+    } else {
+      setSelectedId(null);
+    }
   }, [pathname]);
 
   const isManageAccountActive = selectedId === "manage-account";
@@ -271,12 +316,17 @@ export function SideNav({
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(["porsche", "porsche-sports-cars"]));
 
-  const toggleExpand = (id: string) => {
+  const topLevelBrandIds = defaultNavItems.filter((i) => i.children && i.children.length > 0).map((i) => i.id);
+
+  const toggleExpand = (id: string, isTopLevelBrand: boolean) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
       } else {
+        if (isTopLevelBrand) {
+          topLevelBrandIds.forEach((bid) => next.delete(bid));
+        }
         next.add(id);
       }
       return next;
@@ -293,11 +343,13 @@ export function SideNav({
     const hasChildren = Array.isArray(item.children);
     const isExpanded = expandedIds.has(item.id);
     const isActive = item.id === selectedId;
+    const hasActiveChild = hasChildren && hasDescendantSelected(item, selectedId);
 
     const paddingLeft = depth === 0 ? "pl-4" : depth === 1 ? "pl-8" : "pl-12";
     const activeStyles = isActive
       ? "bg-[#e6f7f7] text-[var(--primary)]"
       : "text-[#262626] hover:bg-[#f6f6f6]";
+    const parentOfActiveStyles = hasActiveChild && !isActive ? "border-l-2 border-[var(--primary)] text-[var(--primary)]" : "";
 
     const content = (
       <>
@@ -310,8 +362,8 @@ export function SideNav({
           <>
             <span className="flex-1 truncate">{item.label}</span>
             {hasChildren && (
-              <span className="flex-shrink-0">
-                {isExpanded ? <MinusIcon /> : <ChevronDownIcon />}
+              <span className={`flex-shrink-0 transition-transform duration-200 ease-out ${isExpanded ? "rotate-180" : ""}`}>
+                <ChevronDownIcon />
               </span>
             )}
           </>
@@ -325,7 +377,7 @@ export function SideNav({
           <Link
             href={item.href}
             onClick={() => setSelectedId(item.id)}
-            className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors rounded-r-md no-underline ${activeStyles}`}
+            className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors no-underline ${activeStyles} ${parentOfActiveStyles}`}
           >
             {content}
           </Link>
@@ -335,19 +387,27 @@ export function SideNav({
             onClick={() => {
               setSelectedId(item.id);
               if (hasChildren) {
-                toggleExpand(item.id);
+                toggleExpand(item.id, depth === 0);
               } else {
                 onNavigate?.(item.id);
               }
             }}
-            className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors rounded-r-md ${activeStyles}`}
+            className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors ${activeStyles} ${parentOfActiveStyles}`}
           >
             {content}
           </button>
         )}
-        {hasChildren && isExpanded && !collapsed && (
-          <div className="mt-0">
-            {item.children!.map((child) => renderNavItem(child, depth + 1, item.id))}
+        {hasChildren && !collapsed && (
+          <div
+            className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${
+              isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <div className="mt-0">
+                {item.children!.map((child) => renderNavItem(child, depth + 1, item.id))}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -404,7 +464,7 @@ export function SideNav({
         <Link
           href="/manage-account"
           onClick={() => setSelectedId("manage-account")}
-          className={`w-full flex items-center gap-3 py-2.5 pl-4 pr-4 text-left text-sm font-normal rounded-r-md transition-colors no-underline ${
+          className={`w-full flex items-center gap-3 py-2.5 pl-4 pr-4 text-left text-sm font-normal transition-colors no-underline ${
             isManageAccountActive ? "bg-[#e6f7f7] text-[var(--primary)]" : "text-[#262626] hover:bg-[#f6f6f6]"
           }`}
         >
@@ -416,7 +476,7 @@ export function SideNav({
         <button
           type="button"
           onClick={onLogOut}
-          className="w-full flex items-center gap-3 py-2.5 pl-4 pr-4 text-left text-sm font-normal text-[#bd1005] hover:bg-[#f6f6f6] rounded-r-md transition-colors"
+          className="w-full flex items-center gap-3 py-2.5 pl-4 pr-4 text-left text-sm font-normal text-[#bd1005] hover:bg-[#f6f6f6] transition-colors"
         >
           <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
             <LogOutIcon />
