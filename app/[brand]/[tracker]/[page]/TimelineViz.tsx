@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
+import { useTrackerDate } from "../TrackerDateContext";
 import { GroupedTopicTooltip } from "./GroupedTopicTooltip";
 
 export type TimelineMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
@@ -129,10 +130,37 @@ const GROUPED_MODEL_COLORS = [
   "var(--viz-10)",
 ];
 
+/** Gradient stop at bottom (darker) and top (lighter) for each palette color. */
+const GROUPED_BAR_GRADIENT_IDS = [
+  "grouped-bar-grad-0",
+  "grouped-bar-grad-1",
+  "grouped-bar-grad-2",
+  "grouped-bar-grad-3",
+  "grouped-bar-grad-4",
+  "grouped-bar-grad-5",
+  "grouped-bar-grad-6",
+  "grouped-bar-grad-7",
+] as const;
+
+const GROUPED_BAR_GRADIENT_DEFS = [
+  { bottom: "var(--viz-2-gradient-end)", top: "var(--viz-2-gradient-start)" },
+  { bottom: "var(--viz-3-gradient-end)", top: "var(--viz-3-gradient-start)" },
+  { bottom: "var(--viz-4-gradient-end)", top: "var(--viz-4-gradient-start)" },
+  { bottom: "var(--viz-5-gradient-end)", top: "var(--viz-5-gradient-start)" },
+  { bottom: "var(--viz-6-gradient-end)", top: "var(--viz-6-gradient-start)" },
+  { bottom: "var(--viz-7-gradient-end)", top: "var(--viz-7-gradient-start)" },
+  { bottom: "var(--viz-9-gradient-end)", top: "var(--viz-9-gradient-start)" },
+  { bottom: "var(--viz-10-gradient-end)", top: "var(--viz-10-gradient-start)" },
+];
+
 function getModelBarColor(label: string, index: number): string {
   const override = GROUPED_MODEL_COLOR_OVERRIDES[label];
   if (override) return override;
   return GROUPED_MODEL_COLORS[index % GROUPED_MODEL_PALETTE_SIZE]!;
+}
+
+function getModelBarGradientUrl(modelIndex: number): string {
+  return `url(#${GROUPED_BAR_GRADIENT_IDS[modelIndex % GROUPED_MODEL_PALETTE_SIZE]})`;
 }
 
 function GroupedTopicChart({
@@ -141,12 +169,14 @@ function GroupedTopicChart({
   isPosition,
   width,
   height = 280,
+  compareToDateLabel,
 }: {
   data: TopicModelScores;
   maxVal: number;
   isPosition: boolean;
   width: number;
   height?: number;
+  compareToDateLabel?: string;
 }) {
   const [hoveredTopicIndex, setHoveredTopicIndex] = useState<number | null>(null);
   const padding = { top: 24, right: 16, bottom: 40, left: 44 };
@@ -207,6 +237,22 @@ function GroupedTopicChart({
         ))}
       </div>
       <svg width={width} height={height} className="block" aria-hidden>
+        <defs>
+          {GROUPED_BAR_GRADIENT_DEFS.map((g, i) => (
+            <linearGradient
+              key={i}
+              id={GROUPED_BAR_GRADIENT_IDS[i]}
+              x1="0"
+              y1="1"
+              x2="0"
+              y2="0"
+              gradientUnits="objectBoundingBox"
+            >
+              <stop offset="0" stopColor={g.bottom} />
+              <stop offset="1" stopColor={g.top} />
+            </linearGradient>
+          ))}
+        </defs>
         {yTicks.map((v) => (
           <text
             key={v}
@@ -309,7 +355,7 @@ function GroupedTopicChart({
               <path
                 key={`${t.id}-${m.id}`}
                 d={pathD}
-                fill={getModelBarColor(m.label, mi)}
+                fill={getModelBarGradientUrl(mi)}
                 opacity={dimmed ? 0.45 : 1}
                 stroke={isHovered ? "rgba(0,0,0,0.12)" : "none"}
                 strokeWidth={isHovered ? 1 : 0}
@@ -356,6 +402,7 @@ function GroupedTopicChart({
           isPosition={isPosition}
           formatScore={formatScore}
           getModelBarColor={getModelBarColor}
+          compareToDateLabel={compareToDateLabel}
           style={{
             left: Math.max(
               TOOLTIP_GAP,
@@ -430,6 +477,10 @@ export function TimelineViz(props?: TimelineVizProps) {
   const [chartView, setChartView] = useState<ChartView>("grouped");
   const [topicModelScores, setTopicModelScores] = useState<TopicModelScores | null>(null);
   const [groupedLoading, setGroupedLoading] = useState(false);
+  const { selectedDateStr, compareToDateStr, compareToDate } = useTrackerDate();
+  const compareToDateLabel = compareToDateStr
+    ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
+    : undefined;
 
   const fetchMeta = useCallback(() => {
     const q = new URLSearchParams({ brandId, trackerId });
@@ -531,6 +582,9 @@ export function TimelineViz(props?: TimelineVizProps) {
       chart: "timeline",
       topics: selectedTopicTimeline,
     });
+    if (trackerId === "luxury-suvs-v2") params.set("series", "topics");
+    if (selectedDateStr) params.set("date", selectedDateStr);
+    if (compareToDateStr) params.set("compareToDate", compareToDateStr);
     fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
       .then((data: { dates: string[]; series: TimelineSeries[] }) => {
@@ -542,7 +596,7 @@ export function TimelineViz(props?: TimelineVizProps) {
         setSeries([]);
       })
       .finally(() => setLoading(false));
-  }, [chartView, brandId, trackerId, metric, selectedBrandsTimeline, selectedTopicTimeline, selectedModel, modelIdsForRequest.join(",")]);
+  }, [chartView, brandId, trackerId, metric, selectedBrandsTimeline, selectedTopicTimeline, selectedModel, modelIdsForRequest.join(","), selectedDateStr, compareToDateStr]);
 
   useEffect(() => {
     if (chartView !== "grouped") {
@@ -563,6 +617,8 @@ export function TimelineViz(props?: TimelineVizProps) {
       models: modelsList.map((m) => m.id).join(","),
       chart: "grouped",
     });
+    if (selectedDateStr) params.set("date", selectedDateStr);
+    if (compareToDateStr) params.set("compareToDate", compareToDateStr);
     fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
       .then((data: TopicModelScores & { chart?: string }) => {
@@ -578,7 +634,7 @@ export function TimelineViz(props?: TimelineVizProps) {
       })
       .catch(() => setTopicModelScores(null))
       .finally(() => setGroupedLoading(false));
-  }, [chartView, brandId, trackerId, metric, selectedBrand, modelsList]);
+  }, [chartView, brandId, trackerId, metric, selectedBrand, modelsList, selectedDateStr, compareToDateStr]);
 
   const brandSearchLower = brandSearchQuery.trim().toLowerCase();
   const competitorOrder = new Map<string, number>(
@@ -779,11 +835,11 @@ export function TimelineViz(props?: TimelineVizProps) {
 
   return (
     <div ref={cardRef} className="rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-visible">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
-        <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
+      <div className="flex flex-col items-start gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5] md:flex-row md:items-center md:justify-between">
+        <h2 className="w-full text-[20px] font-semibold text-[#262626] leading-tight md:w-auto">
           Results Across Topics
         </h2>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex w-full flex-wrap items-center justify-start gap-2 md:w-auto">
           <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
             {(Object.keys(METRIC_CONFIG) as TimelineMetric[]).map((m) => (
               <button
@@ -1067,6 +1123,7 @@ export function TimelineViz(props?: TimelineVizProps) {
                   maxVal={config.max}
                   isPosition={isPosition}
                   width={chartWidth}
+                  compareToDateLabel={compareToDateLabel}
                 />
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-sm text-[#7F7F7F]">
@@ -1207,9 +1264,17 @@ export function TimelineViz(props?: TimelineVizProps) {
                       const idx = series.findIndex((ss) => ss.brand === s.brand);
                     const point = s.data.find((p) => dates.indexOf(p.date) === hoveredDateIndex);
                     const value = point?.value ?? 0;
-                    const prevDate = hoveredDateIndex > 0 ? dates[hoveredDateIndex - 1] : null;
-                    const prevPoint = prevDate ? s.data.find((p) => p.date === prevDate) : null;
-                    const prevValue = prevPoint?.value;
+                    // Comparison = score(hovered date) − score(compare-to date)
+                    const valueAtCompareTo =
+                      compareToDateStr != null
+                        ? s.data.find((p) => p.date === compareToDateStr)?.value
+                        : undefined;
+                    const prevValue =
+                      valueAtCompareTo != null && Number.isFinite(valueAtCompareTo)
+                        ? valueAtCompareTo
+                        : hoveredDateIndex > 0
+                          ? s.data.find((p) => p.date === dates[hoveredDateIndex - 1])?.value
+                          : undefined;
                     const change =
                       prevValue != null && Number.isFinite(prevValue)
                         ? Math.round((value - prevValue) * 10) / 10
@@ -1258,6 +1323,11 @@ export function TimelineViz(props?: TimelineVizProps) {
                     );
                   })}
                 </div>
+                {compareToDateLabel && (
+                  <p className="mt-2 pt-2 border-t border-[#e5e5e5] text-xs text-[#7F7F7F] text-left px-3 pb-2">
+                    Compare to {compareToDateLabel}
+                  </p>
+                )}
               </div>
             )}
             </div>

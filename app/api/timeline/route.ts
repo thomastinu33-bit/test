@@ -68,6 +68,11 @@ export async function GET(request: Request) {
   const brandsParam = searchParams.get("brands");
   const modelsParam = searchParams.get("models");
   const topicParam = searchParams.get("topic");
+  const dateParam = searchParams.get("date");
+  const compareToDateParam = searchParams.get("compareToDate");
+  const isLuxurySuv = brandId === "porsche" && (trackerId === "luxury-suvs" || trackerId === "luxury-suvs-v2");
+  const reportDate = isLuxurySuv && dateParam ? dateParam : undefined;
+  const compareToDate = isLuxurySuv && compareToDateParam ? compareToDateParam : undefined;
 
   if (isSkincareTracker(brandId, trackerId)) {
     const topic = topicParam && SKINCARE_TOPICS.includes(topicParam as SkincareTopic)
@@ -147,19 +152,34 @@ export async function GET(request: Request) {
     const tableData = getResultsTableData(
       metric as PorscheScoreRow["metric"],
       brandIds,
-      modelIds
+      modelIds,
+      reportDate,
+      compareToDate
     );
     return NextResponse.json(tableData);
   }
 
   if (chart === "grouped" && brandIds.length > 0) {
     const brand = brandIds[0]!;
-    const topicModelScores = getTopicModelScores(metric as PorscheScoreRow["metric"], brand);
+    const topicModelScores = getTopicModelScores(metric as PorscheScoreRow["metric"], brand, reportDate, compareToDate);
     return NextResponse.json({ chart: "grouped", ...topicModelScores });
   }
 
   const topicsParam = searchParams.get("topics");
+  const seriesParam = searchParams.get("series");
   if (chart === "timeline" && brandIds.length > 0 && modelIds.length > 0) {
+    if (trackerId === "luxury-suvs-v2" && seriesParam === "topics") {
+      const brand = brandIds[0]!;
+      const modelId = modelIds[0]!;
+      const { dates, series: dimSeries } = getDimensionTimelineData(
+        metric as PorscheScoreRow["metric"],
+        modelId,
+        brand,
+        reportDate
+      );
+      const series = dimSeries.map((s) => ({ brand: s.label, data: s.data }));
+      return NextResponse.json({ dates, series });
+    }
     const singleTopic = topicsParam
       ? (topicsParam.split(",").map((s) => s.trim()).filter(Boolean)[0] as TimelineTopic) || "overall"
       : "overall";
@@ -168,7 +188,8 @@ export async function GET(request: Request) {
       metric as PorscheScoreRow["metric"],
       brandIds,
       modelIds,
-      topic
+      topic,
+      reportDate
     );
     return NextResponse.json({ dates, series });
   }
@@ -177,7 +198,8 @@ export async function GET(request: Request) {
     metric as PorscheScoreRow["metric"],
     brandIds,
     modelIds,
-    topic
+    topic,
+    reportDate
   );
   return NextResponse.json({ dates, series });
 }

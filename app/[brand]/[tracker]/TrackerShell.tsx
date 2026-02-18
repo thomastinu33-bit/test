@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { getTracker, getBrand } from "@/app/manage-account/data";
 import { AskAIButton, Button, PageNav } from "@/components/Evertune";
+import { TrackerDateProvider } from "./TrackerDateContext";
 
 function formatLocation(location: string): string {
   if (location === "United States English") return "United States";
@@ -74,25 +75,259 @@ const TRACKER_PAGE_NAV_ITEMS = [
   { id: "shopping", label: "Shopping" },
 ];
 
+/** Trackers that show Jan 15–22 only in the date picker (Luxury SUV, Luxury SUV v2). */
+const LUXURY_SUV_TRACKER_IDS = new Set(["luxury-suvs", "luxury-suvs-v2"]);
+const LUXURY_SUV_DATE_MIN = new Date(2025, 0, 15);
+const LUXURY_SUV_DATE_MAX = new Date(2025, 0, 22);
+
+function dateInRange(d: Date, min: Date, max: Date): boolean {
+  const t = d.getTime();
+  return t >= min.getTime() && t <= max.getTime();
+}
+
+/** Format for comparison line: "15 Jan 2025" */
+function formatDateCompare(d: Date): string {
+  const day = d.getDate();
+  const mon = MONTHS[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day} ${mon} ${year}`;
+}
+
+/** Single dropdown: first click sets report date (blue), second click sets compare-to date (yellow). */
+function ReportAndCompareDatePicker({
+  reportDate,
+  compareToDate,
+  onReportDateChange,
+  onCompareToDateChange,
+  minDate,
+  maxDate,
+  id,
+}: {
+  reportDate: Date;
+  compareToDate: Date;
+  onReportDateChange: (d: Date) => void;
+  onCompareToDateChange: (d: Date) => void;
+  minDate: Date;
+  maxDate: Date;
+  id: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [viewMonth, setViewMonth] = useState(() => new Date(minDate.getFullYear(), minDate.getMonth(), 1));
+  const ref = useRef<HTMLDivElement>(null);
+
+  const value = step === 1 ? reportDate : compareToDate;
+
+  useEffect(() => {
+    if (!open) {
+      setStep(1);
+      return;
+    }
+    const v = value.getTime();
+    if (v < minDate.getTime()) setViewMonth(new Date(minDate.getFullYear(), minDate.getMonth(), 1));
+    else if (v > maxDate.getTime()) setViewMonth(new Date(maxDate.getFullYear(), maxDate.getMonth(), 1));
+    else setViewMonth(new Date(value.getFullYear(), value.getMonth(), 1));
+  }, [open, value, minDate, maxDate]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const cells: { day: number; isCurrentMonth: boolean; isPrevMonth: boolean }[] = [];
+  for (let i = firstDay - 1; i >= 0; i--) {
+    cells.push({ day: daysInPrevMonth - i, isCurrentMonth: false, isPrevMonth: true });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, isCurrentMonth: true, isPrevMonth: false });
+  }
+  const remaining = 42 - cells.length;
+  for (let d = 1; d <= remaining; d++) {
+    cells.push({ day: d, isCurrentMonth: false, isPrevMonth: false });
+  }
+
+  const isReportSelected = (day: number, isCurrent: boolean, isPrev: boolean) => {
+    if (isCurrent) return reportDate.getMonth() === month && reportDate.getFullYear() === year && reportDate.getDate() === day;
+    if (isPrev) return reportDate.getMonth() === month - 1 && reportDate.getFullYear() === year && reportDate.getDate() === day;
+    return reportDate.getMonth() === month + 1 && reportDate.getFullYear() === year && reportDate.getDate() === day;
+  };
+  const isCompareSelected = (day: number, isCurrent: boolean, isPrev: boolean) => {
+    if (isCurrent) return compareToDate.getMonth() === month && compareToDate.getFullYear() === year && compareToDate.getDate() === day;
+    if (isPrev) return compareToDate.getMonth() === month - 1 && compareToDate.getFullYear() === year && compareToDate.getDate() === day;
+    return compareToDate.getMonth() === month + 1 && compareToDate.getFullYear() === year && compareToDate.getDate() === day;
+  };
+
+  const isDateDisabled = (day: number, isCurrentMonth: boolean, isPrevMonth: boolean): boolean => {
+    let d: Date;
+    if (isCurrentMonth) d = new Date(year, month, day);
+    else if (isPrevMonth) d = new Date(year, month - 1, day);
+    else d = new Date(year, month + 1, day);
+    return !dateInRange(d, minDate, maxDate);
+  };
+
+  const handleSelect = (day: number, isCurrentMonth: boolean, isPrevMonth: boolean) => {
+    let d: Date;
+    if (isCurrentMonth) d = new Date(year, month, day);
+    else if (isPrevMonth) d = new Date(year, month - 1, day);
+    else d = new Date(year, month + 1, day);
+    if (!dateInRange(d, minDate, maxDate)) return;
+    if (step === 1) {
+      onReportDateChange(d);
+      setStep(2);
+    } else {
+      onCompareToDateChange(d);
+      setOpen(false);
+    }
+  };
+
+  const canGoPrev = viewMonth.getTime() > new Date(minDate.getFullYear(), minDate.getMonth(), 1).getTime();
+  const canGoNext = viewMonth.getTime() < new Date(maxDate.getFullYear(), maxDate.getMonth(), 1).getTime();
+
+  return (
+    <div className="relative min-w-[200px]" ref={ref}>
+      <button
+        type="button"
+        id={id}
+        onClick={() => setOpen((o) => !o)}
+        className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label="Date Picker: report date and compare to date"
+      >
+        <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
+          Date Picker
+        </span>
+        <span className="mr-2 shrink-0 text-[#7F7F7F]">
+          <CalendarIcon />
+        </span>
+        <span className="flex-1 min-w-0 text-sm truncate flex items-center gap-1.5 text-[#262626]">
+          <span>{formatDateForInput(reportDate)}</span>
+          <span className="text-[#7F7F7F]">→</span>
+          <span>{formatDateForInput(compareToDate)}</span>
+        </span>
+        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+          <ChevronDownIcon />
+        </span>
+      </button>
+      {open && (
+        <div
+          className="absolute top-full left-0 mt-1 z-50 w-[280px] bg-white border border-[#e5e5e5] rounded-lg shadow-lg p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Select report date, then compare to date"
+        >
+          <p className="mb-3 text-center text-xs text-[#7F7F7F]">
+            {step === 1 ? "Pick a date" : "Select compare to date"}
+          </p>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              onClick={() => setViewMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
+              disabled={!canGoPrev}
+              className="p-1.5 rounded-md text-[#7F7F7F] hover:bg-[#f6f6f6] hover:text-[#262626] disabled:opacity-40 disabled:pointer-events-none"
+              aria-label="Previous month"
+            >
+              <ChevronLeftIcon />
+            </button>
+            <span className="text-sm font-medium text-[#262626]">
+              {MONTHS[viewMonth.getMonth()]} {viewMonth.getFullYear()}
+            </span>
+            <button
+              type="button"
+              onClick={() => setViewMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
+              disabled={!canGoNext}
+              className="p-1.5 rounded-md text-[#7F7F7F] hover:bg-[#f6f6f6] hover:text-[#262626] disabled:opacity-40 disabled:pointer-events-none"
+              aria-label="Next month"
+            >
+              <ChevronRightIcon />
+            </button>
+          </div>
+          <div className="grid grid-cols-7 gap-0.5 mb-2">
+            {DAYS.map((d, i) => (
+              <div key={i} className="text-center text-xs font-medium text-[#7F7F7F] py-1">
+                {d}
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {cells.map(({ day, isCurrentMonth, isPrevMonth }, i) => {
+              const disabled = isDateDisabled(day, isCurrentMonth, isPrevMonth);
+              const reportSel = isReportSelected(day, isCurrentMonth, isPrevMonth);
+              const compareSel = isCompareSelected(day, isCurrentMonth, isPrevMonth);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleSelect(day, isCurrentMonth, isPrevMonth)}
+                  disabled={disabled}
+                  className={`w-9 h-9 rounded-full text-sm flex items-center justify-center ${
+                    disabled
+                      ? "text-[#d4d4d4] cursor-not-allowed"
+                      : reportSel
+                        ? "bg-[var(--primary)] text-white"
+                        : compareSel
+                          ? "bg-[#EAB308] text-[#854D0E]"
+                          : isCurrentMonth
+                            ? "text-[#262626] hover:bg-[#f6f6f6]"
+                            : "text-[#a3a3a3] hover:bg-[#f6f6f6]"
+                  }`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 pt-3 border-t border-[#e5e5e5] text-center text-xs text-[#525252]">
+            <span className="font-medium text-[var(--primary)]">{formatDateCompare(reportDate)}</span>
+            {" compared to "}
+            <span className="font-medium text-[#EAB308]">{formatDateCompare(compareToDate)}</span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DatePicker({
   value,
   onChange,
   id,
   label = "Select Date",
+  minDate,
+  maxDate,
 }: {
   value: Date;
   onChange: (d: Date) => void;
   id: string;
   label?: string;
+  minDate?: Date;
+  maxDate?: Date;
 }) {
   const [open, setOpen] = useState(false);
-  const [viewMonth, setViewMonth] = useState(() => new Date(value.getFullYear(), value.getMonth(), 1));
+  const [viewMonth, setViewMonth] = useState(() => {
+    const v = value.getTime();
+    if (minDate && v < minDate.getTime()) return new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    if (maxDate && v > maxDate.getTime()) return new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+    return new Date(value.getFullYear(), value.getMonth(), 1);
+  });
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    setViewMonth(new Date(value.getFullYear(), value.getMonth(), 1));
-  }, [open, value]);
+    const v = value.getTime();
+    if (minDate && v < minDate.getTime()) setViewMonth(new Date(minDate.getFullYear(), minDate.getMonth(), 1));
+    else if (maxDate && v > maxDate.getTime()) setViewMonth(new Date(maxDate.getFullYear(), maxDate.getMonth(), 1));
+    else setViewMonth(new Date(value.getFullYear(), value.getMonth(), 1));
+  }, [open, value, minDate, maxDate]);
 
   useEffect(() => {
     if (!open) return;
@@ -126,16 +361,27 @@ function DatePicker({
     return value.getMonth() === month + 1 && value.getFullYear() === year && value.getDate() === day;
   };
 
+  const isDateDisabled = (day: number, isCurrentMonth: boolean, isPrevMonth: boolean): boolean => {
+    if (!minDate || !maxDate) return false;
+    let d: Date;
+    if (isCurrentMonth) d = new Date(year, month, day);
+    else if (isPrevMonth) d = new Date(year, month - 1, day);
+    else d = new Date(year, month + 1, day);
+    return !dateInRange(d, minDate, maxDate);
+  };
+
   const handleSelect = (day: number, isCurrentMonth: boolean, isPrevMonth: boolean) => {
-    if (isCurrentMonth) {
-      onChange(new Date(year, month, day));
-    } else if (isPrevMonth) {
-      onChange(new Date(year, month - 1, day));
-    } else {
-      onChange(new Date(year, month + 1, day));
-    }
+    let d: Date;
+    if (isCurrentMonth) d = new Date(year, month, day);
+    else if (isPrevMonth) d = new Date(year, month - 1, day);
+    else d = new Date(year, month + 1, day);
+    if (minDate && maxDate && !dateInRange(d, minDate, maxDate)) return;
+    onChange(d);
     setOpen(false);
   };
+
+  const canGoPrev = !minDate || viewMonth.getTime() > new Date(minDate.getFullYear(), minDate.getMonth(), 1).getTime();
+  const canGoNext = !maxDate || viewMonth.getTime() < new Date(maxDate.getFullYear(), maxDate.getMonth(), 1).getTime();
 
   return (
     <div className="relative min-w-[180px]" ref={ref}>
@@ -151,10 +397,10 @@ function DatePicker({
         <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
           {label}
         </span>
-        <span className="mr-2 text-[#7F7F7F] shrink-0">
+        <span className="mr-2 shrink-0 text-[#7F7F7F]">
           <CalendarIcon />
         </span>
-        <span className="flex-1 min-w-0 text-sm text-[#262626] truncate">{formatDateForInput(value)}</span>
+        <span className="flex-1 min-w-0 text-sm truncate text-[#262626]">{formatDateForInput(value)}</span>
         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
           <ChevronDownIcon />
         </span>
@@ -170,7 +416,8 @@ function DatePicker({
             <button
               type="button"
               onClick={() => setViewMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
-              className="p-1.5 rounded-md text-[#7F7F7F] hover:bg-[#f6f6f6] hover:text-[#262626]"
+              disabled={!canGoPrev}
+              className="p-1.5 rounded-md text-[#7F7F7F] hover:bg-[#f6f6f6] hover:text-[#262626] disabled:opacity-40 disabled:pointer-events-none"
               aria-label="Previous month"
             >
               <ChevronLeftIcon />
@@ -181,7 +428,8 @@ function DatePicker({
             <button
               type="button"
               onClick={() => setViewMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
-              className="p-1.5 rounded-md text-[#7F7F7F] hover:bg-[#f6f6f6] hover:text-[#262626]"
+              disabled={!canGoNext}
+              className="p-1.5 rounded-md text-[#7F7F7F] hover:bg-[#f6f6f6] hover:text-[#262626] disabled:opacity-40 disabled:pointer-events-none"
               aria-label="Next month"
             >
               <ChevronRightIcon />
@@ -195,22 +443,28 @@ function DatePicker({
             ))}
           </div>
           <div className="grid grid-cols-7 gap-0.5">
-            {cells.map(({ day, isCurrentMonth, isPrevMonth }, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handleSelect(day, isCurrentMonth, isPrevMonth)}
-                className={`w-9 h-9 rounded-full text-sm flex items-center justify-center ${
-                  isSelected(day, isCurrentMonth, isPrevMonth)
-                    ? "bg-[var(--primary)] text-white"
-                    : isCurrentMonth
-                      ? "text-[#262626] hover:bg-[#f6f6f6]"
-                      : "text-[#a3a3a3] hover:bg-[#f6f6f6]"
-                }`}
-              >
-                {day}
-              </button>
-            ))}
+            {cells.map(({ day, isCurrentMonth, isPrevMonth }, i) => {
+              const disabled = isDateDisabled(day, isCurrentMonth, isPrevMonth);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleSelect(day, isCurrentMonth, isPrevMonth)}
+                  disabled={disabled}
+                  className={`w-9 h-9 rounded-full text-sm flex items-center justify-center ${
+                    disabled
+                      ? "text-[#d4d4d4] cursor-not-allowed"
+                      : isSelected(day, isCurrentMonth, isPrevMonth)
+                        ? "bg-[var(--primary)] text-white"
+                        : isCurrentMonth
+                          ? "text-[#262626] hover:bg-[#f6f6f6]"
+                          : "text-[#a3a3a3] hover:bg-[#f6f6f6]"
+                  }`}
+                >
+                  {day}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -230,9 +484,17 @@ export function TrackerShell({
   const brand = getBrand(brandId);
   const tracker = getTracker(brandId, trackerId);
   const [movingAverage, setMovingAverage] = useState("30-Day");
+  const isLuxurySuv = LUXURY_SUV_TRACKER_IDS.has(trackerId);
+  const datePickerMin = isLuxurySuv ? LUXURY_SUV_DATE_MIN : undefined;
+  const datePickerMax = isLuxurySuv ? LUXURY_SUV_DATE_MAX : undefined;
   const [selectedDate, setSelectedDate] = useState(() => {
+    if (isLuxurySuv) return new Date(LUXURY_SUV_DATE_MAX);
     const d = parseDateInput("01/15/2025");
     return d ?? new Date();
+  });
+  const [compareToDate, setCompareToDate] = useState(() => {
+    if (isLuxurySuv) return new Date(LUXURY_SUV_DATE_MIN);
+    return new Date();
   });
 
   if (!brand || !tracker) {
@@ -249,75 +511,111 @@ export function TrackerShell({
   const locationLabel = formatLocation(tracker.location);
   const basePath = `/${brandId}/${trackerId}`;
 
+  useEffect(() => {
+    if (!isLuxurySuv) return;
+    setSelectedDate((prev) => {
+      if (prev.getTime() < LUXURY_SUV_DATE_MIN.getTime()) return new Date(LUXURY_SUV_DATE_MIN);
+      if (prev.getTime() > LUXURY_SUV_DATE_MAX.getTime()) return new Date(LUXURY_SUV_DATE_MAX);
+      return prev;
+    });
+    setCompareToDate((prev) => {
+      if (prev.getTime() < LUXURY_SUV_DATE_MIN.getTime()) return new Date(LUXURY_SUV_DATE_MIN);
+      if (prev.getTime() > LUXURY_SUV_DATE_MAX.getTime()) return new Date(LUXURY_SUV_DATE_MAX);
+      return prev;
+    });
+  }, [isLuxurySuv]);
+
   return (
-    <div className="flex flex-col min-h-full bg-[#f6f6f6]">
-      <header className="flex-shrink-0 h-20 bg-white border-b border-[#eeeeee] px-6 flex items-center">
-        <div className="flex items-center justify-between gap-6 w-full">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-[#e5e5e5]" aria-hidden />
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-medium uppercase tracking-wide text-[var(--nav-brand)]">
-                {brand.name}
-              </span>
-              <span className="text-lg font-semibold text-[#262626] truncate">
-                {tracker.name} <span className="font-normal text-[#262626]">| {locationLabel}</span>
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            {/* Data / view controls */}
-            <div className="flex items-center gap-3">
-              <div className="relative rounded-lg border border-[#e5e5e5] bg-white min-w-[140px] h-10 flex items-center pl-3 pr-9">
-                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                  Moving Average
+    <TrackerDateProvider
+      selectedDate={selectedDate}
+      setSelectedDate={setSelectedDate}
+      compareToDate={compareToDate}
+      setCompareToDate={setCompareToDate}
+      useDateForData={isLuxurySuv}
+    >
+      <div className="flex flex-col min-h-full bg-[#f6f6f6]">
+        <header className="flex-shrink-0 h-20 bg-white border-b border-[#eeeeee] px-6 flex items-center">
+          <div className="flex items-center justify-between gap-6 w-full">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-[#e5e5e5]" aria-hidden />
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-medium uppercase tracking-wide text-[var(--nav-brand)]">
+                  {brand.name}
                 </span>
-                <span className="text-sm text-[#262626] truncate">{movingAverage}</span>
+                <span className="text-lg font-semibold text-[#262626] truncate">
+                  {tracker.name} <span className="font-normal text-[#262626]">| {locationLabel}</span>
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Data / view controls */}
+              <div className="flex items-center gap-3">
+                <div className="relative rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] min-w-[140px] h-10 flex items-center pl-3 pr-9 opacity-70 cursor-not-allowed" aria-disabled="true">
+                  <span className="absolute left-3 top-0 -translate-y-1/2 bg-[#f5f5f5] px-1 text-xs text-[#7F7F7F]">
+                    Moving Average
+                  </span>
+                  <span className="text-sm text-[#7F7F7F] truncate">{movingAverage}</span>
+                  <button
+                    type="button"
+                    disabled
+                    aria-label="Change moving average (disabled)"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#7F7F7F] cursor-not-allowed pointer-events-none"
+                  >
+                    <ChevronDownIcon />
+                  </button>
+                </div>
+                {isLuxurySuv && datePickerMin && datePickerMax ? (
+                  <ReportAndCompareDatePicker
+                    id="tracker-date-picker"
+                    reportDate={selectedDate}
+                    compareToDate={compareToDate}
+                    onReportDateChange={setSelectedDate}
+                    onCompareToDateChange={setCompareToDate}
+                    minDate={datePickerMin}
+                    maxDate={datePickerMax}
+                  />
+                ) : (
+                  <DatePicker
+                    id="tracker-date-picker"
+                    value={selectedDate}
+                    onChange={setSelectedDate}
+                    label="Date Picker"
+                    minDate={datePickerMin}
+                    maxDate={datePickerMax}
+                  />
+                )}
+              </div>
+              <div className="h-8 w-px bg-[#e5e5e5]" aria-hidden />
+              {/* Utility: Settings + Ask AI */}
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setMovingAverage(movingAverage === "30-Day" ? "7-Day" : "30-Day")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#7F7F7F] hover:text-[#262626]"
-                  aria-label="Change moving average"
+                  className="flex items-center justify-center w-10 h-10 rounded-lg text-[#262626] hover:bg-[#f5f5f5] transition-colors"
+                  aria-label="Settings"
                 >
-                  <ChevronDownIcon />
+                  <SettingsIcon />
                 </button>
+                <AskAIButton />
               </div>
-              <DatePicker
-                id="tracker-date-picker"
-                value={selectedDate}
-                onChange={setSelectedDate}
-                label="Select Date"
-              />
+              {/* Primary action */}
+              <Button variant="primary" className="gap-2 h-10">
+                <PlusIcon />
+                New Tracker
+              </Button>
             </div>
-            <div className="h-8 w-px bg-[#e5e5e5]" aria-hidden />
-            {/* Utility: Settings + Ask AI */}
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                className="flex items-center justify-center w-10 h-10 rounded-lg text-[#262626] hover:bg-[#f5f5f5] transition-colors"
-                aria-label="Settings"
-              >
-                <SettingsIcon />
-              </button>
-              <AskAIButton />
-            </div>
-            {/* Primary action */}
-            <Button variant="primary" className="gap-2 h-10">
-              <PlusIcon />
-              New Tracker
-            </Button>
           </div>
+        </header>
+        <div className="flex-shrink-0">
+          <PageNav basePath={basePath} items={TRACKER_PAGE_NAV_ITEMS} />
         </div>
-      </header>
-      <div className="flex-shrink-0">
-        <PageNav basePath={basePath} items={TRACKER_PAGE_NAV_ITEMS} />
-      </div>
-      <div className="flex-1 min-h-0 flex flex-col mt-6">
-        <div className="flex-1 min-h-0 mt-0 mx-5 mb-5 bg-white rounded-lg overflow-hidden flex flex-col">
-          <div className="flex-1 min-h-0 overflow-y-auto p-8">
-            {children}
+        <div className="flex-1 min-h-0 flex flex-col mt-6">
+          <div className="flex-1 min-h-0 mt-0 mx-5 mb-5 bg-white rounded-lg overflow-hidden flex flex-col">
+            <div className="flex-1 min-h-0 overflow-y-auto p-8">
+              {children}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </TrackerDateProvider>
   );
 }

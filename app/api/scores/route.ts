@@ -1,5 +1,6 @@
 import {
   getDimensionTimelineData,
+  getModelTimelineData,
   getGaugeDimensionsForModelWithChange,
   getUniqueModels,
   getUniqueBrands,
@@ -50,6 +51,11 @@ export async function GET(request: NextRequest) {
   const view = searchParams.get("view") ?? "gauge";
   const topic = searchParams.get("topic") ?? "overall";
   const selectedBrand = searchParams.get("brand") ?? null; // null = use default per tracker
+  const dateParam = searchParams.get("date");
+  const compareToDateParam = searchParams.get("compareToDate");
+  const isLuxurySuv = brandId === "porsche" && (trackerId === "luxury-suvs" || trackerId === "luxury-suvs-v2");
+  const reportDate = isLuxurySuv && dateParam ? dateParam : undefined;
+  const compareToDate = isLuxurySuv && compareToDateParam ? compareToDateParam : undefined;
   const validMetric = VALID_METRICS.includes(metric) ? metric : "AI Brand Score";
 
   if (isSkincareTracker(brandId, trackerId)) {
@@ -102,13 +108,13 @@ export async function GET(request: NextRequest) {
   const brands = getUniqueBrands();
   const defaultBrand = "PORSCHE";
   const brand = selectedBrand ?? defaultBrand;
-  const dimensions = getGaugeDimensionsForModelWithChange(validMetric, model, brand);
+  const dimensions = getGaugeDimensionsForModelWithChange(validMetric, model, brand, reportDate, compareToDate);
   const dimensionKeys = GAUGE_DIMENSION_KEYS as string[];
   const dimensionLabels = PORSCHE_DIM_LABELS;
 
   const modelScores = dimensionKeys.includes(topic)
     ? models.map((m) => {
-        const dims = getGaugeDimensionsForModelWithChange(validMetric, m.id, brand);
+        const dims = getGaugeDimensionsForModelWithChange(validMetric, m.id, brand, reportDate, compareToDate);
         const value = (dims[topic as keyof typeof dims] as number) ?? 0;
         const cKey = changeKeyForTopic(topic);
         const change = (dims[cKey as keyof typeof dims] as number) ?? null;
@@ -117,7 +123,10 @@ export async function GET(request: NextRequest) {
     : undefined;
 
   if (view === "timeline") {
-    const timeline = getDimensionTimelineData(validMetric, model);
+    const timeline =
+      trackerId === "luxury-suvs-v2"
+        ? getModelTimelineData(validMetric, brand, topic as "overall" | "topOfMind" | "perception" | "media" | "process" | "product" | "price", reportDate)
+        : getDimensionTimelineData(validMetric, model, brand, reportDate);
     return NextResponse.json({
       models,
       brands,

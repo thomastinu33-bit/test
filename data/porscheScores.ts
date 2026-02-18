@@ -38,7 +38,11 @@ function dayVariation(key: string, daysAgo: number, range: number): number {
   return range * Math.sin(daysAgo * freq + phase);
 }
 
-/** Add mock rows for the previous 6 days so each date has clearly different values. */
+/** Base date for Luxury SUV data: Jan 15–22 (8 days). */
+const LUXURY_SUV_DATA_END = "2025-01-22";
+const LUXURY_SUV_HISTORY_DAYS = 7;
+
+/** Add mock rows for the previous 7 days so we have Jan 15–22 (8 days) of data. */
 function addMockHistory(baseRows: PorscheScoreRow[]): PorscheScoreRow[] {
   if (baseRows.length === 0) return baseRows;
   const baseDate = baseRows[0]!.reportDate;
@@ -49,6 +53,7 @@ function addMockHistory(baseRows: PorscheScoreRow[]): PorscheScoreRow[] {
   const baseTime = new Date(y, m - 1, d).getTime();
   const oneDay = 24 * 60 * 60 * 1000;
   const out = [...baseRows];
+  const numDays = LUXURY_SUV_HISTORY_DAYS;
   for (const row of baseRows) {
     const key = `${row.modelMaker}|${row.model}|${row.brand}|${row.metric}`;
     const h = hashKey(key);
@@ -57,15 +62,15 @@ function addMockHistory(baseRows: PorscheScoreRow[]): PorscheScoreRow[] {
     const isPosition = row.metric === "Average Position";
     const cap = isPosition ? 30 : 100;
     const baseVal = Math.max(1, row.overall);
-    const totalChangeOver6Days = trendUp ? baseVal * strength : -baseVal * strength;
-    const dailyDelta = totalChangeOver6Days / 6;
+    const totalChange = trendUp ? baseVal * strength : -baseVal * strength;
+    const dailyDelta = totalChange / numDays;
     const variationRange = isPosition ? 2.5 : 8 + (h % 10);
-    for (let daysAgo = 1; daysAgo <= 6; daysAgo++) {
+    for (let daysAgo = 1; daysAgo <= numDays; daysAgo++) {
       const pastDate = new Date(baseTime - daysAgo * oneDay);
       const dateStr = `${pastDate.getFullYear()}-${String(pastDate.getMonth() + 1).padStart(2, "0")}-${String(pastDate.getDate()).padStart(2, "0")}`;
       const linear = row.overall - dailyDelta * daysAgo;
       const variation = dayVariation(key, daysAgo, variationRange);
-      const daySpread = (daysAgo / 6) * (h % 5) * (isPosition ? 0.5 : 2);
+      const daySpread = (daysAgo / numDays) * (h % 5) * (isPosition ? 0.5 : 2);
       const overallRaw = linear + variation + (trendUp ? -daySpread : daySpread);
       const overall = Math.max(0, Math.min(cap, overallRaw));
       const segVar = variation * 0.6;
@@ -214,6 +219,8 @@ export function getPorscheScores(): PorscheScoreRow[] {
     });
   }
   fillSyntheticForZeroModels(rows);
+  // Normalize to Jan 15–22 range: use 2025-01-22 as latest, addMockHistory adds 7 days back to 2025-01-15
+  for (const r of rows) r.reportDate = LUXURY_SUV_DATA_END;
   cached = addMockHistory(rows);
   return cached;
 }
@@ -222,15 +229,20 @@ export function getPorscheScores(): PorscheScoreRow[] {
 export function getLatestReportDate(): string {
   const rows = getPorscheScores();
   const dates = [...new Set(rows.map((r) => r.reportDate))].sort();
-  return dates[dates.length - 1] ?? "2026-02-03";
+  return dates[dates.length - 1] ?? LUXURY_SUV_DATA_END;
 }
 
 /** Report date for N days before the latest. */
 export function getReportDateDaysAgo(daysAgo: number): string {
   const latest = getLatestReportDate();
-  const [y, m, d] = latest.split("-").map(Number);
+  return getDateDaysBefore(latest, daysAgo);
+}
+
+/** Date string N days before a given YYYY-MM-DD date. */
+export function getDateDaysBefore(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
   const t = new Date(y!, m! - 1, d!);
-  t.setDate(t.getDate() - daysAgo);
+  t.setDate(t.getDate() - days);
   return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 }
 
@@ -331,7 +343,8 @@ export function getTimelineData(
   metric: PorscheScoreRow["metric"],
   brandIds: string[],
   modelIds: string[],
-  topic: TimelineTopic = "overall"
+  topic: TimelineTopic = "overall",
+  reportDate?: string
 ): { dates: string[]; series: TimelineSeries[] } {
   const rows = getPorscheScores();
   const brandSet = new Set(brandIds);
@@ -343,6 +356,7 @@ export function getTimelineData(
     if (!brandSet.has(r.brand) || r.metric !== metric) continue;
     const mid = `${r.modelMaker}|${r.model}`;
     if (!modelSet.has(mid)) continue;
+    if (reportDate && r.reportDate > reportDate) continue;
     dateSet.add(r.reportDate);
     const key = `${r.brand}|${r.reportDate}`;
     const cur = byBrandDate.get(key) ?? { sum: 0, count: 0 };
@@ -384,7 +398,8 @@ export interface DimensionTimelineSeries {
 export function getDimensionTimelineData(
   metric: PorscheScoreRow["metric"],
   modelId: string,
-  brand = "PORSCHE"
+  brand = "PORSCHE",
+  reportDate?: string
 ): { dates: string[]; series: DimensionTimelineSeries[] } {
   const rows = getPorscheScores();
   const dateSet = new Set<string>();
@@ -393,7 +408,8 @@ export function getDimensionTimelineData(
     (r) =>
       r.brand === brand &&
       r.metric === metric &&
-      (isAvg || `${r.modelMaker}|${r.model}` === modelId)
+      (isAvg || `${r.modelMaker}|${r.model}` === modelId) &&
+      (reportDate == null || r.reportDate <= reportDate)
   );
   for (const r of filtered) dateSet.add(r.reportDate);
   const dates = Array.from(dateSet).sort();
@@ -443,6 +459,51 @@ export function getDimensionTimelineData(
   return { dates, series };
 }
 
+/** Timeline of all models for one brand and topic (dimension). For Overview "models over time" view. */
+export function getModelTimelineData(
+  metric: PorscheScoreRow["metric"],
+  brand: string,
+  topicId: keyof GaugeDimensions,
+  reportDate?: string
+): { dates: string[]; series: DimensionTimelineSeries[] } {
+  const rows = getPorscheScores();
+  const filtered = rows.filter(
+    (r) =>
+      r.brand === brand &&
+      r.metric === metric &&
+      (reportDate == null || r.reportDate <= reportDate)
+  );
+  const dateSet = new Set<string>();
+  for (const r of filtered) dateSet.add(r.reportDate);
+  const dates = Array.from(dateSet).sort();
+
+  const models = getUniqueModels();
+  const byDateModel = new Map<string, { sum: number; count: number }>();
+  for (const r of filtered) {
+    const modelId = `${r.modelMaker}|${r.model}`;
+    const key = `${r.reportDate}|${modelId}`;
+    const cur = byDateModel.get(key) ?? { sum: 0, count: 0 };
+    const val = r[topicId] ?? r.overall;
+    cur.sum += val;
+    cur.count += 1;
+    byDateModel.set(key, cur);
+  }
+
+  const series: DimensionTimelineSeries[] = models.map((m) => ({
+    dimension: m.id as keyof GaugeDimensions,
+    label: m.label,
+    data: dates.map((date) => {
+      const key = `${date}|${m.id}`;
+      const v = byDateModel.get(key);
+      const value =
+        v && v.count > 0 ? Math.round((v.sum / v.count) * 10) / 10 : 0;
+      return { date, value };
+    }),
+  }));
+
+  return { dates, series };
+}
+
 /** Topic columns for results table: Overall first, then others. */
 export const RESULTS_TABLE_TOPICS: { id: keyof GaugeDimensions; label: string }[] = [
   { id: "overall", label: "Overall" },
@@ -472,16 +533,18 @@ export interface ResultsTableRow {
   changePrice: number | null;
 }
 
-/** Results table: brands × topics for latest (or given) date, metric and models. Includes change vs previous date. */
+/** Results table: brands × topics for latest (or given) date, metric and models.
+ * Change values = score(reportDate) − score(compareToDate), i.e. selected date minus compare-to date. */
 export function getResultsTableData(
   metric: PorscheScoreRow["metric"],
   brandIds: string[],
   modelIds: string[],
-  reportDate?: string
+  reportDate?: string,
+  compareToDate?: string
 ): { brands: string[]; topicColumns: typeof RESULTS_TABLE_TOPICS; rows: ResultsTableRow[] } {
   const rows = getPorscheScores();
   const date = reportDate ?? getLatestReportDate();
-  const prevDate = getReportDateDaysAgo(1);
+  const prevDate = compareToDate ?? (reportDate ? getDateDaysBefore(reportDate, 1) : getReportDateDaysAgo(1));
   const brandSet = new Set(brandIds);
   const modelSet = new Set(modelIds);
   const byBrandTopic = new Map<string, { sum: number; count: number }>();
@@ -616,20 +679,23 @@ function getDimensionsForRows(
   };
 }
 
-/** Get gauge dimension data for a model (or average) and metric, with change vs 7 days ago. */
+/** Get gauge dimension data for a model (or average) and metric.
+ * Change values = score(reportDate) − score(compareToDate), i.e. selected date minus compare-to date. */
 export function getGaugeDimensionsForModelWithChange(
   metric: PorscheScoreRow["metric"],
   modelId: string,
-  brand = "PORSCHE"
+  brand = "PORSCHE",
+  reportDate?: string,
+  compareToDate?: string
 ): GaugeDimensionsWithChange {
   const all = getPorscheScores();
-  const latest = getLatestReportDate();
-  const weekAgo = getReportDateDaysAgo(6);
+  const latest = reportDate ?? getLatestReportDate();
+  const previousDate = compareToDate ?? getDateDaysBefore(latest, 6);
   const rowsLatest = all.filter(
     (r) => r.brand === brand && r.reportDate === latest && (modelId === "__average__" || `${r.modelMaker}|${r.model}` === modelId)
   );
   const rowsWeekAgo = all.filter(
-    (r) => r.brand === brand && r.reportDate === weekAgo && (modelId === "__average__" || `${r.modelMaker}|${r.model}` === modelId)
+    (r) => r.brand === brand && r.reportDate === previousDate && (modelId === "__average__" || `${r.modelMaker}|${r.model}` === modelId)
   );
   const current = getDimensionsForRows(rowsLatest, metric);
   const previous = getDimensionsForRows(rowsWeekAgo, metric);
@@ -661,15 +727,18 @@ function changeKeyForTopic(topicId: string): keyof GaugeDimensionsWithChange {
   return key as keyof GaugeDimensionsWithChange;
 }
 
+/** Topic × model scores for grouped chart. Changes = score(reportDate) − score(compareToDate). */
 export function getTopicModelScores(
   metric: PorscheScoreRow["metric"],
-  brand = "PORSCHE"
+  brand = "PORSCHE",
+  reportDate?: string,
+  compareToDate?: string
 ): TopicModelScores {
   const models = getUniqueModels();
   const topicColumns = RESULTS_TABLE_TOPICS;
   const topicIds = topicColumns.map((t) => t.id);
   const modelData = models.map((m) => {
-    const dims = getGaugeDimensionsForModelWithChange(metric, m.id, brand);
+    const dims = getGaugeDimensionsForModelWithChange(metric, m.id, brand, reportDate, compareToDate);
     const values = topicIds.map((id) => dims[id] ?? 0);
     const changes = topicIds.map((id) => (dims[changeKeyForTopic(id)] as number) ?? 0);
     return { id: m.id, label: m.label, values, changes };

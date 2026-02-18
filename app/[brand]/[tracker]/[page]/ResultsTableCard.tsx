@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useTrackerDate } from "../TrackerDateContext";
 
 const AVERAGE_ACROSS_ALL = "__average__";
 const MAIN_BRAND_PORSCHE = "PORSCHE";
@@ -78,6 +79,7 @@ export function ResultsTableCard() {
   const params = useParams();
   const brandId = (params?.brand as string) ?? "porsche";
   const trackerId = (params?.tracker as string) ?? "luxury-suvs";
+  const { selectedDateStr, compareToDateStr } = useTrackerDate();
   const mainBrand = brandId === "cetaphil" ? MAIN_BRAND_CETAPHIL : MAIN_BRAND_PORSCHE;
   const competitorSet = new Set(
     brandId === "cetaphil"
@@ -225,6 +227,8 @@ export function ResultsTableCard() {
       models: modelIdsForRequest.join(","),
       table: "1",
     });
+    if (selectedDateStr) params.set("date", selectedDateStr);
+    if (compareToDateStr) params.set("compareToDate", compareToDateStr);
     fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
       .then((data: { brands?: string[]; topicColumns?: { id: string; label: string }[]; rows?: Record<string, unknown>[] }) => {
@@ -246,15 +250,15 @@ export function ResultsTableCard() {
       })
       .catch(() => setTableData(null))
       .finally(() => setLoading(false));
-  }, [brandId, trackerId, mainBrand, metric, selectedBrands, selectedModel, modelIdsForRequest.join(",")]);
+  }, [brandId, trackerId, mainBrand, metric, selectedBrands, selectedModel, modelIdsForRequest.join(","), selectedDateStr, compareToDateStr]);
 
   return (
     <div className="w-full rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
-        <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
+      <div className="flex flex-col items-start gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5] md:flex-row md:items-center md:justify-between">
+        <h2 className="w-full text-[20px] font-semibold text-[#262626] leading-tight md:w-auto">
           Results table
         </h2>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center justify-start gap-2 md:w-auto">
           <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
             {(Object.keys(METRIC_CONFIG) as TimelineMetric[]).map((m) => (
               <button

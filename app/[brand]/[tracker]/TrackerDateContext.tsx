@@ -1,0 +1,64 @@
+"use client";
+
+import { createContext, useContext, type ReactNode } from "react";
+
+/** Format Date as YYYY-MM-DD for API params. */
+export function formatDateForApi(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+interface TrackerDateContextValue {
+  selectedDate: Date;
+  setSelectedDate: (d: Date) => void;
+  /** YYYY-MM-DD for API query params; null when date should not drive data (e.g. non–Luxury SUV). */
+  selectedDateStr: string | null;
+  compareToDate: Date;
+  setCompareToDate: (d: Date) => void;
+  /** YYYY-MM-DD for compare-to API param; null when not used. */
+  compareToDateStr: string | null;
+}
+
+const TrackerDateContext = createContext<TrackerDateContextValue | null>(null);
+
+export function TrackerDateProvider({
+  children,
+  selectedDate,
+  setSelectedDate,
+  compareToDate,
+  setCompareToDate,
+  useDateForData,
+}: {
+  children: ReactNode;
+  selectedDate: Date;
+  setSelectedDate: (d: Date) => void;
+  compareToDate: Date;
+  setCompareToDate: (d: Date) => void;
+  /** When true, data fetches use these dates (e.g. Luxury SUV trackers). */
+  useDateForData: boolean;
+}) {
+  const value: TrackerDateContextValue = {
+    selectedDate,
+    setSelectedDate,
+    selectedDateStr: useDateForData ? formatDateForApi(selectedDate) : null,
+    compareToDate,
+    setCompareToDate,
+    compareToDateStr: useDateForData ? formatDateForApi(compareToDate) : null,
+  };
+
+  return (
+    <TrackerDateContext.Provider value={value}>
+      {children}
+    </TrackerDateContext.Provider>
+  );
+}
+
+export function useTrackerDate(): TrackerDateContextValue {
+  const ctx = useContext(TrackerDateContext);
+  if (!ctx) {
+    throw new Error("useTrackerDate must be used within TrackerDateProvider");
+  }
+  return ctx;
+}

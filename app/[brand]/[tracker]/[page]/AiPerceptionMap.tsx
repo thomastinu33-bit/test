@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
+import { useTrackerDate } from "../TrackerDateContext";
 
 type RadarMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
 
@@ -59,6 +60,22 @@ const CHART_COLORS = [
 
 function getChartColor(index: number): string {
   return CHART_COLORS[index % CHART_COLORS.length]!;
+}
+
+function formatDateLabel(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y!, m! - 1, d!);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
+}
+
+interface TimelineSeriesPoint {
+  date: string;
+  value: number;
+}
+
+interface TimelineSeriesItem {
+  brand: string;
+  data: TimelineSeriesPoint[];
 }
 
 interface BrandSeries {
@@ -358,6 +375,15 @@ export function AiPerceptionMap() {
   const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
   const [topicDropdownRect, setTopicDropdownRect] = useState<{ top: number; left: number } | null>(null);
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [aiMapView, setAiMapView] = useState<"radar" | "timeline">("radar");
+  const [selectedTopicTimeline, setSelectedTopicTimeline] = useState<string>("overall");
+  const [timelineData, setTimelineData] = useState<{ dates: string[]; series: TimelineSeriesItem[] } | null>(null);
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineChartWidth, setTimelineChartWidth] = useState(600);
+  const [hoveredDateIndex, setHoveredDateIndex] = useState<number | null>(null);
+  const timelineChartRef = useRef<HTMLDivElement>(null);
+  const { selectedDateStr, compareToDateStr, compareToDate } = useTrackerDate();
+  const showTimelineToggle = trackerId !== "luxury-suvs";
 
   const competitorSet = new Set(
     brandId === "cetaphil"
@@ -415,6 +441,8 @@ export function AiPerceptionMap() {
       models: modelIdsForRequest.join(","),
       table: "1",
     });
+    if (selectedDateStr) params.set("date", selectedDateStr);
+    if (compareToDateStr) params.set("compareToDate", compareToDateStr);
     fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
       .then((data: TableResponse) => {
@@ -428,7 +456,50 @@ export function AiPerceptionMap() {
       })
       .catch(() => setTableData(null))
       .finally(() => setLoading(false));
-  }, [brandId, trackerId, metric, modelIdsForRequest.join(","), selectedModel, brandsForRequest.join(",")]);
+  }, [brandId, trackerId, metric, modelIdsForRequest.join(","), selectedModel, brandsForRequest.join(","), selectedDateStr, compareToDateStr]);
+
+  useEffect(() => {
+    if (aiMapView !== "timeline" || brandsForRequest.length === 0 || modelIdsForRequest.length === 0) {
+      setTimelineData(null);
+      return;
+    }
+    setTimelineLoading(true);
+    const params = new URLSearchParams({
+      brandId,
+      trackerId,
+      metric,
+      brands: brandsForRequest.join(","),
+      models: modelIdsForRequest.join(","),
+      chart: "timeline",
+      topics: selectedTopicTimeline,
+      series: "brands",
+    });
+    if (selectedDateStr) params.set("date", selectedDateStr);
+    if (compareToDateStr) params.set("compareToDate", compareToDateStr);
+    fetch(`/api/timeline?${params}`)
+      .then((res) => res.json())
+      .then((data: { dates?: string[]; series?: TimelineSeriesItem[] }) => {
+        setTimelineData({
+          dates: data.dates ?? [],
+          series: data.series ?? [],
+        });
+      })
+      .catch(() => setTimelineData(null))
+      .finally(() => setTimelineLoading(false));
+  }, [aiMapView, brandId, trackerId, metric, brandsForRequest.join(","), modelIdsForRequest.join(","), selectedTopicTimeline, selectedDateStr, compareToDateStr]);
+
+  useEffect(() => {
+    const el = timelineChartRef.current;
+    if (!el) return;
+    const updateWidth = () => {
+      const w = el.getBoundingClientRect().width;
+      if (Number.isFinite(w) && w > 0) setTimelineChartWidth(Math.max(200, w));
+    };
+    const ro = new ResizeObserver(() => { if (el.isConnected) updateWidth(); });
+    ro.observe(el);
+    requestAnimationFrame(updateWidth);
+    return () => ro.disconnect();
+  }, [aiMapView]);
 
   const competitorOrder = new Map<string, number>(
     (brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE).map((c, i) => [c, i])
@@ -502,6 +573,8 @@ export function AiPerceptionMap() {
       : selectedTopics.size === 1
         ? (topicColumns.find((t) => String(t.id) === Array.from(selectedTopics)[0])?.label ?? "1 topic")
         : `${selectedTopics.size} topics`;
+  const timelineTopicDisplayLabel =
+    topicColumns.find((t) => String(t.id) === selectedTopicTimeline)?.label ?? "Overall";
 
   const series: BrandSeries[] =
     tableData && effectiveTopics.length > 0
@@ -534,11 +607,11 @@ export function AiPerceptionMap() {
 
   return (
     <div className="rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-visible">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
-        <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
-          AI Perception Map
+      <div className="flex flex-col items-start gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5] md:flex-row md:items-center md:justify-between">
+        <h2 className="w-full text-[20px] font-semibold text-[#262626] leading-tight md:w-auto">
+          {trackerId === "luxury-suvs-v2" ? "Results Across Brands" : "AI Perception Map"}
         </h2>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex w-full flex-wrap items-center justify-start gap-2 md:w-auto">
           <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
             {(Object.keys(METRIC_CONFIG) as RadarMetric[]).map((m) => (
               <button
@@ -638,11 +711,11 @@ export function AiPerceptionMap() {
                   else openTopicDropdown();
                 }}
                 className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-                aria-label="Select topics"
+                aria-label={showTimelineToggle && aiMapView === "timeline" ? "Select topic" : "Select topics"}
                 aria-expanded={topicDropdownOpen}
               >
                 <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Topic</span>
-                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
+                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{showTimelineToggle && aiMapView === "timeline" ? timelineTopicDisplayLabel : topicDisplayLabel}</span>
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -657,6 +730,15 @@ export function AiPerceptionMap() {
                       <div className="max-h-64 overflow-auto py-1">
                         {topicColumns.map((t) => {
                           const idStr = String(t.id);
+                          if (showTimelineToggle && aiMapView === "timeline") {
+                            const isSelected = selectedTopicTimeline === idStr;
+                            return (
+                              <button key={t.id} type="button" onClick={() => { setSelectedTopicTimeline(idStr); closeTopicDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSelected ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
+                                <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSelected && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
+                                <span className="truncate">{t.label}</span>
+                              </button>
+                            );
+                          }
                           const isSelected = selectedTopics.has(idStr);
                           return (
                             <label key={t.id} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
@@ -734,7 +816,146 @@ export function AiPerceptionMap() {
       </div>
 
       <div className="px-4 pt-6 pb-6 sm:px-6">
-        {loading ? (
+        {showTimelineToggle && aiMapView === "timeline" ? (
+          <div ref={timelineChartRef} className="w-full min-w-0">
+            {timelineLoading && !timelineData ? (
+              <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
+                Loading…
+              </div>
+            ) : !timelineData || timelineData.dates.length === 0 || timelineData.series.length === 0 ? (
+              <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
+                {selectedBrands.size === 0 ? "Select at least one brand to see the timeline." : "No data for the selected brands, topic, and model."}
+              </div>
+            ) : (() => {
+              const config = METRIC_CONFIG[metric];
+              const isPosition = metric === "Average Position";
+              const chartHeight = 280;
+              const chartPadding = { top: 16, right: 16, bottom: 32, left: 44 };
+              const TOOLTIP_GAP = 12;
+              const TOOLTIP_MAX_WIDTH = 224;
+              const { dates, series: timelineSeries } = timelineData;
+              const width = timelineChartWidth;
+              const plotWidth = Math.max(0, width - chartPadding.left - chartPadding.right);
+              const plotHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+              const allValues = timelineSeries.flatMap((s) => s.data.map((d) => d.value));
+              const dataMin = allValues.length ? Math.min(...allValues) : 0;
+              const dataMax = allValues.length ? Math.max(...allValues) : config.max;
+              const dataRange = Math.max(dataMax - dataMin, 1);
+              const padding = Math.max(dataRange * 0.08, 2);
+              const yMin = Math.max(0, dataMin - padding);
+              const yMax = Math.min(config.max, dataMax + padding);
+              const yRange = Math.max(0.001, yMax - yMin);
+              const xScale = (i: number) =>
+                chartPadding.left + (dates.length > 1 ? (i / (dates.length - 1)) * plotWidth : 0);
+              const yScale = (v: number) =>
+                chartPadding.top + plotHeight - ((v - yMin) / yRange) * plotHeight;
+              const handleChartMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+                if (dates.length === 0) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                if (x < chartPadding.left || x > width - chartPadding.right) {
+                  setHoveredDateIndex(null);
+                  return;
+                }
+                const fraction = (x - chartPadding.left) / (width - chartPadding.right - chartPadding.left);
+                setHoveredDateIndex(Math.max(0, Math.min(Math.round(fraction * (dates.length - 1)), dates.length - 1)));
+              };
+              const compareToDateLabel = compareToDateStr
+                ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
+                : undefined;
+              return (
+                <div className="relative">
+                  <svg
+                    width={width}
+                    height={chartHeight}
+                    className="block cursor-crosshair"
+                    aria-hidden
+                    onMouseMove={handleChartMouseMove}
+                    onMouseLeave={() => setHoveredDateIndex(null)}
+                  >
+                    {[yMin, yMin + yRange * 0.25, yMin + yRange * 0.5, yMin + yRange * 0.75, yMax].map((v, i) => (
+                      <text key={i} x={chartPadding.left - 8} y={yScale(v)} textAnchor="end" className="fill-[#525252] text-[11px]">
+                        {isPosition ? v.toFixed(1) : Math.round(v).toString()}
+                      </text>
+                    ))}
+                    {dates.map((d, i) => (
+                      <text key={d} x={xScale(i)} y={chartHeight - 8} textAnchor="middle" className="fill-[#525252] text-[10px]">
+                        {formatDateLabel(d)}
+                      </text>
+                    ))}
+                    {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
+                      <line key={i} x1={chartPadding.left} x2={width - chartPadding.right} y1={yScale(yMin + yRange * pct)} y2={yScale(yMin + yRange * pct)} stroke="#e5e5e5" strokeWidth={1} strokeDasharray="4 2" />
+                    ))}
+                    {hoveredDateIndex !== null && (
+                      <line x1={xScale(hoveredDateIndex)} x2={xScale(hoveredDateIndex)} y1={chartPadding.top} y2={chartHeight - chartPadding.bottom} stroke="#999" strokeWidth={1} strokeDasharray="4 2" pointerEvents="none" />
+                    )}
+                    {timelineSeries.map((s, idx) => {
+                      const color = getChartColor(idx);
+                      const points = s.data.map((p) => { const dateIdx = dates.indexOf(p.date); if (dateIdx === -1) return null; return `${xScale(dateIdx)},${yScale(p.value)}`; }).filter(Boolean) as string[];
+                      const d = points.length >= 2 ? `M ${points.join(" L ")}` : "";
+                      return (
+                        <g key={s.brand}>
+                          <path d={d} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                          {hoveredDateIndex !== null && (() => {
+                            const point = s.data.find((p) => dates.indexOf(p.date) === hoveredDateIndex);
+                            if (!point) return null;
+                            return <circle key={`${s.brand}-hover`} cx={xScale(hoveredDateIndex)} cy={yScale(point.value)} r={4} fill={color} stroke="white" strokeWidth={2} pointerEvents="none" />;
+                          })()}
+                        </g>
+                      );
+                    })}
+                  </svg>
+                  {hoveredDateIndex !== null && dates[hoveredDateIndex] && (
+                    <div
+                      className="absolute z-10 pointer-events-none rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-2 px-3 min-w-[10rem] max-w-[14rem]"
+                      style={{ left: Math.max(0, Math.min(xScale(hoveredDateIndex) + TOOLTIP_GAP, width - TOOLTIP_MAX_WIDTH)), top: 8 + TOOLTIP_GAP }}
+                    >
+                      <p className="text-xs font-semibold text-[#262626] mb-2 border-b border-[#e5e5e5] pb-1.5 text-left">{formatDateLabel(dates[hoveredDateIndex]!)}</p>
+                      <div className="space-y-1">
+                        {timelineSeries.map((s, idx) => {
+                          const point = s.data.find((p) => dates.indexOf(p.date) === hoveredDateIndex);
+                          const value = point?.value ?? 0;
+                          const valueAtCompareTo = compareToDateStr ? s.data.find((p) => p.date === compareToDateStr)?.value : undefined;
+                          const prevValue = valueAtCompareTo != null && Number.isFinite(valueAtCompareTo) ? valueAtCompareTo : (hoveredDateIndex > 0 ? s.data.find((p) => p.date === dates[hoveredDateIndex - 1])?.value : undefined);
+                          const change = prevValue != null && Number.isFinite(prevValue) ? Math.round((value - prevValue) * 10) / 10 : null;
+                          const hasChange = change != null;
+                          const changeGood = hasChange && (isPosition ? (change ?? 0) < 0 : (change ?? 0) > 0);
+                          const changeBad = hasChange && (isPosition ? (change ?? 0) > 0 : (change ?? 0) < 0);
+                          const changeText = hasChange && change !== 0 ? `${(change ?? 0) > 0 ? "▲" : "▼"} ${Math.abs(change ?? 0).toFixed(1)}` : hasChange ? "0" : "—";
+                          const changePillClass = changeGood ? "bg-emerald-50 text-emerald-700" : changeBad ? "bg-red-50 text-red-600" : hasChange ? "bg-[#f0f0f0] text-[#525252]" : "bg-[#f0f0f0] text-[#999]";
+                          return (
+                            <div key={s.brand} className="flex items-center justify-between gap-4 text-xs w-full">
+                              <span className="flex items-center gap-1.5 min-w-0">
+                                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: getChartColor(idx) }} />
+                                <span className="text-[#525252] truncate">{s.brand}</span>
+                              </span>
+                              <span className="flex items-center gap-2 shrink-0">
+                                <span className="font-medium tabular-nums text-[#262626]">{isPosition ? value.toFixed(1) : Math.round(value).toString()}</span>
+                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold tabular-nums uppercase tracking-wide ${changePillClass}`}>
+                                  {changeText}
+                                  {hasChange && change !== 0 && " pts"}
+                                </span>
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {compareToDateLabel && <p className="mt-2 pt-2 border-t border-[#e5e5e5] text-xs text-[#7F7F7F] text-left">Compare to {compareToDateLabel}</p>}
+                    </div>
+                  )}
+                  <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 border-t border-[#e5e5e5] pt-3">
+                    {timelineSeries.map((s, idx) => (
+                      <span key={s.brand} className="flex items-center gap-2 text-xs text-[#525252]">
+                        <span className="w-3 h-0.5 rounded-full shrink-0" style={{ background: getChartColor(idx) }} />
+                        {s.brand}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        ) : loading ? (
           <div className="min-h-[400px] flex items-center justify-center text-sm text-[#7F7F7F]">
             Loading…
           </div>
@@ -748,6 +969,33 @@ export function AiPerceptionMap() {
           </div>
         ) : (
           <RadarChart topicColumns={effectiveTopics} series={series} metric={metric} />
+        )}
+
+        {showTimelineToggle && (
+          <div className="mt-6 pt-4 border-t border-[#e5e5e5] flex items-center justify-center gap-1">
+            <button
+              type="button"
+              onClick={() => setAiMapView("radar")}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${aiMapView === "radar" ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]" : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"}`}
+              aria-label="Perception map (radar)"
+              title="Perception map"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAiMapView("timeline")}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${aiMapView === "timeline" ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]" : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"}`}
+              aria-label="Timeline (brands over time)"
+              title="Timeline"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </button>
+          </div>
         )}
       </div>
     </div>

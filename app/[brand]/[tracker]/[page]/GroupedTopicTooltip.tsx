@@ -34,6 +34,8 @@ export interface GroupedTopicTooltipProps {
   formatScore: (v: number) => string;
   getModelBarColor: (label: string, index: number) => string;
   style: React.CSSProperties;
+  /** Optional line at bottom, e.g. "Compare to 15 Jan 2025" */
+  compareToDateLabel?: string;
 }
 
 export function GroupedTopicTooltip({
@@ -46,6 +48,7 @@ export function GroupedTopicTooltip({
   formatScore,
   getModelBarColor,
   style,
+  compareToDateLabel,
 }: GroupedTopicTooltipProps) {
   const avgValue = averages[topicIndex];
   const avgChange = averageChanges?.[topicIndex];
@@ -111,6 +114,11 @@ export function GroupedTopicTooltip({
           );
         })}
       </div>
+      {compareToDateLabel && (
+        <p className="mt-2 pt-2 border-t border-[#e5e5e5] text-xs text-[#7F7F7F] text-left">
+          Compare to {compareToDateLabel}
+        </p>
+      )}
     </div>
   );
 }

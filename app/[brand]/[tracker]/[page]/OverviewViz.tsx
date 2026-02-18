@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
+import { useTrackerDate } from "../TrackerDateContext";
 import { getModelIcon } from "./ModelLogos";
 import { ScoreGauge } from "./ScoreGauge";
 
@@ -171,6 +172,7 @@ function OverviewTimelineChart({
   isAvgPosition,
   formatValue,
   width,
+  compareToDateLabel,
 }: {
   dates: string[];
   series: DimensionTimelineSeries[];
@@ -179,6 +181,7 @@ function OverviewTimelineChart({
   isAvgPosition: boolean;
   formatValue: (v: number) => string;
   width: number;
+  compareToDateLabel?: string;
 }) {
   const [hoveredDateIndex, setHoveredDateIndex] = useState<number | null>(null);
 
@@ -381,6 +384,11 @@ function OverviewTimelineChart({
                 );
               })}
             </div>
+            {compareToDateLabel && (
+              <p className="mt-2 pt-2 border-t border-[#e5e5e5] text-xs text-[#7F7F7F] text-left">
+                Compare to {compareToDateLabel}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -426,11 +434,18 @@ export function OverviewViz() {
   const [overviewView, setOverviewView] = useState<OverviewView>("gauge");
   const [chartWidth, setChartWidth] = useState(600);
 
+  const { selectedDateStr, compareToDateStr, compareToDate } = useTrackerDate();
+  const changeTooltip = compareToDateStr
+    ? `Compared to ${compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}`
+    : undefined;
+
   const fetchData = () => {
     setLoading(true);
     const q = new URLSearchParams({ brandId, trackerId, metric, model: AVERAGE_ACROSS_ALL, topic: topicId });
     if (selectedBrand) q.set("brand", selectedBrand);
     if (overviewView === "timeline") q.set("view", "timeline");
+    if (selectedDateStr) q.set("date", selectedDateStr);
+    if (compareToDateStr) q.set("compareToDate", compareToDateStr);
     fetch(`/api/scores?${q}`)
       .then((res) => res.json())
       .then((json: OverviewApiResponse) => {
@@ -453,7 +468,7 @@ export function OverviewViz() {
 
   useEffect(() => {
     fetchData();
-  }, [brandId, trackerId, metric, topicId, selectedBrand, overviewView]);
+  }, [brandId, trackerId, metric, topicId, selectedBrand, overviewView, selectedDateStr, compareToDateStr]);
 
   useEffect(() => {
     const el = chartRef.current;
@@ -543,11 +558,11 @@ export function OverviewViz() {
 
   return (
     <div ref={cardRef} className="rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
-        <h2 className="text-[20px] font-semibold text-[#262626] leading-tight">
+      <div className="flex flex-col items-start gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5] md:flex-row md:items-center md:justify-between">
+        <h2 className="w-full text-[20px] font-semibold text-[#262626] leading-tight md:w-auto">
           Results Across Models
         </h2>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex w-full flex-wrap items-center justify-start gap-2 md:w-auto">
           <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
             {(Object.keys(METRIC_CONFIG) as OverviewMetric[]).map((m) => (
               <button
@@ -564,49 +579,6 @@ export function OverviewViz() {
               </button>
             ))}
           </div>
-          {dimensionKeys.length > 0 && (
-            <div className="relative min-w-[10rem]">
-              <button
-                type="button"
-                onClick={() => { setTopicDropdownOpen((o) => !o); setBrandDropdownOpen(false); }}
-                className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-                aria-label="Select topic"
-                aria-expanded={topicDropdownOpen}
-              >
-                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                  Topic
-                </span>
-                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
-                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </button>
-              {topicDropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => setTopicDropdownOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
-                    {dimensionKeys.map((key) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => selectTopic(key)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                          topicId === key ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
-                        }`}
-                      >
-                        <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                          {topicId === key && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
-                        </span>
-                        <span className="truncate">{dimensionLabels[key] ?? key}</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
           {brands.length > 0 && (
             <div className="relative min-w-[10rem]">
               <button
@@ -695,6 +667,49 @@ export function OverviewViz() {
               )}
             </div>
           )}
+          {dimensionKeys.length > 0 && (
+            <div className="relative min-w-[10rem]">
+              <button
+                type="button"
+                onClick={() => { setTopicDropdownOpen((o) => !o); setBrandDropdownOpen(false); }}
+                className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
+                aria-label="Select topic"
+                aria-expanded={topicDropdownOpen}
+              >
+                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
+                  Topic
+                </span>
+                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </button>
+              {topicDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => setTopicDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
+                    {dimensionKeys.map((key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => selectTopic(key)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
+                          topicId === key ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
+                        }`}
+                      >
+                        <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
+                          {topicId === key && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
+                        </span>
+                        <span className="truncate">{dimensionLabels[key] ?? key}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <button
             type="button"
             onClick={handleCapture}
@@ -714,7 +729,7 @@ export function OverviewViz() {
         {overviewView === "gauge" && (
           <>
             {modelScores && modelScores.length > 0 ? (
-              <div className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-6">
+              <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2 sm:gap-4 lg:gap-6 min-w-0">
                 {(() => {
                   const n = modelScores.length;
                   const avgValue =
@@ -728,7 +743,7 @@ export function OverviewViz() {
                     changes.length > 0 ? Math.round((changes.reduce((a, b) => a + b, 0) / changes.length) * 10) / 10 : null;
                   return (
                     <>
-                      <div key="average" className="flex justify-center">
+                      <div key="average" className="flex justify-center min-w-0">
                         <ScoreGauge
                           label="Average"
                           value={avgValue}
@@ -739,6 +754,7 @@ export function OverviewViz() {
                           arcGradientEnd="var(--primary-dark)"
                           valueFormat={(v) => formatValue(v)}
                           inverse={isAvgPosition}
+                          changeTooltip={changeTooltip}
                         />
                       </div>
                       {modelScores.map((ms, i) => {
@@ -751,7 +767,7 @@ export function OverviewViz() {
                         const override = MODEL_GAUGE_OVERRIDES[ms.label];
                         const gaugeColors = getModelGaugeColors(i);
                         return (
-                          <div key={ms.id} className="flex justify-center">
+                          <div key={ms.id} className="flex justify-center min-w-0">
                             <ScoreGauge
                               label={ms.label}
                               value={ms.value}
@@ -763,6 +779,7 @@ export function OverviewViz() {
                               valueFormat={(v) => formatValue(v)}
                               inverse={isAvgPosition}
                               icon={getModelIcon(ms.label)}
+                              changeTooltip={changeTooltip}
                             />
                           </div>
                         );
@@ -772,7 +789,7 @@ export function OverviewViz() {
                 })()}
               </div>
             ) : (
-              <div className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-6">
+              <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2 sm:gap-4 lg:gap-6 min-w-0">
                 {dimensionKeys.map((key, i) => {
                   const changeKey = `change${key.charAt(0).toUpperCase()}${key.slice(1)}`;
                   const value = dimensions[key] as number;
@@ -781,7 +798,7 @@ export function OverviewViz() {
                     isAvgPosition && changeRaw != null ? -changeRaw : changeRaw;
                   const label = dimensionLabels[key] ?? key;
                   return (
-                    <div key={key} className="flex justify-center">
+                    <div key={key} className="flex justify-center min-w-0">
                       <ScoreGauge
                         label={label}
                         value={value}
@@ -792,16 +809,12 @@ export function OverviewViz() {
                         arcGradientEnd={GAUGE_ARC_GRADIENT_ENDS[i]}
                         valueFormat={(v) => formatValue(v)}
                         inverse={isAvgPosition}
+                        changeTooltip={changeTooltip}
                       />
                     </div>
                   );
                 })}
               </div>
-            )}
-            {isAvgPosition && (
-              <p className="mt-4 text-xs text-[#7F7F7F]">
-                Lower is better (e.g. 2.7 = average position 2.7 in rankings).
-              </p>
             )}
           </>
         )}
@@ -825,7 +838,21 @@ export function OverviewViz() {
                 isAvgPosition={isAvgPosition}
                 formatValue={formatValue}
                 width={chartWidth}
+                compareToDateLabel={compareToDateStr ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : undefined}
               />
+            )}
+          </div>
+        )}
+
+        {(isAvgPosition || (compareToDateStr && overviewView !== "timeline")) && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[#7F7F7F]">
+            {isAvgPosition && (
+              <span>Lower is better (e.g. 2.7 = average position 2.7 in rankings).</span>
+            )}
+            {compareToDateStr && overviewView !== "timeline" && (
+              <span className="ml-auto text-right">
+                Compared to {compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
+              </span>
             )}
           </div>
         )}

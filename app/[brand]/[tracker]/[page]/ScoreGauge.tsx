@@ -13,6 +13,8 @@ interface ScoreGaugeProps {
   valueFormat?: (n: number) => string;
   inverse?: boolean;
   icon?: React.ReactNode;
+  /** Tooltip for the change pill (e.g. "Compared to 15 Jan 2025") */
+  changeTooltip?: string;
 }
 
 export function ScoreGauge({
@@ -26,6 +28,7 @@ export function ScoreGauge({
   valueFormat = (n) => String(Math.round(n)),
   inverse = false,
   icon,
+  changeTooltip,
 }: ScoreGaugeProps) {
   const gradientId = useId().replace(/:/g, "-");
   const useGradient = arcGradientStart != null && arcGradientEnd != null;
@@ -105,6 +108,7 @@ export function ScoreGauge({
             {valueFormat(value)}
           </span>
           <span
+            title={changeTooltip}
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums uppercase tracking-wide ${
               changePositive
                 ? "bg-emerald-50 text-emerald-700"
