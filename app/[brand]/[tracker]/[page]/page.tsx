@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { OverviewViz } from "./OverviewViz";
+import { AiPerceptionMap } from "./AiPerceptionMap";
 import { TimelineViz } from "./TimelineViz";
 import { ResultsTableCard } from "./ResultsTableCard";
 
@@ -34,6 +35,7 @@ export default function TrackerPagePage() {
         </div>
         <OverviewViz />
         <TimelineViz />
+        <AiPerceptionMap />
         <ResultsTableCard />
       </div>
     );

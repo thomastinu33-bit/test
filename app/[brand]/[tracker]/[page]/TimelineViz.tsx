@@ -57,7 +57,7 @@ const TOPIC_OPTIONS: { id: TimelineTopicId; label: string }[] = [
   { id: "price", label: "Price" },
 ];
 
-const DEFAULT_TOPIC_COUNT = 5;
+const DEFAULT_TOPIC_COUNT = 10;
 const DEFAULT_TOPIC_IDS = TOPIC_OPTIONS.slice(0, DEFAULT_TOPIC_COUNT).map((t) => t.id);
 
 type ChartView = "grouped" | "timeline";
@@ -399,8 +399,13 @@ export function TimelineViz(props?: TimelineVizProps) {
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(
     () => new Set(DEFAULT_TOPIC_IDS)
   );
+  const [selectedBrandsTimeline, setSelectedBrandsTimeline] = useState<Set<string>>(new Set());
+  const [selectedTopicTimeline, setSelectedTopicTimeline] = useState<string>("overall");
   const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
   const [brandSearchQuery, setBrandSearchQuery] = useState("");
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [modelDropdownRect, setModelDropdownRect] = useState<{ top: number; left: number } | null>(null);
+  const modelTriggerRef = useRef<HTMLButtonElement>(null);
   const metric = props?.metric ?? internalMetric;
   const setMetric = props?.setMetric ?? setInternalMetric;
   const brandsList = internalBrandsList;
@@ -457,6 +462,12 @@ export function TimelineViz(props?: TimelineVizProps) {
         if (defaultBrand) {
           setSelectedBrand((prev) => (brands.some((b) => b.toUpperCase() === prev.toUpperCase()) ? prev : defaultBrand));
         }
+        const competitorOrder = brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE;
+        const inList = competitorOrder
+          .filter((c) => brands.some((b) => b.toUpperCase() === c.toUpperCase()))
+          .slice(0, 6)
+          .map((c) => brands.find((b) => b.toUpperCase() === c.toUpperCase())!);
+        setSelectedBrandsTimeline((prev) => (prev.size === 0 ? new Set(inList) : prev));
       })
       .catch(() => {});
   }, [brandId, trackerId, mainBrand]);
@@ -503,7 +514,8 @@ export function TimelineViz(props?: TimelineVizProps) {
       setLoading(false);
       return;
     }
-    if (!selectedBrand || modelIdsForRequest.length === 0) {
+    const timelineBrands = Array.from(selectedBrandsTimeline);
+    if (timelineBrands.length === 0 || modelIdsForRequest.length === 0) {
       setDates([]);
       setSeries([]);
       setLoading(false);
@@ -514,10 +526,10 @@ export function TimelineViz(props?: TimelineVizProps) {
       brandId,
       trackerId,
       metric,
-      brands: selectedBrand,
+      brands: timelineBrands.join(","),
       models: modelIdsForRequest.join(","),
       chart: "timeline",
-      ...(selectedTopics.size > 0 && { topics: Array.from(selectedTopics).join(",") }),
+      topics: selectedTopicTimeline,
     });
     fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
@@ -530,7 +542,7 @@ export function TimelineViz(props?: TimelineVizProps) {
         setSeries([]);
       })
       .finally(() => setLoading(false));
-  }, [chartView, brandId, trackerId, metric, selectedBrand, selectedModel, selectedTopics, modelIdsForRequest.join(",")]);
+  }, [chartView, brandId, trackerId, metric, selectedBrandsTimeline, selectedTopicTimeline, selectedModel, modelIdsForRequest.join(",")]);
 
   useEffect(() => {
     if (chartView !== "grouped") {
@@ -569,6 +581,17 @@ export function TimelineViz(props?: TimelineVizProps) {
   }, [chartView, brandId, trackerId, metric, selectedBrand, modelsList]);
 
   const brandSearchLower = brandSearchQuery.trim().toLowerCase();
+  const competitorOrder = new Map<string, number>(
+    (brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE).map((c, i) => [c, i])
+  );
+  const competitorBrands = brandsList
+    .filter((b) => competitorSet.has(b.toUpperCase()))
+    .sort((a, b) => (competitorOrder.get(a.toUpperCase()) ?? 999) - (competitorOrder.get(b.toUpperCase()) ?? 999));
+  const otherBrands = brandsList.filter((b) => !competitorSet.has(b.toUpperCase()));
+  const matchesBrandSearch = (b: string) => !brandSearchLower || b.toLowerCase().includes(brandSearchLower);
+  const filteredCompetitor = competitorBrands.filter(matchesBrandSearch);
+  const filteredOther = otherBrands.filter(matchesBrandSearch);
+  const hasAnyBrandFiltered = filteredCompetitor.length > 0 || filteredOther.length > 0;
   const filteredBrands = sortBrandsWithMainFirst(
     brandsList.filter((b) => !brandSearchLower || b.toLowerCase().includes(brandSearchLower)),
     mainBrand
@@ -632,6 +655,33 @@ export function TimelineViz(props?: TimelineVizProps) {
       : selectedTopics.size === 1
         ? (topicColumns.find((t) => String(t.id) === Array.from(selectedTopics)[0])?.label ?? "1 topic")
         : `${selectedTopics.size} topics`;
+
+  const timelineTopicDisplayLabel =
+    topicColumns.find((t) => String(t.id) === selectedTopicTimeline)?.label ?? "Overall";
+  const openModelDropdown = useCallback(() => {
+    const el = modelTriggerRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setModelDropdownRect({ top: rect.bottom + 4, left: Math.max(8, rect.right - 224) });
+    } else setModelDropdownRect({ top: 100, left: 16 });
+    setModelDropdownOpen(true);
+  }, []);
+  const closeModelDropdown = useCallback(() => {
+    setModelDropdownOpen(false);
+    setModelDropdownRect(null);
+  }, []);
+  const modelDisplayLabel =
+    selectedModel === AVERAGE_ACROSS_ALL
+      ? "Average Across All"
+      : modelsList.find((m) => m.id === selectedModel)?.label ?? "Model";
+  const toggleTimelineBrand = useCallback((b: string) => {
+    setSelectedBrandsTimeline((prev) => {
+      const next = new Set(prev);
+      if (next.has(b)) next.delete(b);
+      else next.add(b);
+      return next;
+    });
+  }, []);
 
   const config = METRIC_CONFIG[metric];
   const isPosition = metric === "Average Position";
@@ -751,151 +801,211 @@ export function TimelineViz(props?: TimelineVizProps) {
             ))}
           </div>
 
-          <div className="relative min-w-[10rem] overflow-visible z-10">
-            <button
-              ref={brandTriggerRef}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (brandDropdownOpen) closeBrandDropdown();
-                else openBrandDropdown();
-              }}
-              className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-              aria-label="Select brand"
-              aria-expanded={brandDropdownOpen}
-            >
-              <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">
-                Brand
-              </span>
-              <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{selectedBrand || "Select brand"}</span>
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-            </button>
-            {brandDropdownOpen &&
-              brandDropdownRect &&
-              typeof document !== "undefined" &&
-              createPortal(
-                <>
-                  <div
-                    className="fixed inset-0 z-[100]"
-                    aria-hidden
-                    onClick={closeBrandDropdown}
-                  />
-                  <div
-                    className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden"
-                    style={{ top: brandDropdownRect.top, left: brandDropdownRect.left }}
-                    onClick={(ev) => ev.stopPropagation()}
-                  >
-                    <div className="p-2 border-b border-[#e5e5e5] bg-white">
-                      <input
-                        type="search"
-                        value={brandSearchQuery}
-                        onChange={(e) => setBrandSearchQuery(e.target.value)}
-                        placeholder="Search brands…"
-                        className="w-full rounded-md border border-[#e5e5e5] bg-[#fafafa] px-2.5 py-1.5 text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#262626]/20"
-                        autoFocus
-                        aria-label="Search brands"
-                      />
-                    </div>
-                    <div className="max-h-64 overflow-auto py-1">
-                      {filteredBrands.length === 0 ? (
-                        <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
-                      ) : (
-                        filteredBrands.map((b) => {
-                          const isSelected = b.toUpperCase() === selectedBrand.toUpperCase();
-                          return (
-                            <button
-                              key={b}
-                              type="button"
-                              onClick={() => {
-                                setSelectedBrand(b);
-                                closeBrandDropdown();
-                              }}
-                              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                                isSelected ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
-                              }`}
-                            >
-                              <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                                {isSelected && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
-                              </span>
-                              <span className="truncate">{b}</span>
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                </>,
-                document.body
-              )}
-          </div>
-
-          <div className="relative min-w-[10rem] overflow-visible z-10">
-            <button
-              ref={topicTriggerRef}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (topicDropdownOpen) closeTopicDropdown();
-                else openTopicDropdown();
-              }}
-              className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-              aria-label="Select topics"
-              aria-expanded={topicDropdownOpen}
-            >
-              <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">
-                Topic
-              </span>
-              <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-            </button>
-            {topicDropdownOpen &&
-              topicDropdownRect &&
-              typeof document !== "undefined" &&
-              createPortal(
-                <>
-                  <div
-                    className="fixed inset-0 z-[100]"
-                    aria-hidden
-                    onClick={closeTopicDropdown}
-                  />
-                  <div
-                    className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden"
-                    style={{ top: topicDropdownRect.top, left: topicDropdownRect.left }}
-                    onClick={(ev) => ev.stopPropagation()}
-                  >
-                    <div className="max-h-64 overflow-auto py-1">
-                      {topicColumns.map((t) => {
-                        const idStr = String(t.id);
-                        const isSelected = selectedTopics.has(idStr);
-                        return (
-                          <label
-                            key={t.id}
-                            className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleTopic(idStr)}
-                              className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
-                            />
-                            <span className="truncate">{t.label}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </>,
-                document.body
-              )}
-          </div>
+          {chartView === "grouped" ? (
+            <>
+              <div className="relative min-w-[10rem] overflow-visible z-10">
+                <button
+                  ref={brandTriggerRef}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (brandDropdownOpen) closeBrandDropdown();
+                    else openBrandDropdown();
+                  }}
+                  className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
+                  aria-label="Select brand"
+                  aria-expanded={brandDropdownOpen}
+                >
+                  <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Brand</span>
+                  <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{selectedBrand || "Select brand"}</span>
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </span>
+                </button>
+                {brandDropdownOpen && brandDropdownRect && typeof document !== "undefined" &&
+                  createPortal(
+                    <>
+                      <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeBrandDropdown} />
+                      <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: brandDropdownRect.top, left: brandDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
+                        <div className="p-2 border-b border-[#e5e5e5] bg-[#fafafa]">
+                          <input type="search" value={brandSearchQuery} onChange={(e) => setBrandSearchQuery(e.target.value)} placeholder="Search brands…" className="w-full rounded-md border border-[#e5e5e5] bg-white px-2.5 py-1.5 text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#262626]/20" autoFocus aria-label="Search brands" />
+                        </div>
+                        <div className="max-h-64 overflow-auto py-1">
+                          {!hasAnyBrandFiltered ? (
+                            <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
+                          ) : (
+                            <>
+                              <div className="px-3 pt-2 pb-1">
+                                <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">Competitor &amp; Keywords list</p>
+                              </div>
+                              {filteredCompetitor.map((b) => {
+                                const isSelected = b.toUpperCase() === selectedBrand.toUpperCase();
+                                return (
+                                  <button key={b} type="button" onClick={() => { setSelectedBrand(b); closeBrandDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSelected ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
+                                    <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSelected && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
+                                    <span className="truncate">{b}</span>
+                                  </button>
+                                );
+                              })}
+                              <div className="px-3 pt-3 pb-1 border-t border-[#e5e5e5] mt-1">
+                                <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">All Other Brands &amp; Keywords</p>
+                              </div>
+                              {filteredOther.map((b) => {
+                                const isSelected = b.toUpperCase() === selectedBrand.toUpperCase();
+                                return (
+                                  <button key={b} type="button" onClick={() => { setSelectedBrand(b); closeBrandDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSelected ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
+                                    <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSelected && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
+                                    <span className="truncate">{b}</span>
+                                  </button>
+                                );
+                              })}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </>,
+                    document.body
+                  )}
+              </div>
+              <div className="relative min-w-[10rem] overflow-visible z-10">
+                <button ref={topicTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (topicDropdownOpen) closeTopicDropdown(); else openTopicDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select topics" aria-expanded={topicDropdownOpen}>
+                  <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Topic</span>
+                  <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
+                </button>
+                {topicDropdownOpen && topicDropdownRect && typeof document !== "undefined" &&
+                  createPortal(
+                    <>
+                      <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeTopicDropdown} />
+                      <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: topicDropdownRect.top, left: topicDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
+                        <div className="max-h-64 overflow-auto py-1">
+                          {topicColumns.map((t) => {
+                            const idStr = String(t.id);
+                            const isSelected = selectedTopics.has(idStr);
+                            return (
+                              <label key={t.id} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                                <input type="checkbox" checked={isSelected} onChange={() => toggleTopic(idStr)} className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                                <span className="truncate">{t.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>,
+                    document.body
+                  )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="relative min-w-[10rem] overflow-visible z-10">
+                <button ref={brandTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (brandDropdownOpen) closeBrandDropdown(); else openBrandDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select brands" aria-expanded={brandDropdownOpen}>
+                  <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Brands</span>
+                  <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{selectedBrandsTimeline.size === 0 ? "Select brands" : `${selectedBrandsTimeline.size} brands`}</span>
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
+                </button>
+                {brandDropdownOpen && brandDropdownRect && typeof document !== "undefined" &&
+                  createPortal(
+                    <>
+                      <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeBrandDropdown} />
+                      <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: brandDropdownRect.top, left: brandDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
+                        <div className="p-2 border-b border-[#e5e5e5] bg-[#fafafa]">
+                          <input type="search" value={brandSearchQuery} onChange={(e) => setBrandSearchQuery(e.target.value)} placeholder="Search brands…" className="w-full rounded-md border border-[#e5e5e5] bg-white px-2.5 py-1.5 text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#262626]/20" autoFocus aria-label="Search brands" />
+                        </div>
+                        <div className="max-h-64 overflow-auto py-1">
+                          {!hasAnyBrandFiltered ? (
+                            <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
+                          ) : (
+                            <>
+                              <div className="px-3 pt-2 pb-1">
+                                <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">Competitor &amp; Keywords list</p>
+                              </div>
+                              {filteredCompetitor.map((b) => (
+                                <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                                  <input type="checkbox" checked={selectedBrandsTimeline.has(b)} onChange={() => toggleTimelineBrand(b)} className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                                  <span className="truncate">{b}</span>
+                                </label>
+                              ))}
+                              <div className="px-3 pt-3 pb-1 border-t border-[#e5e5e5] mt-1">
+                                <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">All Other Brands &amp; Keywords</p>
+                              </div>
+                              {filteredOther.map((b) => (
+                                <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                                  <input type="checkbox" checked={selectedBrandsTimeline.has(b)} onChange={() => toggleTimelineBrand(b)} className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                                  <span className="truncate">{b}</span>
+                                </label>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </>,
+                    document.body
+                  )}
+              </div>
+              <div className="relative min-w-[10rem] overflow-visible z-10">
+                <button ref={topicTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (topicDropdownOpen) closeTopicDropdown(); else openTopicDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select topic" aria-expanded={topicDropdownOpen}>
+                  <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Topic</span>
+                  <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{timelineTopicDisplayLabel}</span>
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
+                </button>
+                {topicDropdownOpen && topicDropdownRect && typeof document !== "undefined" &&
+                  createPortal(
+                    <>
+                      <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeTopicDropdown} />
+                      <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: topicDropdownRect.top, left: topicDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
+                        <div className="max-h-64 overflow-auto py-1">
+                          {topicColumns.map((t) => {
+                            const idStr = String(t.id);
+                            const isSelected = selectedTopicTimeline === idStr;
+                            return (
+                              <button key={t.id} type="button" onClick={() => { setSelectedTopicTimeline(idStr); closeTopicDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSelected ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
+                                <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSelected && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
+                                <span className="truncate">{t.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>,
+                    document.body
+                  )}
+              </div>
+              <div className="relative min-w-[10rem] overflow-visible z-10">
+                <button ref={modelTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (modelDropdownOpen) closeModelDropdown(); else openModelDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select model" aria-expanded={modelDropdownOpen}>
+                  <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Model</span>
+                  <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{modelDisplayLabel}</span>
+                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
+                </button>
+                {modelDropdownOpen && modelDropdownRect && typeof document !== "undefined" &&
+                  createPortal(
+                    <>
+                      <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeModelDropdown} />
+                      <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: modelDropdownRect.top, left: modelDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
+                        <div className="max-h-64 overflow-auto py-1">
+                          <button type="button" onClick={() => { setInternalSelectedModel(AVERAGE_ACROSS_ALL); closeModelDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${selectedModel === AVERAGE_ACROSS_ALL ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
+                            <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{selectedModel === AVERAGE_ACROSS_ALL && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
+                            <span className="truncate">Average Across All</span>
+                          </button>
+                          {modelsList.map((m) => {
+                            const isSelected = selectedModel === m.id;
+                            return (
+                              <button key={m.id} type="button" onClick={() => { setInternalSelectedModel(m.id); closeModelDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSelected ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
+                                <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSelected && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
+                                <span className="truncate">{m.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>,
+                    document.body
+                  )}
+              </div>
+            </>
+          )}
 
           <button
             type="button"
@@ -970,7 +1080,7 @@ export function TimelineViz(props?: TimelineVizProps) {
             </div>
           ) : dates.length === 0 || series.length === 0 ? (
             <div className="h-[300px] flex items-center justify-center text-sm text-[#7F7F7F]">
-              Select a brand to see the timeline.
+              {selectedBrandsTimeline.size === 0 ? "Select at least one brand to see the timeline." : "No data for the selected brands, topic, and model."}
             </div>
           ) : (
             <div className="relative">

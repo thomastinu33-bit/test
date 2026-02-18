@@ -197,6 +197,7 @@ const defaultNavItems: NavItem[] = [
     label: "Porsche",
     children: [
       { id: "porsche-luxury-suvs", label: "Luxury SUVs", icon: "list", href: "/porsche/luxury-suvs" },
+      { id: "porsche-luxury-suvs-v2", label: "Luxury SUVs v2", icon: "list", href: "/porsche/luxury-suvs-v2" },
       {
         id: "porsche-sports-cars",
         label: "Sports Cars",

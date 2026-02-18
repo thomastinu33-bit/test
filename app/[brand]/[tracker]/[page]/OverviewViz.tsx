@@ -60,6 +60,9 @@ const DIMENSION_GAUGES: { key: string; changeKey: string; label: string }[] = [
 
 const AVERAGE_ACROSS_ALL = "__average__";
 
+const COMPETITOR_LIST_PORSCHE = ["PORSCHE", "BMW", "BENZ", "VOLVOCARS", "AUDI", "LEXUS"] as const;
+const COMPETITOR_LIST_CETAPHIL = ["CETAPHIL", "NEUTROGENA", "DRUNK ELEPHANT", "ORDINARY", "SKINCEUTICALS", "ELTAMD"] as const;
+
 const GAUGE_COLORS = [
   "var(--primary)",
   "var(--viz-2)",
@@ -400,6 +403,7 @@ export function OverviewViz() {
   const params = useParams();
   const brandId = (params?.brand as string) ?? "porsche";
   const trackerId = (params?.tracker as string) ?? "luxury-suvs";
+  const mainBrand = brandId === "cetaphil" ? "CETAPHIL" : "PORSCHE";
 
   const cardRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
@@ -414,8 +418,9 @@ export function OverviewViz() {
   const [metric, setMetric] = useState<OverviewMetric>("AI Brand Score");
   const [topicId, setTopicId] = useState<string>("overall");
   const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string>(mainBrand);
   const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
+  const [brandSearchQuery, setBrandSearchQuery] = useState("");
   const [brands, setBrands] = useState<string[]>([]);
   const [modelScores, setModelScores] = useState<ModelScore[] | null>(null);
   const [overviewView, setOverviewView] = useState<OverviewView>("gauge");
@@ -429,8 +434,13 @@ export function OverviewViz() {
     fetch(`/api/scores?${q}`)
       .then((res) => res.json())
       .then((json: OverviewApiResponse) => {
+        const brandList = json.brands ?? [];
         setModels(json.models ?? []);
-        setBrands(json.brands ?? []);
+        setBrands(brandList);
+        setSelectedBrand((prev) => {
+          const match = brandList.find((b) => b.toUpperCase() === prev.toUpperCase());
+          return match ?? (brandList.length > 0 ? brandList[0]! : prev);
+        });
         setDimensions(json.dimensions ?? null);
         setDimensionKeys(json.dimensionKeys ?? DIMENSION_GAUGES.map((g) => g.key));
         setDimensionLabels(json.dimensionLabels ?? Object.fromEntries(DIMENSION_GAUGES.map((g) => [g.key, g.label])));
@@ -493,6 +503,7 @@ export function OverviewViz() {
   const config = METRIC_CONFIG[metric];
   const maxVal = config.max;
   const isAvgPosition = metric === "Average Position";
+  const showTimelineToggle = trackerId !== "luxury-suvs";
 
   const formatValue = (value: number) =>
     typeof value === "number" && Number.isFinite(value)
@@ -500,14 +511,32 @@ export function OverviewViz() {
       : "—";
 
   const topicDisplayLabel = dimensionLabels[topicId] ?? topicId;
-  const brandDisplayLabel = selectedBrand ?? "Default";
+  const brandDisplayLabel = selectedBrand;
+
+  const competitorSet = new Set(
+    brandId === "cetaphil"
+      ? COMPETITOR_LIST_CETAPHIL.map((c) => c.toUpperCase())
+      : COMPETITOR_LIST_PORSCHE.map((c) => c.toUpperCase())
+  );
+  const competitorOrder = new Map<string, number>(
+    (brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE).map((c, i) => [c, i])
+  );
+  const competitorBrands = brands
+    .filter((b) => competitorSet.has(b.toUpperCase()))
+    .sort((a, b) => (competitorOrder.get(a.toUpperCase()) ?? 999) - (competitorOrder.get(b.toUpperCase()) ?? 999));
+  const otherBrands = brands.filter((b) => !competitorSet.has(b.toUpperCase()));
+  const qSearch = brandSearchQuery.trim().toLowerCase();
+  const matchesSearch = (b: string) => !qSearch || b.toLowerCase().includes(qSearch);
+  const filteredCompetitor = competitorBrands.filter(matchesSearch);
+  const filteredOther = otherBrands.filter(matchesSearch);
+  const hasAnyFiltered = filteredCompetitor.length > 0 || filteredOther.length > 0;
 
   const selectTopic = (id: string) => {
     setTopicId(id);
     setTopicDropdownOpen(false);
   };
 
-  const selectBrand = (b: string | null) => {
+  const selectBrand = (b: string) => {
     setSelectedBrand(b);
     setBrandDropdownOpen(false);
   };
@@ -582,7 +611,7 @@ export function OverviewViz() {
             <div className="relative min-w-[10rem]">
               <button
                 type="button"
-                onClick={() => { setBrandDropdownOpen((o) => !o); setTopicDropdownOpen(false); }}
+                onClick={() => { setBrandDropdownOpen((o) => !o); setTopicDropdownOpen(false); setBrandSearchQuery(""); }}
                 className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
                 aria-label="Select brand"
                 aria-expanded={brandDropdownOpen}
@@ -599,35 +628,68 @@ export function OverviewViz() {
               </button>
               {brandDropdownOpen && (
                 <>
-                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => setBrandDropdownOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
-                    <button
-                      type="button"
-                      onClick={() => selectBrand(null)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                        selectedBrand === null ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
-                      }`}
-                    >
-                      <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                        {selectedBrand === null && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
-                      </span>
-                      Default
-                    </button>
-                    {brands.map((b) => (
-                      <button
-                        key={b}
-                        type="button"
-                        onClick={() => selectBrand(b)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                          selectedBrand === b ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
-                        }`}
-                      >
-                        <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                          {selectedBrand === b && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
-                        </span>
-                        <span className="truncate">{b}</span>
-                      </button>
-                    ))}
+                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => { setBrandDropdownOpen(false); setBrandSearchQuery(""); }} />
+                  <div className="absolute right-0 top-full mt-1 z-20 w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden">
+                    <div className="p-2 border-b border-[#e5e5e5] bg-[#fafafa]">
+                      <input
+                        type="search"
+                        value={brandSearchQuery}
+                        onChange={(e) => setBrandSearchQuery(e.target.value)}
+                        placeholder="Search brands…"
+                        className="w-full rounded-md border border-[#e5e5e5] bg-white px-2.5 py-1.5 text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#262626]/20"
+                        autoFocus
+                        aria-label="Search brands"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div className="max-h-64 overflow-auto py-1">
+                      {!hasAnyFiltered ? (
+                        <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
+                      ) : (
+                        <>
+                          <div className="px-3 pt-2 pb-1">
+                            <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">
+                              Competitor &amp; Keywords list
+                            </p>
+                          </div>
+                          {filteredCompetitor.map((b) => (
+                            <button
+                              key={b}
+                              type="button"
+                              onClick={() => selectBrand(b)}
+                              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
+                                selectedBrand === b ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
+                              }`}
+                            >
+                              <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
+                                {selectedBrand === b && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
+                              </span>
+                              <span className="truncate">{b}</span>
+                            </button>
+                          ))}
+                          <div className="px-3 pt-3 pb-1 border-t border-[#e5e5e5] mt-1">
+                            <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">
+                              All Other Brands &amp; Keywords
+                            </p>
+                          </div>
+                          {filteredOther.map((b) => (
+                            <button
+                              key={b}
+                              type="button"
+                              onClick={() => selectBrand(b)}
+                              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
+                                selectedBrand === b ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
+                              }`}
+                            >
+                              <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
+                                {selectedBrand === b && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
+                              </span>
+                              <span className="truncate">{b}</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </>
               )}
@@ -744,7 +806,7 @@ export function OverviewViz() {
           </>
         )}
 
-        {overviewView === "timeline" && (
+        {showTimelineToggle && overviewView === "timeline" && (
           <div ref={chartRef} className="w-full min-w-0">
             {loading && !timelineData ? (
               <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
@@ -768,41 +830,43 @@ export function OverviewViz() {
           </div>
         )}
 
-        <div className="mt-6 pt-4 border-t border-[#e5e5e5] flex items-center justify-center gap-1">
-          <button
-            type="button"
-            onClick={() => setOverviewView("gauge")}
-            className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
-              overviewView === "gauge"
-                ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]"
-                : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"
-            }`}
-            aria-label="Gauge view"
-            title="Gauge view"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              {/* Light track: 100% circle */}
-              <circle cx="12" cy="12" r="10" strokeWidth="2" className="opacity-40" />
-              {/* Dark arc: first 25% (90° from top to right) */}
-              <path d="M12 2 A10 10 0 0 1 22 12" strokeWidth="2.5" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setOverviewView("timeline")}
-            className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
-              overviewView === "timeline"
-                ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]"
-                : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"
-            }`}
-            aria-label="Timeline view"
-            title="Timeline view"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-          </button>
-        </div>
+        {showTimelineToggle && (
+          <div className="mt-6 pt-4 border-t border-[#e5e5e5] flex items-center justify-center gap-1">
+            <button
+              type="button"
+              onClick={() => setOverviewView("gauge")}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
+                overviewView === "gauge"
+                  ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]"
+                  : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"
+              }`}
+              aria-label="Gauge view"
+              title="Gauge view"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                {/* Light track: 100% circle */}
+                <circle cx="12" cy="12" r="10" strokeWidth="2" className="opacity-40" />
+                {/* Dark arc: first 25% (90° from top to right) */}
+                <path d="M12 2 A10 10 0 0 1 22 12" strokeWidth="2.5" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => setOverviewView("timeline")}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
+                overviewView === "timeline"
+                  ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]"
+                  : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"
+              }`}
+              aria-label="Timeline view"
+              title="Timeline view"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

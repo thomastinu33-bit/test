@@ -3,7 +3,7 @@ export const brands = [
   { id: "bmw", name: "BMW", trackerCount: 6 },
   { id: "cetaphil", name: "Cetaphil", trackerCount: 1 },
   { id: "nike", name: "Nike", trackerCount: 12 },
-  { id: "porsche", name: "Porsche", trackerCount: 18 },
+  { id: "porsche", name: "Porsche", trackerCount: 19 },
 ] as const;
 
 export const trackersByBrand: Record<string, { id: string; name: string; location: string }[]> = {
@@ -17,6 +17,7 @@ export const trackersByBrand: Record<string, { id: string; name: string; locatio
   ],
   porsche: [
     { id: "luxury-suvs", name: "Luxury SUVs", location: "United States English" },
+    { id: "luxury-suvs-v2", name: "Luxury SUVs v2", location: "United States English" },
   ],
   cetaphil: [
     { id: "skincare", name: "Skincare", location: "United States English" },
