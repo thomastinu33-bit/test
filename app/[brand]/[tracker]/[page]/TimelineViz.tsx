@@ -392,30 +392,32 @@ function GroupedTopicChart({
         ))}
       </svg>
       {/* Tooltip on topic hover: scores across models for this topic */}
-      {hoveredTopicIndex !== null && topics[hoveredTopicIndex] && (
-        <GroupedTopicTooltip
-          topicLabel={topics[hoveredTopicIndex]!.label}
-          topicIndex={hoveredTopicIndex}
-          models={models}
-          averages={averages}
-          averageChanges={data.averageChanges}
-          isPosition={isPosition}
-          formatScore={formatScore}
-          getModelBarColor={getModelBarColor}
-          compareToDateLabel={compareToDateLabel}
-          style={{
-            left: Math.max(
-              TOOLTIP_GAP,
-              Math.min(
-                xGroupCenter(hoveredTopicIndex) - 112,
-                width - TOOLTIP_MAX_WIDTH - TOOLTIP_GAP
-              )
-            ),
-            top: TOOLTIP_GAP,
-            transition: "left 0.15s ease-out, top 0.15s ease-out",
-          }}
-        />
-      )}
+      {hoveredTopicIndex !== null && topics[hoveredTopicIndex] && (() => {
+        const groupLeft = padding.left + hoveredTopicIndex * (groupWidth + topicGap);
+        const isLastGroup = hoveredTopicIndex === numTopics - 1;
+        const left = isLastGroup
+          ? Math.max(TOOLTIP_GAP, Math.min(groupLeft, width - TOOLTIP_MAX_WIDTH - TOOLTIP_GAP))
+          : Math.max(TOOLTIP_GAP, groupLeft - TOOLTIP_MAX_WIDTH - TOOLTIP_GAP);
+        return (
+          <GroupedTopicTooltip
+            topicLabel={topics[hoveredTopicIndex]!.label}
+            topicIndex={hoveredTopicIndex}
+            models={models}
+            averages={averages}
+            averageChanges={data.averageChanges}
+            isPosition={isPosition}
+            formatScore={formatScore}
+            getModelBarColor={getModelBarColor}
+            compareToDateLabel={compareToDateLabel}
+            alignRight={!isLastGroup}
+            style={{
+              left,
+              top: TOOLTIP_GAP,
+              transition: "left 0.15s ease-out, top 0.15s ease-out",
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }

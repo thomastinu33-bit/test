@@ -557,7 +557,7 @@ export function OverviewViz() {
   };
 
   return (
-    <div ref={cardRef} className="rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
+    <div ref={cardRef} className="w-full min-w-0 rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="flex flex-col items-start gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5] md:flex-row md:items-center md:justify-between">
         <h2 className="w-full text-[20px] font-semibold text-[#262626] leading-tight md:w-auto">
           Results Across Models
@@ -729,7 +729,7 @@ export function OverviewViz() {
         {overviewView === "gauge" && (
           <>
             {modelScores && modelScores.length > 0 ? (
-              <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2 sm:gap-4 lg:gap-6 min-w-0">
+              <div className="flex w-full flex-wrap justify-between gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
                 {(() => {
                   const n = modelScores.length;
                   const avgValue =
@@ -743,7 +743,7 @@ export function OverviewViz() {
                     changes.length > 0 ? Math.round((changes.reduce((a, b) => a + b, 0) / changes.length) * 10) / 10 : null;
                   return (
                     <>
-                      <div key="average" className="flex justify-center min-w-0">
+                      <div key="average" className="flex justify-center min-w-0 w-32 shrink-0">
                         <ScoreGauge
                           label="Average"
                           value={avgValue}
@@ -767,7 +767,7 @@ export function OverviewViz() {
                         const override = MODEL_GAUGE_OVERRIDES[ms.label];
                         const gaugeColors = getModelGaugeColors(i);
                         return (
-                          <div key={ms.id} className="flex justify-center min-w-0">
+                          <div key={ms.id} className="flex justify-center min-w-0 w-32 shrink-0">
                             <ScoreGauge
                               label={ms.label}
                               value={ms.value}
@@ -789,7 +789,7 @@ export function OverviewViz() {
                 })()}
               </div>
             ) : (
-              <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-2 sm:gap-4 lg:gap-6 min-w-0">
+              <div className="flex w-full flex-wrap justify-between gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
                 {dimensionKeys.map((key, i) => {
                   const changeKey = `change${key.charAt(0).toUpperCase()}${key.slice(1)}`;
                   const value = dimensions[key] as number;
@@ -798,7 +798,7 @@ export function OverviewViz() {
                     isAvgPosition && changeRaw != null ? -changeRaw : changeRaw;
                   const label = dimensionLabels[key] ?? key;
                   return (
-                    <div key={key} className="flex justify-center min-w-0">
+                    <div key={key} className="flex justify-center min-w-0 w-32 shrink-0">
                       <ScoreGauge
                         label={label}
                         value={value}

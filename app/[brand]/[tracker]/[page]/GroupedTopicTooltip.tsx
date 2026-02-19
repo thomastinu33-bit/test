@@ -36,6 +36,8 @@ export interface GroupedTopicTooltipProps {
   style: React.CSSProperties;
   /** Optional line at bottom, e.g. "Compare to 15 Jan 2025" */
   compareToDateLabel?: string;
+  /** When true, tooltip content is right-aligned (e.g. for non-last columns) */
+  alignRight?: boolean;
 }
 
 export function GroupedTopicTooltip({
@@ -49,17 +51,19 @@ export function GroupedTopicTooltip({
   getModelBarColor,
   style,
   compareToDateLabel,
+  alignRight = false,
 }: GroupedTopicTooltipProps) {
   const avgValue = averages[topicIndex];
   const avgChange = averageChanges?.[topicIndex];
   const avgPill = changePillProps(avgChange, isPosition);
+  const textAlign = alignRight ? "text-right" : "text-left";
 
   return (
     <div
-      className="absolute z-10 pointer-events-none rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-2 px-3 min-w-[10rem] max-w-[14rem] will-change-[left]"
+      className={`absolute z-10 pointer-events-none rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-2 px-3 min-w-[10rem] max-w-[14rem] will-change-[left] ${textAlign}`}
       style={style}
     >
-      <p className="text-xs font-semibold text-[#262626] mb-2 border-b border-[#e5e5e5] pb-1.5 text-left">
+      <p className={`text-xs font-semibold text-[#262626] mb-2 border-b border-[#e5e5e5] pb-1.5 ${textAlign}`}>
         {topicLabel}
       </p>
       <div className="space-y-1">
@@ -115,7 +119,7 @@ export function GroupedTopicTooltip({
         })}
       </div>
       {compareToDateLabel && (
-        <p className="mt-2 pt-2 border-t border-[#e5e5e5] text-xs text-[#7F7F7F] text-left">
+        <p className={`mt-2 pt-2 border-t border-[#e5e5e5] text-xs text-[#7F7F7F] ${textAlign}`}>
           Compare to {compareToDateLabel}
         </p>
       )}
