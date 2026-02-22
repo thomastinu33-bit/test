@@ -1,6 +1,12 @@
 "use client";
 
-import { AskAIButton } from "@/components/Evertune";
+import { AskAIButton, Button } from "@/components/Evertune";
+
+const PlusIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
 
 const FlaskIcon = () => (
   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -20,7 +26,13 @@ export default function PromptLabPage() {
       {/* Header */}
       <header className="sticky top-0 z-10 flex-shrink-0 h-20 bg-white border-b border-[#eeeeee] flex items-center justify-between px-8">
         <h1 className="text-xl font-semibold text-[#262626]">Prompt Lab</h1>
-        <AskAIButton />
+        <div className="flex items-center gap-3">
+          <AskAIButton />
+          <Button variant="primary" className="gap-2">
+            <PlusIcon />
+            New Tracker
+          </Button>
+        </div>
       </header>
 
       {/* Content */}
