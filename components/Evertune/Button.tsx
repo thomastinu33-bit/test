@@ -29,7 +29,7 @@ export function Button({
   const variantStyles: Record<ButtonVariant, string> = {
     primary:
       "text-white focus:ring-[var(--primary)] [background:linear-gradient(180deg,var(--primary-gradient-start)_0%,var(--primary)_50%,var(--primary-gradient-end)_100%)] hover:opacity-95",
-    secondary: "bg-[#434343] text-white hover:bg-[#333] focus:ring-[#434343]",
+    secondary: "bg-[#475569] text-white hover:bg-[#374151] focus:ring-[#475569]",
     outline: "border-2 border-[#434343] text-[#1f1f1f] hover:bg-[#f5f5f5] focus:ring-[#434343]",
     ghost: "text-[#434343] hover:bg-[#f5f5f5] focus:ring-[#434343]",
     primaryOutline:
