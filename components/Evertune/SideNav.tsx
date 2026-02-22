@@ -174,7 +174,7 @@ export interface SideNavProps {
 const defaultNavItems: NavItem[] = [
   { id: "account-overview", label: "Account Overview", icon: "person" },
   { id: "ai-usage", label: "AI Usage", icon: "gauge" },
-  { id: "prompt-volume", label: "Prompt Volume", icon: "database" },
+  { id: "prompt-lab", label: "Prompt Lab", icon: "database", href: "/prompt-lab" },
   {
     id: "ducati",
     label: "Ducati",
