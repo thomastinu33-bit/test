@@ -45,7 +45,7 @@ export function PageNav({ basePath, items, className = "" }: PageNavProps) {
               className={`
                 relative pb-4 pt-1 px-3 -mx-3 text-sm no-underline transition-colors duration-150 rounded-t-md
                 ${isActive
-                  ? "font-semibold text-[var(--primary)] bg-[#e6f7f7]"
+                  ? "font-semibold text-[var(--primary)]"
                   : "font-medium text-[#404040] hover:text-[var(--primary)] hover:bg-[#f6f6f6]"}
               `}
               aria-current={isActive ? "page" : undefined}
