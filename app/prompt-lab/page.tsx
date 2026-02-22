@@ -18,7 +18,7 @@ export default function PromptLabPage() {
   return (
     <div className="flex flex-col h-full min-h-0 bg-[#f6f6f6]">
       {/* Header */}
-      <header className="sticky top-0 z-10 flex-shrink-0 h-16 bg-white border-b border-[#eeeeee] flex items-center justify-between px-8">
+      <header className="sticky top-0 z-10 flex-shrink-0 h-20 bg-white border-b border-[#eeeeee] flex items-center justify-between px-8">
         <h1 className="text-xl font-semibold text-[#262626]">Prompt Lab</h1>
         <AskAIButton />
       </header>
