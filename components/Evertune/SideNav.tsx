@@ -136,6 +136,18 @@ const DatabaseIcon = () => (
   </svg>
 );
 
+const FlaskIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M9 3h6M9 3v6L4.5 16.5A2 2 0 0 0 6.329 19.5h11.342A2 2 0 0 0 19.5 16.5L15 9V3M9 3H7m8 0h2"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   person: PersonIcon,
   barChart: BarChartIcon,
@@ -147,6 +159,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   library: LibraryIcon,
   bookOpen: BookOpenIcon,
   database: DatabaseIcon,
+  flask: FlaskIcon,
   list: ListIcon,
   globe: GlobeIcon,
   monitor: MonitorIcon,
@@ -174,7 +187,7 @@ export interface SideNavProps {
 const defaultNavItems: NavItem[] = [
   { id: "account-overview", label: "Account Overview", icon: "person" },
   { id: "ai-usage", label: "AI Usage", icon: "gauge" },
-  { id: "prompt-lab", label: "Prompt Lab", icon: "database", href: "/prompt-lab" },
+  { id: "prompt-lab", label: "Prompt Lab", icon: "flask", href: "/prompt-lab" },
   {
     id: "ducati",
     label: "Ducati",
