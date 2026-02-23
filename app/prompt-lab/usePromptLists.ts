@@ -80,6 +80,18 @@ export function usePromptLists() {
     });
   }, []);
 
+  const editPrompt = useCallback((listId: string, oldText: string, newText: string) => {
+    setLists((prev) => {
+      const next = prev.map((l) =>
+        l.id === listId
+          ? { ...l, prompts: l.prompts.map((p) => p.text === oldText ? { ...p, text: newText } : p) }
+          : l
+      );
+      saveLists(next);
+      return next;
+    });
+  }, []);
+
   const removePrompt = useCallback((listId: string, promptText: string) => {
     setLists((prev) => {
       const next = prev.map((l) =>
@@ -90,5 +102,5 @@ export function usePromptLists() {
     });
   }, []);
 
-  return { lists, createList, addToList, deleteList, renameList, removePrompt };
+  return { lists, createList, addToList, deleteList, renameList, editPrompt, removePrompt };
 }
