@@ -182,7 +182,7 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            Add to List
+            Add to Library
           </button>
           <span className="text-xs text-muted bg-white border border-border rounded-full px-2 py-0.5">
             {prompts.length} prompts
@@ -214,7 +214,7 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
-                  Add to List
+                  Add to Library
                 </button>
               </div>
             ))}

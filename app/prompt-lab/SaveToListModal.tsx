@@ -38,7 +38,7 @@ export function SaveToListModal({ prompts, onClose, defaultName = "" }: SaveToLi
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-foreground">Save to List</h3>
+            <h3 className="text-base font-semibold text-foreground">Save to Library</h3>
             <p className="text-xs text-muted mt-0.5">Saving {label}</p>
           </div>
           <button onClick={onClose} className="text-muted hover:text-foreground transition-colors">
@@ -48,10 +48,10 @@ export function SaveToListModal({ prompts, onClose, defaultName = "" }: SaveToLi
           </button>
         </div>
 
-        {/* Add to existing list */}
+        {/* Add to existing topic */}
         {lists.length > 0 && (
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-foreground">Add to existing list</p>
+            <p className="text-sm font-medium text-foreground">Add to existing topic</p>
             <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
               {lists.map((list) => (
                 <button
@@ -82,7 +82,7 @@ export function SaveToListModal({ prompts, onClose, defaultName = "" }: SaveToLi
 
         {/* New list name */}
         <div className="flex flex-col gap-2">
-          {lists.length === 0 && <p className="text-sm font-medium text-foreground">Name your list</p>}
+          {lists.length === 0 && <p className="text-sm font-medium text-foreground">Name your topic</p>}
           <input
             autoFocus={lists.length === 0}
             type="text"
@@ -114,7 +114,7 @@ export function SaveToListModal({ prompts, onClose, defaultName = "" }: SaveToLi
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={onClose}>Cancel</Button>
             <Button variant="primary" onClick={handleSave} disabled={!canSave}>
-              Save to List
+              Save to Library
             </Button>
           </div>
         )}

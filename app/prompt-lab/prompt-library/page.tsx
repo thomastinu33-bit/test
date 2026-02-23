@@ -100,7 +100,7 @@ export default function PromptLibraryPage() {
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-2xl font-semibold text-foreground">Prompt Library</h2>
         <div className="flex items-center gap-3">
-          {lists.length > 0 && <span className="text-sm text-muted">{lists.length} list{lists.length !== 1 ? "s" : ""}</span>}
+          {lists.length > 0 && <span className="text-sm text-muted">{lists.length} topic{lists.length !== 1 ? "s" : ""}</span>}
           <button
             type="button"
             onClick={startCreating}
@@ -109,7 +109,7 @@ export default function PromptLibraryPage() {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            New List
+            New Topic
           </button>
         </div>
       </div>
@@ -324,7 +324,7 @@ export default function PromptLibraryPage() {
       {selectedLists.size > 0 && (
         <div ref={trackerBarRef} className="flex items-center justify-between pt-4 mt-4 border-t border-border">
           <p className="text-sm text-muted">
-            <span className="font-medium text-foreground">{selectedLists.size}</span> list{selectedLists.size > 1 ? "s" : ""} selected
+            <span className="font-medium text-foreground">{selectedLists.size}</span> topic{selectedLists.size > 1 ? "s" : ""} selected
           </p>
           <Button variant="primary" onClick={() => alert(`Running tracker for: ${[...selectedLists].map(id => lists.find(l => l.id === id)?.name).join(", ")}`)}>
             Run New Tracker
