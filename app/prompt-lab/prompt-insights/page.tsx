@@ -166,7 +166,7 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
               ? "bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]"
               : popularity === "medium"
               ? "bg-[#FFF8E1] text-[#F59E0B] border border-[#FDE68A]"
-              : "bg-[#F3F4F6] text-[#6B7280] border border-[#E5E7EB]"
+              : "bg-[#FEE2E2] text-[#DC2626] border border-[#FECACA]"
           }`}>
             {popularity === "high" ? "High Popularity" : popularity === "medium" ? "Medium Popularity" : "Low Popularity"}
           </span>
@@ -251,6 +251,7 @@ export default function PromptInsightsPage() {
   const [results, setResults] = useState<TopicData[] | null>(session?.results ?? null);
   const [loading, setLoading] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
+  const trackerBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({ brand, location, language, includeBrand, results }));
@@ -263,6 +264,14 @@ export default function PromptInsightsPage() {
       return next;
     });
   };
+
+  useEffect(() => {
+    if (selectedTopics.size === 1) {
+      setTimeout(() => {
+        trackerBarRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 50);
+    }
+  }, [selectedTopics.size]);
 
   const handleGenerate = () => {
     if (!brand) return;
@@ -396,7 +405,7 @@ export default function PromptInsightsPage() {
             </div>
 
             {selectedTopics.size > 0 && (
-              <div className="flex items-center justify-between pt-4 border-t border-border">
+              <div ref={trackerBarRef} className="flex items-center justify-between pt-4 border-t border-border">
                 <p className="text-sm text-muted">
                   <span className="font-medium text-foreground">{selectedTopics.size}</span> topic{selectedTopics.size > 1 ? "s" : ""} selected
                 </p>
