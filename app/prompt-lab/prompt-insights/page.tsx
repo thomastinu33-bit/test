@@ -124,7 +124,7 @@ function SearchDropdown({
   );
 }
 
-function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onToggleSelect, brand }: { topic: string; prompts: string[]; popularity: "high" | "medium"; userIntent: string; selected: boolean; onToggleSelect: () => void; brand: string }) {
+function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onToggleSelect, brand }: { topic: string; prompts: string[]; popularity: "high" | "medium" | "low"; userIntent: string; selected: boolean; onToggleSelect: () => void; brand: string }) {
   const [open, setOpen] = useState(false);
   const [saveModal, setSaveModal] = useState<{ prompts: SavedPrompt[]; defaultName?: string } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -164,9 +164,11 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
           <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${
             popularity === "high"
               ? "bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]"
-              : "bg-[#FFF8E1] text-[#F59E0B] border border-[#FDE68A]"
+              : popularity === "medium"
+              ? "bg-[#FFF8E1] text-[#F59E0B] border border-[#FDE68A]"
+              : "bg-[#F3F4F6] text-[#6B7280] border border-[#E5E7EB]"
           }`}>
-            {popularity === "high" ? "High Popularity" : "Medium Popularity"}
+            {popularity === "high" ? "High Popularity" : popularity === "medium" ? "Medium Popularity" : "Low Popularity"}
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
