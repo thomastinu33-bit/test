@@ -11,6 +11,15 @@
   --primary-dark: #093148;
   --nav-brand: #7f7f7f;
 
+  /* Primary color family (Figma: Prompt-lab) */
+  --primary-50: #F0FAFF;
+  --primary-100: #E0F3FE;
+  --primary-200: #BBE9FC;
+  --primary-600: #048BC5;
+  --border: #EEEEEE;
+  --muted: #9e9e9e;
+  --surface: #fafafa;
+
   /* Design system – color families (Figma: Design-System 428-1398) */
   /* Coral */
   --coral-100: #feeeed;
@@ -127,6 +136,13 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-nav-brand: var(--nav-brand);
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-600: var(--primary-600);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
   --font-sans: var(--font-dm-sans, "DM Sans", system-ui, -apple-system,
         BlinkMacSystemFont, "Segoe UI", sans-serif);
 }

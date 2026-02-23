@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/Evertune";
+import { getBrandInsights, type TopicData } from "./data";
+import { SaveToListModal } from "../SaveToListModal";
+import type { SavedPrompt } from "../usePromptLists";
 
 const ChevronDownIcon = ({ className = "" }: { className?: string }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
@@ -44,81 +47,6 @@ const BRANDS = [
 const LOCATIONS = ["United States", "United Kingdom", "Canada", "Australia", "Germany", "France"];
 const LANGUAGES = ["English", "Spanish", "French", "German", "Japanese", "Chinese"];
 
-const COACH_INSIGHTS: { topic: string; prompts: string[] }[] = [
-  {
-    topic: "Handbag Discovery & Style Exploration",
-    prompts: [
-      "What are the best crossbody styles for commuting?",
-      "Where can I find a small white tote with short handles?",
-      "What are the best structured evening clutches for weddings?",
-      "What are the best lightweight travel backpacks for city trips?",
-      "Which quilted shoulder bags look elegant?",
-      "What are the top handbag trends for spring 2026?",
-      "What are the best compact satchels for daily use?",
-      "What are the top toiletry pouches for weekend trips?",
-      "What are the most stylish messenger bags for cyclists?",
-      "What are the best suitcase-style backpacks for business travel?",
-      "What are the most chic handbags for office wear?",
-      "Which mini backpacks can fit a tablet?",
-      "Where can I find soft hobo bags in chocolate brown?",
-      "Where can I find a leather satchel with a classic silhouette?",
-      "What are the best small handheld bags with stands?",
-      "Where can I find white carry-all bags with handles?",
-      "What are the best sporty golf carry bags with pockets?",
-      "What are the best everyday backpacks with a laptop sleeve?",
-    ],
-  },
-  {
-    topic: "Brand Authenticity",
-    prompts: [
-      "Which maker produces a burgundy top-handle bag with embossing like this?",
-      "Can you identify the purse in this photo?",
-      "What brand makes an embossed leather double bag with a croc pattern?",
-      "Where can I find information on classic top-handle models?",
-      "Which labels are known for that style of leather satchel?",
-      "What are the details of the top-handle embossed burgundy bag model?",
-      "Who manufactures structured bags in brocade fabric?",
-      "Is this type of purse considered vintage or current?",
-      "What are the hallmarks of a high-quality toiletry pouch?",
-      "Which brands offer embossed double-handle designs?",
-      "How can I tell which company made a particular purse?",
-      "Can you provide information on the \"Pimlico\" style top-handle model?",
-      "What distinguishes a designer top-handle bag from similar styles?",
-      "Which makers are known for crocodile-embossed leather bags?",
-      "Can you tell me the origin of this double-handle bag?",
-      "What companies produce durable canvas grocery totes?",
-      "Which brands are known for signature toiletry cases?",
-      "What are common makers of structured brocade handbags?",
-      "How can I identify the maker of a Herschel-style backpack?",
-      "Which purse brands are popular for women's everyday bags?",
-    ],
-  },
-  {
-    topic: "Handbag Pricing",
-    prompts: [
-      "What is the average price range for high-end leather handbags?",
-      "Are designer purses typically discounted after major holidays?",
-      "What are the top-rated makeup bags under $50?",
-      "How do luxury handbags rank by resale value?",
-      "What have tote bag sales trends looked like over the past year?",
-      "What is the typical selling price for structured brocade handbags?",
-      "During which seasons are premium handbags most commonly discounted?",
-      "What statistics show backpack popularity among commuters?",
-      "Which makeup bags receive the highest customer ratings?",
-      "Which handbag styles tend to hold their resale value best?",
-      "How do messenger bag prices compare across major retailers?",
-      "Are handcrafted handbags generally more expensive to repair than mass-produced ones?",
-      "What are the top-rated travel toiletry bags according to reviewers?",
-      "What is the current market share of luxury versus mid-range handbags?",
-      "What defines a \"high-end\" purse, and what are its typical price benchmarks?",
-      "How does the price of a suitcase-style backpack compare to a regular backpack?",
-      "How do discounts influence handbag purchase decisions?",
-      "Which handbag materials are considered the most valuable by cost?",
-      "Which handbag categories sell the fastest online?",
-      "What data shows seasonal spikes in handbag search trends?",
-    ],
-  },
-];
 
 const SearchIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -152,15 +80,15 @@ function SearchDropdown({
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
-        className="w-full flex items-center justify-between bg-white border border-[#eeeeee] rounded-lg px-4 py-3 text-base text-[#262626] focus:outline-none focus:ring-1 focus:ring-[#048BC5]"
+        className="w-full flex items-center justify-between bg-white border border-border rounded-lg px-4 py-3 text-base text-foreground focus:outline-none focus:ring-1 focus:ring-primary-600"
       >
-        <span className={value ? "text-[#262626]" : "text-[#9e9e9e]"}>{value || "Select a brand..."}</span>
+        <span className={value ? "text-foreground" : "text-muted"}>{value || "Select a brand..."}</span>
         <ChevronDownIcon />
       </button>
 
       {open && (
-        <div className="absolute z-20 mt-1 w-full bg-white border border-[#eeeeee] rounded-lg shadow-lg overflow-hidden">
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#eeeeee]">
+        <div className="absolute z-20 mt-1 w-full bg-white border border-border rounded-lg shadow-lg overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
             <SearchIcon />
             <input
               autoFocus
@@ -168,7 +96,7 @@ function SearchDropdown({
               placeholder={placeholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 text-sm text-[#262626] placeholder-[#9e9e9e] focus:outline-none"
+              className="flex-1 text-sm text-foreground placeholder-muted focus:outline-none"
             />
           </div>
           <div className="max-h-56 overflow-y-auto py-1">
@@ -179,15 +107,15 @@ function SearchDropdown({
                 onClick={() => { onChange(name); onOpenChange(false); setSearch(""); }}
                 className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                   value === name
-                    ? "bg-[#E0F3FE] text-[#048BC5] font-medium"
-                    : "text-[#262626] hover:bg-[#f6f6f6]"
+                    ? "bg-primary-100 text-primary-600 font-medium"
+                    : "text-foreground hover:bg-background"
                 }`}
               >
                 {name}
               </button>
             ))}
             {filtered.length === 0 && (
-              <p className="px-4 py-3 text-sm text-[#9e9e9e]">No results found.</p>
+              <p className="px-4 py-3 text-sm text-muted">No results found.</p>
             )}
           </div>
         </div>
@@ -196,8 +124,9 @@ function SearchDropdown({
   );
 }
 
-function TopicAccordion({ topic, prompts }: { topic: string; prompts: string[] }) {
+function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onToggleSelect, brand }: { topic: string; prompts: string[]; popularity: "high" | "medium"; userIntent: string; selected: boolean; onToggleSelect: () => void; brand: string }) {
   const [open, setOpen] = useState(false);
+  const [saveModal, setSaveModal] = useState<{ prompts: SavedPrompt[]; defaultName?: string } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleToggle = () => {
@@ -211,19 +140,51 @@ function TopicAccordion({ topic, prompts }: { topic: string; prompts: string[] }
   };
 
   return (
-    <div ref={containerRef} className="border-2 border-[#f6f6f6] rounded-lg shadow-[2px_2px_10px_0px_rgba(0,0,0,0.1)] overflow-hidden">
+    <>
+    <div ref={containerRef} className="border border-border rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={handleToggle}
-        className="w-full flex items-center justify-between px-6 py-3 bg-white hover:bg-[#fafafa] transition-colors"
+        className="w-full flex items-center justify-between px-6 py-3 bg-white hover:bg-surface transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="text-base font-medium text-[#262626]">{topic}</span>
-          <span className="text-xs text-[#9e9e9e] bg-white border border-[#eeeeee] rounded-full px-2 py-0.5">
-            {prompts.length} prompts
+          <span
+            onClick={(e) => { e.stopPropagation(); onToggleSelect(); }}
+            className={`shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
+              selected ? "bg-primary-600 border-primary-600" : "bg-white border-muted"
+            }`}
+          >
+            {selected && (
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </span>
+          <span className="text-base font-medium text-foreground">{topic}</span>
+          <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${
+            popularity === "high"
+              ? "bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]"
+              : "bg-[#FFF8E1] text-[#F59E0B] border border-[#FDE68A]"
+          }`}>
+            {popularity === "high" ? "High Popularity" : "Medium Popularity"}
           </span>
         </div>
-        <ChevronDownIcon className={`transition-transform duration-200 shrink-0 ${open ? "rotate-180" : ""}`} />
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setSaveModal({ prompts: prompts.map((p) => ({ text: p, topic, brand })), defaultName: topic }); }}
+            className="flex items-center gap-1 text-xs text-primary-600 font-medium px-2 py-1 rounded-md hover:bg-primary-50 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add to List
+          </button>
+          <span className="text-xs text-muted bg-white border border-border rounded-full px-2 py-0.5">
+            {prompts.length} prompts
+          </span>
+          <ChevronDownIcon className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        </div>
       </button>
 
       <div
@@ -231,46 +192,94 @@ function TopicAccordion({ topic, prompts }: { topic: string; prompts: string[] }
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className="border-t border-[#eeeeee]">
+          <div className="border-t border-border">
+            <div className="p-3 border-b border-border">
+              <div className="bg-background rounded-lg p-3 flex flex-col gap-0.5">
+                <p className="text-[13px] font-semibold text-foreground uppercase tracking-wide">User Intent</p>
+                <p className="text-[13px] text-foreground leading-relaxed">{userIntent}</p>
+              </div>
+            </div>
             {prompts.map((prompt, i) => (
-              <div key={i} className="px-6 py-3 border-b border-[#f6f6f6] last:border-b-0">
-                <p className="text-[13px] text-[#262626]">{prompt}</p>
+              <div key={i} className="group flex items-center justify-between px-6 py-3 border-b border-background last:border-b-0">
+                <p className="text-[13px] text-foreground">{prompt}</p>
+                <button
+                  type="button"
+                  onClick={() => setSaveModal({ prompts: [{ text: prompt, topic, brand }] })}
+                  className="shrink-0 ml-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs text-primary-600 font-medium px-2 py-1 rounded-md hover:bg-primary-50 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Add to List
+                </button>
               </div>
             ))}
           </div>
         </div>
       </div>
     </div>
+
+    {saveModal && (
+      <SaveToListModal prompts={saveModal.prompts} defaultName={saveModal.defaultName} onClose={() => setSaveModal(null)} />
+    )}
+    </>
   );
 }
 
+const SESSION_KEY = "prompt-insights-state";
+
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 export default function PromptInsightsPage() {
-  const [brand, setBrand] = useState("");
-  const [location, setLocation] = useState("United States");
-  const [language, setLanguage] = useState("English");
-  const [includeBrand, setIncludeBrand] = useState(true);
+  const session = typeof window !== "undefined" ? loadSession() : null;
+
+  const [brand, setBrand] = useState<string>(session?.brand ?? "");
+  const [location, setLocation] = useState<string>(session?.location ?? "United States");
+  const [language, setLanguage] = useState<string>(session?.language ?? "English");
+  const [includeBrand, setIncludeBrand] = useState<boolean>(session?.includeBrand ?? true);
   const [openDropdown, setOpenDropdown] = useState<"brand" | "location" | "language" | null>(null);
-  const [results, setResults] = useState<typeof COACH_INSIGHTS | null>(null);
+  const [results, setResults] = useState<TopicData[] | null>(session?.results ?? null);
   const [loading, setLoading] = useState(false);
+  const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ brand, location, language, includeBrand, results }));
+  }, [brand, location, language, includeBrand, results]);
+
+  const toggleTopic = (topic: string) => {
+    setSelectedTopics((prev) => {
+      const next = new Set(prev);
+      next.has(topic) ? next.delete(topic) : next.add(topic);
+      return next;
+    });
+  };
 
   const handleGenerate = () => {
     if (!brand) return;
-    setResults(null);
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      if (brand === "Coach") setResults(COACH_INSIGHTS);
+      const data = getBrandInsights(brand);
+      if (data) setResults(data.topics);
     }, 2000);
   };
 
   return (
-    <div className="w-full">
-      <h2 className="text-2xl font-semibold text-[#262626] mb-5">Prompt Insights</h2>
+    <div className="w-full font-sans">
+      <h2 className="text-2xl font-semibold text-foreground mb-5">Prompt Insights</h2>
 
       <div className="bg-white rounded-lg">
         {/* Select Brand */}
         <div className="pb-4">
-          <p className="text-base font-medium text-[#262626] mb-2">Select Brand</p>
+          <p className="text-base font-medium text-foreground mb-2">Select Brand</p>
           <SearchDropdown
             value={brand}
             options={BRANDS.map((b) => b.name)}
@@ -286,7 +295,7 @@ export default function PromptInsightsPage() {
           <div className="flex-1">
             <div className="flex items-center gap-1 mb-2">
               <LocationIcon />
-              <p className="text-base font-medium text-[#262626]">Location</p>
+              <p className="text-base font-medium text-foreground">Location</p>
             </div>
             <SearchDropdown
               value={location}
@@ -301,7 +310,7 @@ export default function PromptInsightsPage() {
           <div className="flex-1">
             <div className="flex items-center gap-1 mb-2">
               <TranslateIcon />
-              <p className="text-base font-medium text-[#262626]">Language</p>
+              <p className="text-base font-medium text-foreground">Language</p>
             </div>
             <SearchDropdown
               value={language}
@@ -318,7 +327,7 @@ export default function PromptInsightsPage() {
         <div className="flex flex-col gap-4">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <p className="text-base font-medium text-[#262626]">
+              <p className="text-base font-medium text-foreground">
                 Would you want to include the brand you selected in the prompts?
               </p>
               <InfoIcon />
@@ -331,15 +340,15 @@ export default function PromptInsightsPage() {
                     key={label}
                     onClick={() => setIncludeBrand(val)}
                     className={`w-[130px] flex items-center gap-2 px-3 py-2 rounded-full border transition-colors ${
-                      active ? "bg-[#E0F3FE] border-[#BBE9FC]" : "bg-white border-[#eeeeee]"
+                      active ? "bg-primary-100 border-primary-200" : "bg-white border-border"
                     }`}
                   >
                     <span className={`shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      active ? "border-[#048BC5]" : "border-[#9e9e9e]"
+                      active ? "border-primary-600" : "border-muted"
                     }`}>
-                      {active && <span className="w-2 h-2 rounded-full bg-[#048BC5]" />}
+                      {active && <span className="w-2 h-2 rounded-full bg-primary-600" />}
                     </span>
-                    <span className="flex-1 text-left text-base font-medium text-[#262626]">{label}</span>
+                    <span className="flex-1 text-left text-base font-medium text-foreground">{label}</span>
                   </button>
                 );
               })}
@@ -359,21 +368,41 @@ export default function PromptInsightsPage() {
 
         {/* Results */}
         {results && (
-          <div className="mt-6 flex flex-col gap-4">
-            <h3 className="text-xl font-semibold text-[#262626]">
+          <div className="mt-6 pt-6 border-t border-border flex flex-col gap-4">
+            <h3 className="text-xl font-semibold text-foreground">
               Branded Prompts for {brand}
             </h3>
-            <div className="bg-[#F0FAFF] rounded-lg p-4 flex flex-col gap-1">
-              <p className="text-base font-semibold text-[#262626]">Key Insights</p>
-              <p className="text-[13px] text-[#262626]">
+            <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 flex flex-col gap-1">
+              <p className="text-base font-semibold text-foreground">Key Insights</p>
+              <p className="text-[13px] text-foreground">
                 Users primarily search for pricing &amp; deals, specific product/model lookup and purchase sources, and brand identity, manufacturing and authenticity information.
               </p>
             </div>
             <div className="flex flex-col gap-3">
               {results.map((item) => (
-                <TopicAccordion key={item.topic} topic={item.topic} prompts={item.prompts} />
+                <TopicAccordion
+                  key={item.topic}
+                  topic={item.topic}
+                  prompts={item.prompts}
+                  popularity={item.popularity}
+                  userIntent={item.userIntent}
+                  selected={selectedTopics.has(item.topic)}
+                  onToggleSelect={() => toggleTopic(item.topic)}
+                  brand={brand}
+                />
               ))}
             </div>
+
+            {selectedTopics.size > 0 && (
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <p className="text-sm text-muted">
+                  <span className="font-medium text-foreground">{selectedTopics.size}</span> topic{selectedTopics.size > 1 ? "s" : ""} selected
+                </p>
+                <Button variant="primary" onClick={() => alert(`Running tracker for: ${[...selectedTopics].join(", ")}`)}>
+                  Run New Tracker
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
