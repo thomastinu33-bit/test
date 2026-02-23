@@ -142,10 +142,12 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
   return (
     <>
     <div ref={containerRef} className="border border-border rounded-lg overflow-hidden">
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={handleToggle}
-        className="w-full flex items-center justify-between px-6 py-3 bg-white hover:bg-surface transition-colors"
+        onKeyDown={(e) => e.key === "Enter" && handleToggle()}
+        className="w-full flex items-center justify-between px-6 py-3 bg-white hover:bg-surface transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-3">
           <span
@@ -187,7 +189,7 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
           </span>
           <ChevronDownIcon className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
         </div>
-      </button>
+      </div>
 
       <div
         className="grid transition-[grid-template-rows] duration-200 ease-in-out"

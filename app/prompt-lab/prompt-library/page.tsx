@@ -102,10 +102,12 @@ export default function PromptLibraryPage() {
             <div key={list.id} className={`border rounded-lg overflow-hidden transition-colors ${isSelected ? "border-primary-200" : "border-border"}`}>
               {/* List header */}
               <div className={`flex items-center justify-between px-5 py-3 transition-colors ${isSelected ? "bg-primary-50" : "bg-white hover:bg-surface"}`}>
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => toggleList(list.id)}
-                  className="flex items-center gap-3 flex-1 text-left"
+                  onKeyDown={(e) => e.key === "Enter" && toggleList(list.id)}
+                  className="flex items-center gap-3 flex-1 text-left cursor-pointer"
                 >
                   <span
                     onClick={(e) => { e.stopPropagation(); toggleSelect(list.id); }}
@@ -156,7 +158,7 @@ export default function PromptLibraryPage() {
                     <TrashIcon />
                   </button>
                   <ChevronDownIcon className={`transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180" : ""}`} />
-                </button>
+                </div>
               </div>
 
               {/* Expanded prompts */}
