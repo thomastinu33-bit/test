@@ -377,7 +377,7 @@ export default function PromptInsightsPage() {
             </div>
           </div>
 
-          <Button variant="primary" className="self-end rounded-lg" style={{ background: "var(--primary-600)" }} onClick={handleGenerate} disabled={!brand || loading}>
+          <Button variant="secondary" className="self-end rounded-lg" onClick={handleGenerate} disabled={!brand || loading}>
             {loading && (
               <svg className="animate-spin w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

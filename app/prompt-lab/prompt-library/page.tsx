@@ -104,7 +104,7 @@ export default function PromptLibraryPage() {
           <button
             type="button"
             onClick={startCreating}
-            className="flex items-center gap-1.5 text-sm font-medium text-white bg-primary-600 px-3 py-1.5 rounded-lg hover:bg-primary-600/90 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium text-white bg-[#475569] px-3 py-1.5 rounded-lg hover:bg-[#374151] transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
