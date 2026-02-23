@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/Evertune";
 import { usePromptLists, type SavedPrompt } from "./usePromptLists";
 
@@ -25,7 +26,6 @@ export function SaveToListModal({ prompts, onClose, defaultName = "" }: SaveToLi
       return;
     }
     setSaved(true);
-    setTimeout(onClose, 800);
   };
 
   const canSave = !!selectedListId || !!newListName.trim();
@@ -94,12 +94,30 @@ export function SaveToListModal({ prompts, onClose, defaultName = "" }: SaveToLi
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleSave} disabled={!canSave}>
-            {saved ? "Saved!" : "Save to List"}
-          </Button>
-        </div>
+        {saved ? (
+          <div className="flex items-center justify-between bg-primary-50 border border-primary-200 rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M20 6L9 17l-5-5" stroke="#048BC5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <p className="text-sm font-medium text-primary-600">Saved to list</p>
+            </div>
+            <Link
+              href="/prompt-lab/prompt-library"
+              onClick={onClose}
+              className="text-sm font-medium text-primary-600 hover:underline"
+            >
+              View in Prompt Library →
+            </Link>
+          </div>
+        ) : (
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button variant="primary" onClick={handleSave} disabled={!canSave}>
+              Save to List
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
