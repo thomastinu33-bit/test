@@ -246,7 +246,7 @@ export default function PromptInsightsPage() {
   const [brand, setBrand] = useState<string>("");
   const [location, setLocation] = useState<string>("United States");
   const [language, setLanguage] = useState<string>("English");
-  const [includeBrand, setIncludeBrand] = useState<boolean>(true);
+  const [includeBrand, setIncludeBrand] = useState<boolean>(false);
   const [openDropdown, setOpenDropdown] = useState<"brand" | "location" | "language" | null>(null);
   const [results, setResults] = useState<TopicData[] | null>(null);
   const [loading, setLoading] = useState(false);

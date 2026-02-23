@@ -43,7 +43,7 @@ export function Button({
   if (variant === "askAI") {
     return (
       <span
-        className="inline-flex rounded-lg transition-opacity hover:opacity-90 focus-within:ring-2 focus-within:ring-[#7C9BFF] focus-within:ring-offset-2"
+        className="group inline-flex rounded-lg transition-opacity hover:opacity-90 focus-within:ring-2 focus-within:ring-[#7C9BFF] focus-within:ring-offset-2"
         style={{
           background: "linear-gradient(135deg, #F7594E 0%, #7C9BFF 50%, #00DEE6 100%)",
         }}

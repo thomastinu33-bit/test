@@ -8,7 +8,7 @@ const AskAIIcon = () => (
     src="/logos/evetune-ai.svg"
     alt=""
     role="presentation"
-    className="shrink-0 w-6 h-6 object-contain"
+    className="shrink-0 w-6 h-6 object-contain transition-transform duration-1000 group-hover:rotate-[360deg]"
   />
 );
 
