@@ -101,6 +101,7 @@ export default function PromptVolumePage() {
   const [language, setLanguage] = useState("English");
   const [openDropdown, setOpenDropdown] = useState<"brand" | "location" | "language" | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [searchedBrand, setSearchedBrand] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleShowVolume = () => {
@@ -109,6 +110,7 @@ export default function PromptVolumePage() {
     setTimeout(() => {
       setLoading(false);
       setShowResults(true);
+      setSearchedBrand(brand);
     }, 1500);
   };
 
@@ -188,45 +190,51 @@ export default function PromptVolumePage() {
           </div>
         </div>
 
-        {/* Results */}
+        {/* Brand-specific volume results */}
         {showResults && (
-          <div className="mt-6 flex flex-col gap-5">
-            {/* Info banner */}
-            <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
-              <p className="text-base text-foreground">
-                Did you know{" "}
-                <span className="font-semibold text-primary-600">over 80% of prompts are unique</span>
-                {" "}— i.e. never seen again. That&apos;s because prompts are long.
-              </p>
+          <div className="mt-6 pt-6 border-t border-border">
+            <h3 className="text-xl font-semibold text-foreground mb-4">Prompt Volume for {searchedBrand}</h3>
+            <div className="bg-surface border border-border rounded-lg p-4 text-sm text-muted">
+              Brand-specific volume data for <span className="font-medium text-foreground">{searchedBrand}</span> would appear here.
             </div>
-
-            {/* Prompt Word Count table */}
-            <div>
-              <h3 className="text-xl font-semibold text-foreground mb-3">Prompt Word Count</h3>
-              <div className="border border-border rounded-lg overflow-hidden">
-                {/* Header */}
-                <div className="grid grid-cols-3 bg-background border-b border-border">
-                  <div className="px-4 py-3.5 font-semibold text-base text-foreground">Model</div>
-                  <div className="px-4 py-3.5 font-semibold text-base text-foreground border-l border-border">Avg. Word Count</div>
-                  <div className="px-4 py-3.5 font-semibold text-base text-foreground border-l border-border">Median Word Count</div>
-                </div>
-                {/* Rows */}
-                {WORD_COUNT_DATA.map((row) => (
-                  <div key={row.model} className="grid grid-cols-3 border-b border-border last:border-b-0 bg-white hover:bg-surface transition-colors">
-                    <div className="px-4 py-3.5 text-base font-medium text-foreground">{row.model}</div>
-                    <div className="px-4 py-3.5 text-base text-foreground border-l border-border">{row.avg}</div>
-                    <div className="px-4 py-3.5 text-base text-foreground border-l border-border">{row.median}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Footer note */}
-            <p className="text-base text-muted">
-              Just like no two conversations with a person are ever exactly the same, the way people prompt AI can vary a lot. That&apos;s why it&apos;s more helpful to focus on topics and themes, rather than trying to match exact prompts.
-            </p>
           </div>
         )}
+
+        {/* Always-visible info + table */}
+        <div className="mt-6 flex flex-col gap-5">
+          {/* Info banner */}
+          <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+            <p className="text-base text-foreground">
+              Did you know{" "}
+              <span className="font-semibold text-primary-600">over 80% of prompts are unique</span>
+              {" "}— i.e. never seen again. That&apos;s because prompts are long.
+            </p>
+          </div>
+
+          {/* Prompt Word Count table */}
+          <div>
+            <h3 className="text-xl font-semibold text-foreground mb-3">Prompt Word Count</h3>
+            <div className="border border-border rounded-lg overflow-hidden">
+              <div className="grid grid-cols-3 bg-background border-b border-border">
+                <div className="px-4 py-3.5 font-semibold text-base text-foreground">Model</div>
+                <div className="px-4 py-3.5 font-semibold text-base text-foreground border-l border-border">Avg. Word Count</div>
+                <div className="px-4 py-3.5 font-semibold text-base text-foreground border-l border-border">Median Word Count</div>
+              </div>
+              {WORD_COUNT_DATA.map((row) => (
+                <div key={row.model} className="grid grid-cols-3 border-b border-border last:border-b-0 bg-white hover:bg-surface transition-colors">
+                  <div className="px-4 py-3.5 text-base font-medium text-foreground">{row.model}</div>
+                  <div className="px-4 py-3.5 text-base text-foreground border-l border-border">{row.avg}</div>
+                  <div className="px-4 py-3.5 text-base text-foreground border-l border-border">{row.median}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer note */}
+          <p className="text-base text-muted">
+            Just like no two conversations with a person are ever exactly the same, the way people prompt AI can vary a lot. That&apos;s why it&apos;s more helpful to focus on topics and themes, rather than trying to match exact prompts.
+          </p>
+        </div>
       </div>
     </div>
   );
