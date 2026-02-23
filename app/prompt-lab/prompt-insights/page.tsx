@@ -243,17 +243,26 @@ function loadSession() {
 }
 
 export default function PromptInsightsPage() {
-  const session = typeof window !== "undefined" ? loadSession() : null;
-
-  const [brand, setBrand] = useState<string>(session?.brand ?? "");
-  const [location, setLocation] = useState<string>(session?.location ?? "United States");
-  const [language, setLanguage] = useState<string>(session?.language ?? "English");
-  const [includeBrand, setIncludeBrand] = useState<boolean>(session?.includeBrand ?? true);
+  const [brand, setBrand] = useState<string>("");
+  const [location, setLocation] = useState<string>("United States");
+  const [language, setLanguage] = useState<string>("English");
+  const [includeBrand, setIncludeBrand] = useState<boolean>(true);
   const [openDropdown, setOpenDropdown] = useState<"brand" | "location" | "language" | null>(null);
-  const [results, setResults] = useState<TopicData[] | null>(session?.results ?? null);
+  const [results, setResults] = useState<TopicData[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
   const trackerBarRef = useRef<HTMLDivElement>(null);
+
+  // Restore session after mount to avoid SSR/client mismatch
+  useEffect(() => {
+    const session = loadSession();
+    if (!session) return;
+    if (session.brand) setBrand(session.brand);
+    if (session.location) setLocation(session.location);
+    if (session.language) setLanguage(session.language);
+    if (session.includeBrand !== undefined) setIncludeBrand(session.includeBrand);
+    if (session.results) setResults(session.results);
+  }, []);
 
   useEffect(() => {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({ brand, location, language, includeBrand, results }));
