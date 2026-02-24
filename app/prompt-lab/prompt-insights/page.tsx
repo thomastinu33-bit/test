@@ -124,8 +124,11 @@ function SearchDropdown({
   );
 }
 
+const PROMPTS_PAGE_SIZE = 3;
+
 function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onToggleSelect, brand }: { topic: string; prompts: string[]; popularity: "high" | "medium" | "low"; userIntent: string; selected: boolean; onToggleSelect: () => void; brand: string }) {
   const [open, setOpen] = useState(false);
+  const [visiblePrompts, setVisiblePrompts] = useState(PROMPTS_PAGE_SIZE);
   const [saveModal, setSaveModal] = useState<{ prompts: SavedPrompt[]; defaultName?: string } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -218,6 +221,14 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
                 </button>
               </div>
             ))}
+            <div className="flex justify-start px-6 py-3 border-t border-background">
+              <button
+                type="button"
+                className="text-xs font-medium text-primary-600 hover:underline transition-colors"
+              >
+                More prompts like this
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -229,6 +240,8 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
     </>
   );
 }
+
+const TOPICS_PAGE_SIZE = 5;
 
 const SESSION_KEY = "prompt-insights-state";
 
@@ -251,6 +264,7 @@ export default function PromptInsightsPage() {
   const [results, setResults] = useState<TopicData[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
+  const [visibleTopicsCount, setVisibleTopicsCount] = useState(TOPICS_PAGE_SIZE);
   const trackerBarRef = useRef<HTMLDivElement>(null);
 
   // Restore session after mount to avoid SSR/client mismatch
@@ -290,7 +304,10 @@ export default function PromptInsightsPage() {
     setTimeout(() => {
       setLoading(false);
       const data = getBrandInsights(brand);
-      if (data) setResults(data.topics);
+      if (data) {
+        setResults(data.topics);
+        setVisibleTopicsCount(TOPICS_PAGE_SIZE);
+      }
     }, 2000);
   };
 
@@ -377,7 +394,7 @@ export default function PromptInsightsPage() {
             </div>
           </div>
 
-          <Button variant="secondary" className="self-end rounded-lg" onClick={handleGenerate} disabled={!brand || loading}>
+          <Button variant="secondary" className="self-end rounded-lg" onClick={handleGenerate} disabled={!brand || loading || !!results}>
             {loading && (
               <svg className="animate-spin w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -392,7 +409,7 @@ export default function PromptInsightsPage() {
         {results && (
           <div className="mt-6 pt-6 border-t border-border flex flex-col gap-4">
             <h3 className="text-xl font-semibold text-foreground">
-              Branded Prompts for {brand}
+              Unbranded Prompts for {brand}
             </h3>
             <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 flex flex-col gap-1">
               <p className="text-base font-semibold text-foreground">Key Insights</p>
@@ -401,7 +418,7 @@ export default function PromptInsightsPage() {
               </p>
             </div>
             <div className="flex flex-col gap-3">
-              {results.map((item) => (
+              {results.slice(0, visibleTopicsCount).map((item) => (
                 <TopicAccordion
                   key={item.topic}
                   topic={item.topic}
@@ -413,6 +430,18 @@ export default function PromptInsightsPage() {
                   brand={brand}
                 />
               ))}
+              {results.length > visibleTopicsCount && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleTopicsCount((v) => v + TOPICS_PAGE_SIZE)}
+                  className="self-center text-sm font-medium text-primary-600 hover:underline transition-colors py-2"
+                >
+                  Show more Topics ({results.length - visibleTopicsCount} remaining)
+                </button>
+              )}
+              <Button variant="secondary" className="self-start">
+                Generate Topic
+              </Button>
             </div>
 
             {selectedTopics.size > 0 && (

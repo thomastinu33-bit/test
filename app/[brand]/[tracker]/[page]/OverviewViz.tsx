@@ -184,6 +184,18 @@ function OverviewTimelineChart({
   compareToDateLabel?: string;
 }) {
   const [hoveredDateIndex, setHoveredDateIndex] = useState<number | null>(null);
+  const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
+
+  const toggleSeries = (dimension: string) => {
+    setHiddenSeries((prev) => {
+      const next = new Set(prev);
+      if (next.has(dimension)) next.delete(dimension);
+      else next.add(dimension);
+      return next;
+    });
+  };
+
+  const visibleSeries = series.filter((s) => !hiddenSeries.has(s.dimension));
 
   const plotWidth = Math.max(0, width - CHART_PADDING.left - CHART_PADDING.right);
   const plotHeight = CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom;
@@ -279,8 +291,9 @@ function OverviewTimelineChart({
               pointerEvents="none"
             />
           )}
-          {series.map((s, idx) => {
-            const color = getChartColor(GAUGE_COLORS, idx);
+          {visibleSeries.map((s) => {
+            const idx = series.findIndex((ss) => ss.dimension === s.dimension);
+            const color = getChartColor(GAUGE_COLORS, 1 + idx);
             const points = s.data
               .map((p) => {
                 const dateIdx = dates.indexOf(p.date);
@@ -332,7 +345,8 @@ function OverviewTimelineChart({
               {formatDateLabel(dates[hoveredDateIndex]!)}
             </p>
             <div className="space-y-1">
-              {series.map((s, idx) => {
+              {visibleSeries.map((s) => {
+                const idx = series.findIndex((ss) => ss.dimension === s.dimension);
                 const point = s.data.find((p) => dates.indexOf(p.date) === hoveredDateIndex);
                 const value = point?.value ?? 0;
                 const prevDate = hoveredDateIndex > 0 ? dates[hoveredDateIndex - 1] : null;
@@ -365,7 +379,7 @@ function OverviewTimelineChart({
                     <span className="flex items-center gap-1.5 min-w-0">
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: getChartGradient(GAUGE_GRADIENTS, idx) }}
+                        style={{ background: getChartGradient(GAUGE_GRADIENTS, 1 + idx) }}
                       />
                       <span className="text-[#525252] truncate">{s.label}</span>
                     </span>
@@ -393,15 +407,25 @@ function OverviewTimelineChart({
         )}
       </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 justify-center border-t border-[#e5e5e5] pt-3">
-        {series.map((s, idx) => (
-          <span key={s.dimension} className="flex items-center gap-2 text-xs text-[#525252]">
-            <span
-              className="w-3 h-0.5 rounded-full shrink-0"
-              style={{ background: getChartGradient(GAUGE_GRADIENTS, idx) }}
-            />
-            {s.label}
-          </span>
-        ))}
+        {series.map((s, idx) => {
+          const isHidden = hiddenSeries.has(s.dimension);
+          return (
+            <button
+              key={s.dimension}
+              type="button"
+              onClick={() => toggleSeries(s.dimension)}
+              className={`flex items-center gap-2 rounded-md px-1.5 py-1 -m-1 text-left transition-colors hover:bg-[#f0f0f0] ${isHidden ? "opacity-50" : ""}`}
+            >
+              <span
+                className="w-3 h-0.5 rounded-full shrink-0"
+                style={{ background: getChartGradient(GAUGE_GRADIENTS, 1 + idx) }}
+              />
+              <span className={`text-xs ${isHidden ? "text-[#999] line-through" : "text-[#525252]"}`}>
+                {s.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

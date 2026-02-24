@@ -381,7 +381,17 @@ export function AiPerceptionMap() {
   const [timelineLoading, setTimelineLoading] = useState(false);
   const [timelineChartWidth, setTimelineChartWidth] = useState(600);
   const [hoveredDateIndex, setHoveredDateIndex] = useState<number | null>(null);
+  const [hiddenTimelineSeries, setHiddenTimelineSeries] = useState<Set<string>>(new Set());
   const timelineChartRef = useRef<HTMLDivElement>(null);
+
+  const toggleTimelineSeries = useCallback((brand: string) => {
+    setHiddenTimelineSeries((prev) => {
+      const next = new Set(prev);
+      if (next.has(brand)) next.delete(brand);
+      else next.add(brand);
+      return next;
+    });
+  }, []);
   const { selectedDateStr, compareToDateStr, compareToDate } = useTrackerDate();
   const showTimelineToggle = trackerId !== "luxury-suvs";
 
@@ -890,6 +900,7 @@ export function AiPerceptionMap() {
                       <line x1={xScale(hoveredDateIndex)} x2={xScale(hoveredDateIndex)} y1={chartPadding.top} y2={chartHeight - chartPadding.bottom} stroke="#999" strokeWidth={1} strokeDasharray="4 2" pointerEvents="none" />
                     )}
                     {timelineSeries.map((s, idx) => {
+                      if (hiddenTimelineSeries.has(s.brand)) return null;
                       const color = getChartColor(idx);
                       const points = s.data.map((p) => { const dateIdx = dates.indexOf(p.date); if (dateIdx === -1) return null; return `${xScale(dateIdx)},${yScale(p.value)}`; }).filter(Boolean) as string[];
                       const d = points.length >= 2 ? `M ${points.join(" L ")}` : "";
@@ -912,7 +923,8 @@ export function AiPerceptionMap() {
                     >
                       <p className="text-xs font-semibold text-[#262626] mb-2 border-b border-[#e5e5e5] pb-1.5 text-left">{formatDateLabel(dates[hoveredDateIndex]!)}</p>
                       <div className="space-y-1">
-                        {timelineSeries.map((s, idx) => {
+                        {timelineSeries.filter((s) => !hiddenTimelineSeries.has(s.brand)).map((s) => {
+                          const idx = timelineSeries.findIndex((ss) => ss.brand === s.brand);
                           const point = s.data.find((p) => dates.indexOf(p.date) === hoveredDateIndex);
                           const value = point?.value ?? 0;
                           const valueAtCompareTo = compareToDateStr ? s.data.find((p) => p.date === compareToDateStr)?.value : undefined;
@@ -944,12 +956,20 @@ export function AiPerceptionMap() {
                     </div>
                   )}
                   <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 border-t border-[#e5e5e5] pt-3">
-                    {timelineSeries.map((s, idx) => (
-                      <span key={s.brand} className="flex items-center gap-2 text-xs text-[#525252]">
-                        <span className="w-3 h-0.5 rounded-full shrink-0" style={{ background: getChartColor(idx) }} />
-                        {s.brand}
-                      </span>
-                    ))}
+                    {timelineSeries.map((s, idx) => {
+                      const isHidden = hiddenTimelineSeries.has(s.brand);
+                      return (
+                        <button
+                          key={s.brand}
+                          type="button"
+                          onClick={() => toggleTimelineSeries(s.brand)}
+                          className={`flex items-center gap-2 rounded-md px-1.5 py-1 -m-1 text-left transition-colors hover:bg-[#f0f0f0] ${isHidden ? "opacity-50" : ""}`}
+                        >
+                          <span className="w-3 h-0.5 rounded-full shrink-0" style={{ background: getChartColor(idx) }} />
+                          <span className={`text-xs ${isHidden ? "text-[#999] line-through" : "text-[#525252]"}`}>{s.brand}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               );

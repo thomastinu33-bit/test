@@ -14,7 +14,8 @@ const PlusIcon = () => (
 
 const SearchIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15.5 14h-.79l-.28-.27a6.471 6.471 0 0 0 1.57-4.23A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5L20.49 19l-5-5Zm-6 0A4.5 4.5 0 1 1 14 9.5 4.505 4.505 0 0 1 9.5 14Z" fill="#7F7F7F" stroke="#7F7F7F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="11" cy="11" r="7" stroke="#7F7F7F" strokeWidth="1.5" />
+    <path d="M16.5 16.5L21 21" stroke="#7F7F7F" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
@@ -108,6 +109,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
   const [addedCompetitors, setAddedCompetitors] = useState<string[]>([]);
   const [removedCompetitors, setRemovedCompetitors] = useState<Set<string>>(new Set());
   const [newCompetitorInput, setNewCompetitorInput] = useState("");
+  const [highlightedTerms, setHighlightedTerms] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [bulkExcludedRows, setBulkExcludedRows] = useState<Set<string>>(new Set());
   const [bulkMapTerm, setBulkMapTerm] = useState("");
@@ -187,6 +189,35 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
       return next;
     });
     setNewCompetitorInput("");
+
+    // Auto-mark matching rows as competitors and highlight them
+    const valueLower = value.toLowerCase();
+    const matchingSearchTerms = (surveyTerms ?? [])
+      .filter((row) =>
+        (displayTerms[row.searchTerm] ?? row.displayTerm).toLowerCase() === valueLower ||
+        row.searchTerm.toLowerCase() === valueLower
+      )
+      .map((row) => row.searchTerm);
+
+    if (matchingSearchTerms.length > 0) {
+      setCompetitorTerms((prev) => {
+        const next = new Set(prev);
+        matchingSearchTerms.forEach((st) => next.add(st));
+        return next;
+      });
+      setHighlightedTerms((prev) => {
+        const next = new Set(prev);
+        matchingSearchTerms.forEach((st) => next.add(st));
+        return next;
+      });
+      setTimeout(() => {
+        setHighlightedTerms((prev) => {
+          const next = new Set(prev);
+          matchingSearchTerms.forEach((st) => next.delete(st));
+          return next;
+        });
+      }, 1000);
+    }
   };
 
   const removeCompetitor = (name: string) => {
@@ -194,6 +225,23 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
       setAddedCompetitors((prev) => prev.filter((x) => x !== name));
     } else {
       setRemovedCompetitors((prev) => new Set(prev).add(name));
+    }
+
+    // Unmark any table rows whose display term or search term matches this competitor
+    const nameLower = name.toLowerCase();
+    const matchingSearchTerms = (surveyTerms ?? [])
+      .filter((row) =>
+        (displayTerms[row.searchTerm] ?? row.displayTerm).toLowerCase() === nameLower ||
+        row.searchTerm.toLowerCase() === nameLower
+      )
+      .map((row) => row.searchTerm);
+
+    if (matchingSearchTerms.length > 0) {
+      setCompetitorTerms((prev) => {
+        const next = new Set(prev);
+        matchingSearchTerms.forEach((st) => next.delete(st));
+        return next;
+      });
     }
   };
 
@@ -260,6 +308,31 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
       setCompetitorTerms((prev) => new Set(prev).add(rowSearchTerm));
     }
     setOpenDropdownFor(null);
+  };
+
+  const downloadCsv = () => {
+    const allRows = [
+      ...(surveyTerms ?? []).map((row) => ({
+        searchTerm: row.searchTerm,
+        displayTerm: displayTerms[row.searchTerm] ?? row.displayTerm,
+        isCompetitor: competitorTerms.has(row.searchTerm),
+        ignored: ignoredTerms.has(row.searchTerm),
+      })),
+    ];
+    const header = ["Search Term", "Display Term", "Is Competitor", "Ignored"];
+    const lines = allRows.map((r) =>
+      [r.searchTerm, r.displayTerm, r.isCompetitor ? "Yes" : "No", r.ignored ? "Yes" : "No"]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(",")
+    );
+    const csv = [header.join(","), ...lines].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `dictionary-${brandId}-${trackerId}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const toggleIgnored = (searchTerm: string) => {
@@ -589,7 +662,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                       className="w-full pl-10 pr-4 py-2.5 border border-[#eeeeee] rounded-lg bg-white text-[#262626] placeholder:text-[#7F7F7F] text-sm focus:outline-none focus:ring-1 focus:ring-[#19B5EF]/30 focus:border-[#19B5EF]/50 transition-colors"
                     />
                   </div>
-                  <Button variant="primary" className="gap-2 shrink-0" onClick={addYourOwnTerm}>
+                  <Button variant="secondary" className="gap-2 shrink-0" onClick={addYourOwnTerm}>
                     <PlusIcon />
                     Your Own Term
                   </Button>
@@ -597,6 +670,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                     type="button"
                     className="p-2.5 border border-[#eeeeee] rounded-lg hover:bg-[#f6f6f6] text-[#262626]"
                     title="Download"
+                    onClick={downloadCsv}
                   >
                     <DownloadIcon />
                   </button>
@@ -639,7 +713,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
               </div>
             </div>
 
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b border-[#eeeeee]">
                   {showBulkMapping && (
@@ -654,13 +728,13 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                       />
                     </th>
                   )}
-                  <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] text-left py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee]">
+                  <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] text-left py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee] w-[35%]">
                     Search Terms
                   </th>
-                  <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] text-left py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee]">
+                  <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] text-left py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee] w-[35%]">
                     Display Terms
                   </th>
-                  <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] text-right py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee]">
+                  <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] text-right py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee] w-[30%]">
                     Actions
                   </th>
                 </tr>
@@ -793,11 +867,14 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                 })}
                 {paginatedRows.map((row) => {
                   const isRowChanged = editedDisplayTerms.has(row.searchTerm);
+                  const isHighlighted = highlightedTerms.has(row.searchTerm);
                   return (
                   <tr
                     key={row.searchTerm}
-                    className={`border-b border-[#eeeeee] last:border-b-0 ${
-                      isRowChanged
+                    className={`border-b border-[#eeeeee] last:border-b-0 transition-colors duration-1000 ${
+                      isHighlighted
+                        ? "bg-blue-100"
+                        : isRowChanged
                         ? "bg-[#E8F4FC]/50 hover:bg-[#E8F4FC]/70"
                         : "hover:bg-[#fafafa]"
                     }`}
@@ -937,7 +1014,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                         )}
                         {isCompetitorTerm(row.searchTerm) && (
                           <Button
-                            variant="primary"
+                            variant="secondary"
                             className="!py-1.5 !px-3 !text-sm min-w-[152px]"
                             onClick={() => toggleCompetitor(row.searchTerm)}
                           >
