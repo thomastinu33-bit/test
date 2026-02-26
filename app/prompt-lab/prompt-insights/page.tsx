@@ -594,27 +594,43 @@ export default function PromptInsightsPage() {
               </nav>
             )}
 
-            {selectedTab === "non-branded" ? (
-              <div className="flex flex-col gap-3">
-                {[...results].filter((item) => !selectedCategory || item.category === selectedCategory).sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.popularity] - { high: 0, medium: 1, low: 2 }[b.popularity])).slice(0, visibleTopicsCount).map((item) => (
-                  <TopicAccordion
-                    key={item.topic}
-                    topic={item.topic}
-                    prompts={item.prompts}
-                    subtopics={item.subtopics}
-                    popularity={item.popularity}
-                    userIntent={item.userIntent}
-                    selected={selectedTopics.has(item.topic)}
-                    onToggleSelect={() => toggleTopic(item.topic)}
-                    brand={brand}
-                    open={openTopic === item.topic}
-                    onOpen={() => setOpenTopic(openTopic === item.topic ? null : item.topic)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted py-6 text-center">No data available for this view yet.</p>
-            )}
+            {(() => {
+              const tabFiltered = [...results]
+                .filter((item) => {
+                  const categoryMatch = !selectedCategory || item.category === selectedCategory;
+                  const tabMatch =
+                    selectedTab === "your-brand" ? item.tab === "your-brand" :
+                    selectedTab === "competitor" ? item.tab === "competitor" :
+                    (item.tab === "non-branded" || !item.tab);
+                  return categoryMatch && tabMatch;
+                })
+                .sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.popularity] - { high: 0, medium: 1, low: 2 }[b.popularity]))
+                .slice(0, visibleTopicsCount);
+
+              if (tabFiltered.length === 0) {
+                return <p className="text-sm text-muted py-6 text-center">No data available for this view yet.</p>;
+              }
+
+              return (
+                <div className="flex flex-col gap-3">
+                  {tabFiltered.map((item) => (
+                    <TopicAccordion
+                      key={item.topic}
+                      topic={item.topic}
+                      prompts={item.prompts}
+                      subtopics={item.subtopics}
+                      popularity={item.popularity}
+                      userIntent={item.userIntent}
+                      selected={selectedTopics.has(item.topic)}
+                      onToggleSelect={() => toggleTopic(item.topic)}
+                      brand={brand}
+                      open={openTopic === item.topic}
+                      onOpen={() => setOpenTopic(openTopic === item.topic ? null : item.topic)}
+                    />
+                  ))}
+                </div>
+              );
+            })()}
 
             {selectedTopics.size > 0 && (
               <div ref={trackerBarRef} className="flex items-center justify-between pt-4 border-t border-border">

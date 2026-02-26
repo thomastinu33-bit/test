@@ -19,6 +19,7 @@ export interface TopicData {
   popularity: Popularity;
   userIntent: string;
   category: string;
+  tab?: "your-brand" | "competitor" | "non-branded";
 }
 
 export interface BrandInsights {
@@ -358,6 +359,286 @@ export const INSIGHTS_DATA: BrandInsights[] = [
           "How long should I hold a designer bag before reselling it?",
           "Are dust bags and original packaging important for resale?",
           "What is the average depreciation rate for a mid-tier luxury handbag?",
+        ],
+      },
+      // Your Brand topics
+      {
+        topic: "Coach Model & Product Lookup",
+        popularity: "high",
+        category: "Handbags",
+        tab: "your-brand",
+        userIntent: "Identify specific Coach bag models, view detailed descriptions, or locate where to buy particular Coach handbags, backpacks, or charms.",
+        prompts: [],
+        subtopics: [
+          {
+            name: "Identifying Specific Models",
+            prompts: [
+              "What does the Coach Tabby shoulder bag look like?",
+              "What is the Coach Pillow Tabby and how is it different from the original Tabby?",
+              "What are the dimensions of the Coach Wyn crossbody?",
+              "Does Coach make a bag called the Dreamer?",
+              "What Coach bags come in pebble leather?",
+              "What is the Coach Willow tote and what sizes does it come in?",
+              "What is the difference between the Coach Mini and Micro Tabby?",
+              "What does the Coach Borough bag look like?",
+            ],
+          },
+          {
+            name: "Backpacks & Charms",
+            prompts: [
+              "Does Coach make leather backpacks for women?",
+              "What Coach backpacks are available for men?",
+              "What bag charms does Coach currently sell?",
+              "Where can I buy Coach bag charms online?",
+              "What are the most popular Coach bag charms right now?",
+              "Can I add a Coach charm to any Coach bag?",
+              "Does Coach sell backpacks for kids or teens?",
+            ],
+          },
+          {
+            name: "Where to Buy",
+            prompts: [
+              "Where can I buy a Coach bag near me?",
+              "Does Coach have an official online store?",
+              "Can I buy authentic Coach bags on Amazon?",
+              "Are Coach bags available at Nordstrom?",
+              "Where can I find a discontinued Coach bag model?",
+              "Does Coach ship internationally from their website?",
+              "Can I buy Coach bags directly from their factory stores?",
+            ],
+          },
+        ],
+      },
+      {
+        topic: "Coach Brand Ownership & Authentication",
+        popularity: "medium",
+        category: "Accessories",
+        tab: "your-brand",
+        userIntent: "Understand Coach's brand ownership, whether Coach is considered designer or luxury, where Coach products are manufactured, or how to authenticate Coach items.",
+        prompts: [],
+        subtopics: [
+          {
+            name: "Brand Ownership & Luxury Status",
+            prompts: [
+              "Who owns the Coach brand?",
+              "Is Coach considered a luxury brand?",
+              "Is Coach a designer brand or a premium brand?",
+              "What company owns Coach handbags?",
+              "How does Coach compare to true luxury brands like Gucci or Louis Vuitton?",
+              "Is Coach part of a larger fashion group?",
+              "Has Coach always been an independent brand?",
+            ],
+          },
+          {
+            name: "Manufacturing Origins",
+            prompts: [
+              "Where are Coach bags manufactured?",
+              "Are Coach bags made in the USA?",
+              "Are any Coach bags still made in America?",
+              "Does Coach manufacture its own bags or outsource production?",
+              "Which countries does Coach produce its bags in?",
+              "Does Coach use genuine leather in all its bags?",
+              "What materials does Coach use to make its handbags?",
+            ],
+          },
+          {
+            name: "Authenticating Coach Items",
+            prompts: [
+              "How can I tell if a Coach bag is authentic?",
+              "What are the signs of a fake Coach bag?",
+              "Where is the serial number located on a Coach bag?",
+              "What does the Coach creed patch look like on an authentic bag?",
+              "How do I verify a Coach bag using its serial number?",
+              "Does Coach offer an official authentication service?",
+              "What stitching details indicate a genuine Coach product?",
+              "How do counterfeit Coach bags differ in hardware quality?",
+            ],
+          },
+        ],
+      },
+      {
+        topic: "Coach Pricing & Promotions",
+        popularity: "high",
+        category: "Handbags",
+        tab: "your-brand",
+        userIntent: "Find current Coach prices, the cheapest options available, active promotions, or discount codes for Coach handbags.",
+        prompts: [],
+        subtopics: [
+          {
+            name: "Current Prices",
+            prompts: [
+              "How much does the Coach Tabby bag cost?",
+              "What is the price range for Coach handbags?",
+              "How much does the Coach Wyn crossbody cost?",
+              "What is the cheapest Coach bag available right now?",
+              "How much does a Coach leather wallet cost?",
+              "What is the most affordable Coach crossbody bag?",
+              "How much does a Coach mini bag cost?",
+            ],
+          },
+          {
+            name: "Discount Codes & Promotions",
+            prompts: [
+              "Are there any Coach promo codes available right now?",
+              "Does Coach offer discount codes for first-time buyers?",
+              "How do I get a discount on a Coach bag?",
+              "Does Coach offer a student discount?",
+              "Is there a Coach Friends & Family sale coming up?",
+              "Does Coach have a loyalty or rewards program?",
+              "How do I apply a promo code on the Coach website?",
+            ],
+          },
+          {
+            name: "Finding the Best Deal",
+            prompts: [
+              "Where can I find the cheapest authentic Coach bags?",
+              "Is it cheaper to buy Coach bags at the outlet?",
+              "When does Coach have its biggest sales of the year?",
+              "Does Coach discount bags during Black Friday?",
+              "What is the best time of year to buy a Coach bag?",
+              "Are Coach bags cheaper on their website or in-store?",
+              "Can I find Coach bags at a discount on Nordstrom Rack?",
+            ],
+          },
+        ],
+      },
+      // Competitor topics
+      {
+        topic: "Coach vs. Competitor Brand Comparisons",
+        popularity: "high",
+        category: "Handbags",
+        tab: "competitor",
+        userIntent: "Compare Coach directly against competitor brands on quality, style, value, and reputation to make an informed purchase decision.",
+        prompts: [],
+        subtopics: [
+          {
+            name: "Coach vs. Michael Kors",
+            prompts: [
+              "Is Coach better quality than Michael Kors?",
+              "What is the difference between Coach and Michael Kors handbags?",
+              "Which is more expensive, Coach or Michael Kors?",
+              "Is Coach considered a higher-end brand than Michael Kors?",
+              "Which brand has better leather quality, Coach or Michael Kors?",
+              "Coach vs. Michael Kors: which is better for everyday use?",
+              "Does Michael Kors or Coach hold resale value better?",
+            ],
+          },
+          {
+            name: "Coach vs. Kate Spade",
+            prompts: [
+              "What is the difference between Coach and Kate Spade?",
+              "Is Coach or Kate Spade better quality?",
+              "Which brand is more playful, Coach or Kate Spade?",
+              "Are Coach bags more durable than Kate Spade bags?",
+              "Coach vs. Kate Spade: which is better for a first designer bag?",
+              "Which brand is more affordable, Coach or Kate Spade?",
+              "Is Kate Spade considered the same tier as Coach?",
+            ],
+          },
+          {
+            name: "Coach vs. Tory Burch & Others",
+            prompts: [
+              "Is Coach or Tory Burch considered more luxurious?",
+              "What is the difference between Coach and Tory Burch bag quality?",
+              "How does Coach compare to Marc Jacobs in terms of style?",
+              "Is Coach better than Dooney & Bourke?",
+              "How does Coach compare to Fossil for everyday bags?",
+              "Which brand is the best value between Coach, Tory Burch, and Michael Kors?",
+              "Is Coach considered in the same league as Tory Burch?",
+            ],
+          },
+        ],
+      },
+      {
+        topic: "Competitor Brand Identity & Positioning",
+        popularity: "medium",
+        category: "Accessories",
+        tab: "competitor",
+        userIntent: "Understand where competitor brands sit in the market — their ownership, luxury status, manufacturing, and how they differentiate from Coach.",
+        prompts: [],
+        subtopics: [
+          {
+            name: "Brand Ownership & Luxury Status",
+            prompts: [
+              "Is Michael Kors considered a luxury brand?",
+              "Who owns Kate Spade?",
+              "Is Tory Burch a luxury or designer brand?",
+              "What fashion group owns Michael Kors?",
+              "Is Marc Jacobs considered high fashion or accessible luxury?",
+              "Is Dooney & Bourke a heritage American brand like Coach?",
+              "How did Kate Spade become part of the Tapestry group?",
+            ],
+          },
+          {
+            name: "Manufacturing & Quality",
+            prompts: [
+              "Where are Michael Kors bags manufactured?",
+              "Are Kate Spade bags made with real leather?",
+              "Where are Tory Burch bags made?",
+              "What materials does Marc Jacobs use in their bags?",
+              "Are Dooney & Bourke bags made in the USA?",
+              "How is the leather quality of Michael Kors compared to other brands at its price point?",
+              "Does Kate Spade use genuine leather or vegan leather in their bags?",
+            ],
+          },
+          {
+            name: "Authenticating Competitor Items",
+            prompts: [
+              "How can I tell if a Michael Kors bag is authentic?",
+              "What are the signs of a fake Kate Spade bag?",
+              "Where is the serial number on a Tory Burch bag?",
+              "How do I verify a Marc Jacobs bag is real?",
+              "What distinguishes a genuine Dooney & Bourke from a counterfeit?",
+              "Does Michael Kors have an authentication service?",
+              "What hardware details prove a Kate Spade bag is authentic?",
+            ],
+          },
+        ],
+      },
+      {
+        topic: "Competitor Pricing & Deals",
+        popularity: "high",
+        category: "Handbags",
+        tab: "competitor",
+        userIntent: "Find current prices, discount codes, or the cheapest options for competitor brand handbags, and compare deals against Coach.",
+        prompts: [],
+        subtopics: [
+          {
+            name: "Competitor Price Ranges",
+            prompts: [
+              "How much does a Michael Kors handbag cost on average?",
+              "What is the price range for Kate Spade bags?",
+              "How much does a Tory Burch bag typically cost?",
+              "Are Marc Jacobs bags cheaper than Coach bags?",
+              "What is the most affordable Tory Burch handbag?",
+              "How much does a Dooney & Bourke bag cost compared to Coach?",
+              "Which is cheaper on average, Coach or Michael Kors?",
+            ],
+          },
+          {
+            name: "Competitor Discounts & Promos",
+            prompts: [
+              "Are there any Michael Kors promo codes available right now?",
+              "Does Kate Spade offer discount codes for new customers?",
+              "Does Tory Burch have a sale section on their website?",
+              "How do I get a discount on a Marc Jacobs bag?",
+              "Does Michael Kors have a student discount?",
+              "When does Kate Spade have its biggest annual sale?",
+              "Does Dooney & Bourke offer outlet pricing online?",
+            ],
+          },
+          {
+            name: "Best Value Comparisons",
+            prompts: [
+              "Is it cheaper to buy a Michael Kors or Coach bag?",
+              "Which brand offers the best quality for the price, Coach or Kate Spade?",
+              "Can I find Tory Burch bags cheaper than Coach bags of similar quality?",
+              "Which designer brand has the best outlet discounts?",
+              "Is Michael Kors Outlet better value than Coach Outlet?",
+              "Where can I find the best deals on Kate Spade vs. Coach bags?",
+              "Which brand depreciates in price the fastest: Coach, Michael Kors, or Kate Spade?",
+            ],
+          },
         ],
       },
       {
