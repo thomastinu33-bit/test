@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/Evertune";
-import { getBrandInsights, type TopicData } from "./data";
+import { getBrandInsights, type TopicData, type CategoryData, type SubtopicData } from "./data";
 import { SaveToListModal } from "../SaveToListModal";
 import type { SavedPrompt } from "../usePromptLists";
 
@@ -80,7 +80,7 @@ function SearchDropdown({
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
-        className="w-full flex items-center justify-between bg-white border border-border rounded-lg px-4 py-3 text-base text-foreground focus:outline-none focus:ring-1 focus:ring-primary-600"
+        className="w-full flex items-center justify-between bg-white border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary-600"
       >
         <span className={value ? "text-foreground" : "text-muted"}>{value || "Select a brand..."}</span>
         <ChevronDownIcon />
@@ -126,19 +126,19 @@ function SearchDropdown({
 
 const PROMPTS_PAGE_SIZE = 3;
 
-function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onToggleSelect, brand }: { topic: string; prompts: string[]; popularity: "high" | "medium" | "low"; userIntent: string; selected: boolean; onToggleSelect: () => void; brand: string }) {
-  const [open, setOpen] = useState(false);
+function TopicAccordion({ topic, prompts, subtopics, popularity, userIntent, selected, onToggleSelect, brand, open, onOpen }: { topic: string; prompts: string[]; subtopics?: SubtopicData[]; popularity: "high" | "medium" | "low"; userIntent: string; selected: boolean; onToggleSelect: () => void; brand: string; open: boolean; onOpen: () => void }) {
   const [visiblePrompts, setVisiblePrompts] = useState(PROMPTS_PAGE_SIZE);
   const [saveModal, setSaveModal] = useState<{ prompts: SavedPrompt[]; defaultName?: string } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleToggle = () => {
-    const opening = !open;
-    setOpen(opening);
-    if (opening) {
+    if (!open) {
+      onOpen();
       setTimeout(() => {
         containerRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }, 220);
+    } else {
+      onOpen(); // closes by toggling in parent
     }
   };
 
@@ -150,7 +150,7 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
         tabIndex={0}
         onClick={handleToggle}
         onKeyDown={(e) => e.key === "Enter" && handleToggle()}
-        className="w-full flex items-center justify-between px-6 py-3 bg-white hover:bg-surface transition-colors cursor-pointer"
+        className={`w-full flex items-center justify-between px-5 py-4 transition-colors cursor-pointer ${open ? "bg-surface" : "bg-white hover:bg-surface"}`}
       >
         <div className="flex items-center gap-3">
           <span
@@ -165,31 +165,31 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
               </svg>
             )}
           </span>
-          <span className="text-base font-medium text-foreground">{topic}</span>
-          <span className={`text-xs font-medium rounded-full px-2 py-0.5 ${
+          <span className="text-sm font-semibold text-foreground">{topic}</span>
+          <span className={`text-[10px] font-semibold rounded-full px-2 py-0.5 uppercase tracking-wide ${
             popularity === "high"
-              ? "bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]"
+              ? "bg-[#DCFCE7] text-[#16A34A]"
               : popularity === "medium"
-              ? "bg-[#FFF8E1] text-[#F59E0B] border border-[#FDE68A]"
-              : "bg-[#FEE2E2] text-[#DC2626] border border-[#FECACA]"
+              ? "bg-[#FFF8E1] text-[#F59E0B]"
+              : "bg-[#FEE2E2] text-[#DC2626]"
           }`}>
             {popularity === "high" ? "High Popularity" : popularity === "medium" ? "Medium Popularity" : "Low Popularity"}
           </span>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="text-xs text-muted">
+            {subtopics ? subtopics.reduce((acc, st) => acc + st.prompts.length, 0) : prompts.length} prompts
+          </span>
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setSaveModal({ prompts: prompts.map((p) => ({ text: p, topic, brand })), defaultName: topic }); }}
-            className="flex items-center gap-1 text-xs text-primary-600 font-medium px-2 py-1 rounded-md hover:bg-primary-50 transition-colors"
+            className="flex items-center gap-1 text-xs text-primary-600 font-medium px-2 py-1 rounded-md hover:bg-primary-100 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
             Add to Library
           </button>
-          <span className="text-xs text-muted bg-white border border-border rounded-full px-2 py-0.5">
-            {prompts.length} prompts
-          </span>
           <ChevronDownIcon className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
         </div>
       </div>
@@ -206,29 +206,47 @@ function TopicAccordion({ topic, prompts, popularity, userIntent, selected, onTo
                 <p className="text-[13px] text-foreground leading-relaxed">{userIntent}</p>
               </div>
             </div>
-            {prompts.map((prompt, i) => (
-              <div key={i} className="group flex items-center justify-between px-6 py-3 border-b border-background last:border-b-0">
-                <p className="text-[13px] text-foreground">{prompt}</p>
-                <button
-                  type="button"
-                  onClick={() => setSaveModal({ prompts: [{ text: prompt, topic, brand }] })}
-                  className="shrink-0 ml-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs text-primary-600 font-medium px-2 py-1 rounded-md hover:bg-primary-50 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  Add to Library
-                </button>
-              </div>
-            ))}
-            <div className="flex justify-start px-6 py-3 border-t border-background">
-              <button
-                type="button"
-                className="text-xs font-medium text-primary-600 hover:underline transition-colors"
-              >
-                More prompts like this
-              </button>
-            </div>
+            {subtopics && subtopics.length > 0 ? (
+              subtopics.map((st) => (
+                <div key={st.name}>
+                  <div className="flex items-center justify-between px-5 py-2 bg-surface border-b border-border">
+                    <p className="text-xs font-semibold text-foreground">{st.name}</p>
+                    <button
+                      type="button"
+                      onClick={() => setSaveModal({ prompts: st.prompts.map((p) => ({ text: p, topic, brand })), defaultName: st.name })}
+                      className="text-xs text-primary-600 font-medium hover:underline transition-colors"
+                    >
+                      Add all
+                    </button>
+                  </div>
+                  {st.prompts.map((prompt, i) => (
+                    <div key={i} className="group flex items-center justify-between px-5 py-2.5 border-b border-background last:border-b-0 hover:bg-surface">
+                      <p className="text-[13px] text-foreground">{prompt}</p>
+                      <button
+                        type="button"
+                        onClick={() => setSaveModal({ prompts: [{ text: prompt, topic, brand }] })}
+                        className="shrink-0 ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-primary-600 font-medium hover:underline"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ))
+            ) : (
+              prompts.map((prompt, i) => (
+                <div key={i} className="group flex items-center justify-between px-5 py-2.5 border-b border-background last:border-b-0 hover:bg-surface">
+                  <p className="text-[13px] text-foreground">{prompt}</p>
+                  <button
+                    type="button"
+                    onClick={() => setSaveModal({ prompts: [{ text: prompt, topic, brand }] })}
+                    className="shrink-0 ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-primary-600 font-medium hover:underline"
+                  >
+                    Add
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -262,9 +280,18 @@ export default function PromptInsightsPage() {
   const [includeBrand, setIncludeBrand] = useState<boolean>(false);
   const [openDropdown, setOpenDropdown] = useState<"brand" | "location" | "language" | null>(null);
   const [results, setResults] = useState<TopicData[] | null>(null);
+  const [competitors, setCompetitors] = useState<string[]>([]);
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [shownCategoryNames, setShownCategoryNames] = useState<Set<string>>(new Set());
+  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
+  const [catDropdownSearch, setCatDropdownSearch] = useState("");
+  const moreDropdownRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
   const [visibleTopicsCount, setVisibleTopicsCount] = useState(TOPICS_PAGE_SIZE);
+  const [openTopic, setOpenTopic] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState<"your-brand" | "competitor" | "non-branded">("non-branded");
   const trackerBarRef = useRef<HTMLDivElement>(null);
 
   // Restore session after mount to avoid SSR/client mismatch
@@ -298,6 +325,18 @@ export default function PromptInsightsPage() {
     }
   }, [selectedTopics.size]);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreDropdownRef.current && !moreDropdownRef.current.contains(e.target as Node)) {
+        setMoreDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const parseVol = useCallback((v: string) => parseFloat(v.replace("M", "")) * 1_000_000, []);
+
   const handleGenerate = () => {
     if (!brand) return;
     setLoading(true);
@@ -306,35 +345,46 @@ export default function PromptInsightsPage() {
       const data = getBrandInsights(brand);
       if (data) {
         setResults(data.topics);
+        setCompetitors(data.competitors ?? []);
+        const cats = data.categories ?? [];
+        setCategories(cats);
+        const parseVol = (v: string) => parseFloat(v.replace("M", "")) * 1_000_000;
+        const top5 = [...cats].sort((a, b) => parseVol(b.volume) - parseVol(a.volume)).slice(0, 5).map((c) => c.name);
+        setShownCategoryNames(new Set(top5));
+        setSelectedCategory(top5[0] ?? null);
         setVisibleTopicsCount(TOPICS_PAGE_SIZE);
+        setOpenTopic(null);
       }
     }, 2000);
   };
 
   return (
     <div className="w-full font-sans">
-      <h2 className="text-2xl font-semibold text-foreground mb-5">Prompt Insights</h2>
+      <h2 className="text-2xl font-semibold text-foreground mb-1">Prompt Insights</h2>
+      <p className="text-sm text-muted mb-5">
+        Type in any brand and see categories and prompt themes related to the brand.{" "}
+        <a href="#" className="text-primary-600 hover:underline font-medium">Learn More</a>
+      </p>
 
       <div className="bg-white rounded-lg">
-        {/* Select Brand */}
-        <div className="pb-4">
-          <p className="text-base font-medium text-foreground mb-2">Select Brand</p>
-          <SearchDropdown
-            value={brand}
-            options={BRANDS.map((b) => b.name)}
-            placeholder="Search brands..."
-            open={openDropdown === "brand"}
-            onOpenChange={(o) => setOpenDropdown(o ? "brand" : null)}
-            onChange={(v) => { setBrand(v); setResults(null); }}
-          />
-        </div>
-
-        {/* Location + Language */}
-        <div className="flex gap-5 pb-4">
+        {/* Brand + Location + Language + Generate */}
+        <div className="flex gap-5 pb-4 items-end border border-border rounded-lg p-4">
           <div className="flex-1">
-            <div className="flex items-center gap-1 mb-2">
+            <p className="text-sm font-medium text-foreground mb-1.5">Select Brand</p>
+            <SearchDropdown
+              value={brand}
+              options={BRANDS.map((b) => b.name)}
+              placeholder="Search brands..."
+              open={openDropdown === "brand"}
+              onOpenChange={(o) => setOpenDropdown(o ? "brand" : null)}
+              onChange={(v) => { setBrand(v); setResults(null); }}
+            />
+          </div>
+
+          <div className="flex-1">
+            <div className="flex items-center gap-1 mb-1.5">
               <LocationIcon />
-              <p className="text-base font-medium text-foreground">Location</p>
+              <p className="text-sm font-medium text-foreground">Location</p>
             </div>
             <SearchDropdown
               value={location}
@@ -347,9 +397,9 @@ export default function PromptInsightsPage() {
           </div>
 
           <div className="flex-1">
-            <div className="flex items-center gap-1 mb-2">
+            <div className="flex items-center gap-1 mb-1.5">
               <TranslateIcon />
-              <p className="text-base font-medium text-foreground">Language</p>
+              <p className="text-sm font-medium text-foreground">Language</p>
             </div>
             <SearchDropdown
               value={language}
@@ -360,89 +410,211 @@ export default function PromptInsightsPage() {
               onChange={setLanguage}
             />
           </div>
-        </div>
 
-        {/* Include brand toggle */}
-        <div className="flex flex-col gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <p className="text-base font-medium text-foreground">
-                Would you want to include the brand you selected in the prompts?
-              </p>
-              <InfoIcon />
-            </div>
-            <div className="flex gap-5">
-              {[{ label: "Yes", val: true }, { label: "No", val: false }].map(({ label, val }) => {
-                const active = includeBrand === val;
-                return (
-                  <button
-                    key={label}
-                    onClick={() => setIncludeBrand(val)}
-                    className={`w-[130px] flex items-center gap-2 px-3 py-2 rounded-full border transition-colors ${
-                      active ? "bg-primary-100 border-primary-200" : "bg-white border-border"
-                    }`}
-                  >
-                    <span className={`shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      active ? "border-primary-600" : "border-muted"
-                    }`}>
-                      {active && <span className="w-2 h-2 rounded-full bg-primary-600" />}
-                    </span>
-                    <span className="flex-1 text-left text-base font-medium text-foreground">{label}</span>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="shrink-0 self-end">
+            <Button variant="secondary" className="rounded-lg" onClick={handleGenerate} disabled={!brand || loading || !!results}>
+              {loading && (
+                <svg className="animate-spin w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+              )}
+              {loading ? "Generating..." : "Generate Insights"}
+            </Button>
           </div>
-
-          <Button variant="secondary" className="self-end rounded-lg" onClick={handleGenerate} disabled={!brand || loading || !!results}>
-            {loading && (
-              <svg className="animate-spin w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-              </svg>
-            )}
-            {loading ? "Generating..." : "Generate Insights"}
-          </Button>
         </div>
 
         {/* Results */}
         {results && (
-          <div className="mt-6 pt-6 border-t border-border flex flex-col gap-4">
-            <h3 className="text-xl font-semibold text-foreground">
-              Unbranded Prompts for {brand}
-            </h3>
-            <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 flex flex-col gap-1">
+          <div className="mt-6 flex flex-col gap-4">
+            <div className="relative bg-primary-50 rounded-lg pl-5 pr-4 py-3 flex flex-col gap-0.5 overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg" style={{ background: "linear-gradient(180deg, var(--primary-gradient-start) 0%, var(--primary) 50%, var(--primary-gradient-end) 100%)" }} />
               <p className="text-base font-semibold text-foreground">Key Insights</p>
-              <p className="text-[13px] text-foreground">
+              <p className="text-[13px] text-foreground leading-relaxed">
                 Users primarily search for pricing &amp; deals, specific product/model lookup and purchase sources, and brand identity, manufacturing and authenticity information.
               </p>
             </div>
-            <div className="flex flex-col gap-3">
-              {results.slice(0, visibleTopicsCount).map((item) => (
-                <TopicAccordion
-                  key={item.topic}
-                  topic={item.topic}
-                  prompts={item.prompts}
-                  popularity={item.popularity}
-                  userIntent={item.userIntent}
-                  selected={selectedTopics.has(item.topic)}
-                  onToggleSelect={() => toggleTopic(item.topic)}
-                  brand={brand}
-                />
-              ))}
-              {results.length > visibleTopicsCount && (
+            <div className="border border-border rounded-lg px-4 py-3 flex flex-col gap-2">
+              <p className="text-base font-semibold text-foreground">Competitors Discovered</p>
+              <div className="flex flex-wrap gap-2">
+                {competitors.map((competitor) => (
+                  <span key={competitor} className="text-xs font-medium text-foreground bg-white border border-border rounded-full px-3 py-1">
+                    {competitor}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <h4 className="text-base font-semibold text-foreground">Prompt Themes</h4>
+
+            {/* Category picker */}
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
+                {[...categories]
+                  .sort((a, b) => parseVol(b.volume) - parseVol(a.volume))
+                  .filter((c) => shownCategoryNames.has(c.name))
+                  .map((cat) => {
+                    const isSelected = selectedCategory === cat.name;
+                    return (
+                      <button
+                        key={cat.name}
+                        type="button"
+                        onClick={() => { setSelectedCategory(cat.name); setVisibleTopicsCount(TOPICS_PAGE_SIZE); setSelectedTab("non-branded"); }}
+                        className={`flex flex-col items-start px-4 py-3 rounded-lg border transition-colors text-left ${
+                          isSelected ? "border-primary-600 bg-primary-50" : "border-border bg-white hover:bg-surface"
+                        }`}
+                      >
+                        <span className={`text-sm font-semibold ${isSelected ? "text-primary-600" : "text-foreground"}`}>{cat.name}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-muted">{cat.volume} prompts/mo</span>
+                          <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${
+                            cat.changePositive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                          }`}>
+                            {cat.changePositive
+                              ? <svg width="7" height="7" viewBox="0 0 8 8" fill="currentColor"><polygon points="4,0 8,8 0,8" /></svg>
+                              : <svg width="7" height="7" viewBox="0 0 8 8" fill="currentColor"><polygon points="0,0 8,0 4,8" /></svg>
+                            }
+                            {cat.change.replace(/^[+-]/, "")}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+
+              {/* More categories */}
+              <div ref={moreDropdownRef} className="relative justify-self-start">
                 <button
                   type="button"
-                  onClick={() => setVisibleTopicsCount((v) => v + TOPICS_PAGE_SIZE)}
-                  className="self-center text-sm font-medium text-primary-600 hover:underline transition-colors py-2"
+                  onClick={() => { setMoreDropdownOpen((v) => !v); setCatDropdownSearch(""); }}
+                  className={`flex items-center justify-center rounded-lg border transition-colors h-full min-h-[68px] w-[50px] ${
+                    moreDropdownOpen ? "border-primary-600 bg-primary-50 text-primary-600" : "border-border bg-white hover:bg-surface text-muted"
+                  }`}
                 >
-                  Show more Topics ({results.length - visibleTopicsCount} remaining)
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
                 </button>
-              )}
-              <Button variant="secondary" className="self-start">
-                Generate Topic
-              </Button>
+
+                {moreDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-border rounded-lg shadow-lg w-64 max-h-72 overflow-y-auto">
+                    <div className="px-4 py-2.5 border-b border-border">
+                      <p className="text-xs font-semibold text-muted uppercase tracking-wide">Categories</p>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+                      <SearchIcon />
+                      <input
+                        autoFocus
+                        type="text"
+                        placeholder="Search..."
+                        value={catDropdownSearch}
+                        onChange={(e) => setCatDropdownSearch(e.target.value)}
+                        className="flex-1 text-sm text-foreground placeholder-muted outline-none ring-0 bg-transparent"
+                      />
+                      {catDropdownSearch && (
+                        <button type="button" onClick={() => setCatDropdownSearch("")} className="text-muted hover:text-foreground">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                        </button>
+                      )}
+                    </div>
+                    {[...categories]
+                      .sort((a, b) => parseVol(b.volume) - parseVol(a.volume))
+                      .filter((c) => c.name.toLowerCase().includes(catDropdownSearch.toLowerCase()))
+                      .map((cat) => {
+                        const isShown = shownCategoryNames.has(cat.name);
+                        return (
+                          <label
+                            key={cat.name}
+                            className="flex items-center justify-between px-3 py-1 hover:bg-surface cursor-pointer gap-2"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className={`shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                                isShown ? "bg-primary-600 border-primary-600" : "bg-white border-muted"
+                              }`}>
+                                {isShown && (
+                                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                    <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                )}
+                              </span>
+                              <span className="text-sm text-foreground truncate">{cat.name}</span>
+                            </div>
+                            <span className="text-xs text-muted shrink-0">{cat.volume}/mo</span>
+                            <input
+                              type="checkbox"
+                              className="sr-only"
+                              checked={isShown}
+                              onChange={() => {
+                                setShownCategoryNames((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(cat.name)) {
+                                    next.delete(cat.name);
+                                    if (selectedCategory === cat.name) {
+                                      const first = [...next][0] ?? null;
+                                      setSelectedCategory(first);
+                                    }
+                                  } else {
+                                    next.add(cat.name);
+                                  }
+                                  return next;
+                                });
+                              }}
+                            />
+                          </label>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
             </div>
+
+            {selectedCategory && (
+              <nav className="border-b border-[#e5e5e5] mt-2">
+                <div className="flex gap-6">
+                  {(["your-brand", "competitor", "non-branded"] as const).map((tab) => {
+                    const label = tab === "your-brand" ? "Your Brand" : tab === "competitor" ? "Competitor" : "Non Branded";
+                    const isActive = selectedTab === tab;
+                    return (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setSelectedTab(tab)}
+                        className={`relative pb-4 pt-1 px-3 -mx-3 text-xs tracking-wide uppercase transition-colors duration-150 rounded-t-md ${
+                          isActive
+                            ? "font-bold text-[var(--primary)]"
+                            : "font-semibold text-[#404040] hover:text-[var(--primary)] hover:bg-[#f6f6f6]"
+                        }`}
+                      >
+                        {label}
+                        {isActive && (
+                          <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--primary)] rounded-full" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </nav>
+            )}
+
+            {selectedTab === "non-branded" ? (
+              <div className="flex flex-col gap-3">
+                {[...results].filter((item) => !selectedCategory || item.category === selectedCategory).sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.popularity] - { high: 0, medium: 1, low: 2 }[b.popularity])).slice(0, visibleTopicsCount).map((item) => (
+                  <TopicAccordion
+                    key={item.topic}
+                    topic={item.topic}
+                    prompts={item.prompts}
+                    subtopics={item.subtopics}
+                    popularity={item.popularity}
+                    userIntent={item.userIntent}
+                    selected={selectedTopics.has(item.topic)}
+                    onToggleSelect={() => toggleTopic(item.topic)}
+                    brand={brand}
+                    open={openTopic === item.topic}
+                    onOpen={() => setOpenTopic(openTopic === item.topic ? null : item.topic)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted py-6 text-center">No data available for this view yet.</p>
+            )}
 
             {selectedTopics.size > 0 && (
               <div ref={trackerBarRef} className="flex items-center justify-between pt-4 border-t border-border">
