@@ -115,7 +115,7 @@ export default function PromptVolumePage() {
   };
 
   return (
-    <div className="w-full font-sans">
+    <div className="flex-1 min-w-0 overflow-y-auto p-8 font-sans">
       <div className="mb-5">
         <h2 className="text-2xl font-semibold text-foreground">Prompt Volume</h2>
         <p className="text-base text-muted mt-1">

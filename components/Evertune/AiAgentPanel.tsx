@@ -5,10 +5,10 @@ import { Button } from "./Button";
 
 const AskAIIcon = () => (
   <img
-    src="/logos/evetune-ai.svg"
+    src="/logos/animation.svg"
     alt=""
     role="presentation"
-    className="shrink-0 w-6 h-6 object-contain transition-transform duration-1000 group-hover:rotate-[360deg]"
+    className="shrink-0 w-4 h-4 object-contain"
   />
 );
 
@@ -51,7 +51,7 @@ export function AskAIButton() {
   return (
     <Button variant="askAI" onClick={toggle} aria-label="Open AI agent">
       <AskAIIcon />
-      Ask AI
+      <span>Ask AI</span>
     </Button>
   );
 }
@@ -77,8 +77,8 @@ export function AiAgentProvider({ children }: { children: React.ReactNode }) {
             {/* Header: icon + "Ask AI" + close */}
             <div className="flex-shrink-0 flex items-center justify-between h-14 px-4 border-b border-[#eeeeee]">
               <div className="flex items-center gap-2">
-                <AskAIIcon />
-                <h2 className="text-base font-semibold text-[#262626]">Ask AI</h2>
+                <img src="/logos/animation.svg" alt="" role="presentation" className="shrink-0 w-8 h-8 object-contain" />
+                <h2 className="text-[20px] font-medium text-slate-500">Ask AI</h2>
               </div>
               <button
                 type="button"

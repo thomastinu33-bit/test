@@ -22,9 +22,16 @@ export interface TopicData {
   tab?: "your-brand" | "competitor" | "non-branded";
 }
 
+export interface CompetitorData {
+  name: string;
+  volume: string;
+  change: string;
+  changePositive: boolean;
+}
+
 export interface BrandInsights {
   brand: string;
-  competitors: string[];
+  competitors: CompetitorData[];
   categories: CategoryData[];
   topics: TopicData[];
 }
@@ -32,7 +39,38 @@ export interface BrandInsights {
 export const INSIGHTS_DATA: BrandInsights[] = [
   {
     brand: "Coach",
-    competitors: ["Kate Spade", "Michael Kors", "Tory Burch", "Marc Jacobs", "Fossil", "Dooney & Bourke"],
+    competitors: [
+      { name: "Chanel", volume: "1M", change: "+8%", changePositive: true },
+      { name: "Hermès", volume: "510k", change: "+14%", changePositive: true },
+      { name: "Celine", volume: "385k", change: "+22%", changePositive: true },
+      { name: "Fashionphile", volume: "340k", change: "+5%", changePositive: true },
+      { name: "Gucci", volume: "320k", change: "-3%", changePositive: false },
+      { name: "Mulberry", volume: "310k", change: "+11%", changePositive: true },
+      { name: "LVMH", volume: "275k", change: "+7%", changePositive: true },
+      { name: "Prada", volume: "270k", change: "+18%", changePositive: true },
+      { name: "Louis Vuitton", volume: "230k", change: "+2%", changePositive: true },
+      { name: "Nordstrom Rack", volume: "220k", change: "-6%", changePositive: false },
+      { name: "Ralph Lauren UK", volume: "220k", change: "+9%", changePositive: true },
+      { name: "Miu Miu", volume: "190k", change: "+31%", changePositive: true },
+      { name: "J.Crew", volume: "190k", change: "-4%", changePositive: false },
+      { name: "Michael Kors", volume: "165k", change: "-8%", changePositive: false },
+      { name: "Steve Madden", volume: "150k", change: "+3%", changePositive: true },
+      { name: "Coach Bag", volume: "140k", change: "+12%", changePositive: true },
+      { name: "Nine West", volume: "135k", change: "-2%", changePositive: false },
+      { name: "Lafayette 148", volume: "130k", change: "+6%", changePositive: true },
+      { name: "Loewe", volume: "130k", change: "+27%", changePositive: true },
+      { name: "Burberry", volume: "130k", change: "+4%", changePositive: true },
+      { name: "Belk", volume: "120k", change: "-1%", changePositive: false },
+      { name: "Tory Burch", volume: "115k", change: "+10%", changePositive: true },
+      { name: "Shopbop", volume: "115k", change: "+15%", changePositive: true },
+      { name: "Jimmy Choo", volume: "115k", change: "+8%", changePositive: true },
+      { name: "Neiman Marcus", volume: "110k", change: "-5%", changePositive: false },
+      { name: "Jones New York", volume: "85k", change: "-9%", changePositive: false },
+      { name: "Kate Spade", volume: "85k", change: "+1%", changePositive: true },
+      { name: "Fendi", volume: "75k", change: "+19%", changePositive: true },
+      { name: "Farfetch", volume: "70k", change: "-11%", changePositive: false },
+      { name: "Revolve Clothing", volume: "60k", change: "+16%", changePositive: true },
+    ],
     categories: [
       { name: "Handbags", volume: "5.7M", change: "+12%", changePositive: true },
       { name: "Wallets", volume: "3.4M", change: "+8%", changePositive: true },

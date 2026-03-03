@@ -37,7 +37,7 @@ export function Button({
     include:
       "bg-[#A5A5A5] text-white hover:bg-[#8c8c8c] focus:ring-[#A5A5A5] rounded-full",
     askAI:
-      "rounded-lg bg-white text-[#E65100] hover:opacity-90 focus:ring-[#7C9BFF]",
+      "rounded-lg bg-white text-slate-500 hover:opacity-90 focus:ring-[#7C9BFF]",
   };
 
   if (variant === "askAI") {
@@ -50,7 +50,7 @@ export function Button({
       >
         <button
           type="button"
-          className={`inline-flex items-center justify-center gap-2 rounded-[7px] m-[1px] px-4 py-2 text-sm font-semibold bg-white text-[#E65100] transition-colors disabled:opacity-50 disabled:pointer-events-none focus:ring-0 focus:outline-none ${className}`}
+          className={`inline-flex items-center justify-center gap-2 rounded-[7px] m-[1px] px-4 py-2 text-sm font-normal bg-white text-slate-500 transition-colors disabled:opacity-50 disabled:pointer-events-none focus:ring-0 focus:outline-none ${className}`}
           disabled={disabled}
           {...props}
         >

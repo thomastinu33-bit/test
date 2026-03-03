@@ -96,7 +96,7 @@ export default function PromptLibraryPage() {
   const emptyState = lists.length === 0 && !creatingList;
 
   return (
-    <div className="w-full font-sans">
+    <div className="flex-1 min-w-0 overflow-y-auto p-8 font-sans">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-2xl font-semibold text-foreground">Prompt Library</h2>
         <div className="flex items-center gap-3">
