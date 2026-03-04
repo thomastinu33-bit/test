@@ -344,9 +344,12 @@ export default function PromptInsightsPage() {
   const [loading, setLoading] = useState(false);
   const [visibleTopicsCount, setVisibleTopicsCount] = useState(TOPICS_PAGE_SIZE);
   const [openTopic, setOpenTopic] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<"your-brand" | "competitor" | "non-branded">("non-branded");
+  const [selectedTab, setSelectedTab] = useState<"your-brand" | "non-branded">("non-branded");
   const [competitorPage, setCompetitorPage] = useState(0);
   const [categoryTablePage, setCategoryTablePage] = useState(0);
+  const [resultsTab, setResultsTab] = useState<"prompt-volume" | "prompt-themes">("prompt-volume");
+  const [competitorSearch, setCompetitorSearch] = useState("");
+  const [categorySearch2, setCategorySearch2] = useState("");
   const COMPETITORS_PAGE_SIZE = 10;
   const CATEGORY_TABLE_PAGE_SIZE = 10;
 
@@ -364,6 +367,14 @@ export default function PromptInsightsPage() {
   useEffect(() => {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({ brand, location, language, includeBrand, results }));
   }, [brand, location, language, includeBrand, results]);
+
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      const vol = (v: string) => parseFloat(v.replace("M", "")) * 1_000_000;
+      const sorted = [...categories].sort((a, b) => vol(b.volume) - vol(a.volume));
+      setSelectedCategory(sorted[0].name);
+    }
+  }, [categories, selectedCategory]);
 
 
   useEffect(() => {
@@ -400,7 +411,7 @@ export default function PromptInsightsPage() {
 
   return (
     <div className="flex-1 min-w-0 overflow-y-auto p-8 font-sans">
-      <h2 className="text-2xl font-semibold text-foreground mb-1">Prompt Insights</h2>
+      <h2 className="text-2xl font-semibold text-foreground mb-1">Prompt Lab</h2>
       <p className="text-sm text-muted mb-5">
         Type in any brand and see categories and prompt themes related to the brand.{" "}
         <a href="#" className="text-primary-600 hover:underline font-medium">Learn More</a>
@@ -514,30 +525,78 @@ export default function PromptInsightsPage() {
               </p>
             </div>
 
-            {/* Competitors + Categories side by side */}
+            {/* Top-level tabs */}
+            <nav className="border-b border-[#e5e5e5]">
+              <div className="flex gap-6">
+                {(["prompt-volume", "prompt-themes"] as const).map((tab) => {
+                  const label = tab === "prompt-volume" ? "Prompt Volume" : "Prompt Themes";
+                  const isActive = resultsTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setResultsTab(tab)}
+                      className={`relative pb-3 pt-3 px-1 text-xs tracking-wide uppercase transition-colors duration-150 ${
+                        isActive
+                          ? "font-bold text-[var(--primary)]"
+                          : "font-semibold text-[#404040] hover:text-[var(--primary)]"
+                      }`}
+                    >
+                      {label}
+                      {isActive && <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--primary)] rounded-full" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+
+            {/* Prompt Volume tab */}
+            {resultsTab === "prompt-volume" && (
             <div className="flex gap-4 items-stretch">
               {(() => {
-                const totalPages = Math.ceil(competitors.length / COMPETITORS_PAGE_SIZE);
-                const pageItems = competitors.slice(competitorPage * COMPETITORS_PAGE_SIZE, (competitorPage + 1) * COMPETITORS_PAGE_SIZE);
+                const filtered = competitors.filter((c) => c.name.toLowerCase().includes(competitorSearch.toLowerCase()));
+                const totalPages = Math.ceil(filtered.length / COMPETITORS_PAGE_SIZE);
+                const pageItems = filtered.slice(competitorPage * COMPETITORS_PAGE_SIZE, (competitorPage + 1) * COMPETITORS_PAGE_SIZE);
                 return (
                   <div className="border border-border rounded-lg overflow-hidden flex-1">
-                    <div className="px-4 py-3 border-b border-border">
-                      <p className="text-base font-semibold text-foreground">Competitors Discovered</p>
-                      <p className="text-xs text-muted mt-0.5">{competitors.length} brands · ranked by prompt volume</p>
+                    <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-base font-semibold text-foreground">Competitors Discovered</p>
+                        <p className="text-xs text-muted mt-0.5">{competitors.length} brands · ranked by prompt volume</p>
+                      </div>
+                      <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-1.5 bg-white">
+                        <SearchIcon />
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          value={competitorSearch}
+                          onChange={(e) => { setCompetitorSearch(e.target.value); setCompetitorPage(0); }}
+                          className="text-sm text-foreground placeholder-muted focus:outline-none w-36"
+                        />
+                      </div>
                     </div>
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-surface border-b border-border">
                           <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wide w-10">#</th>
                           <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wide">Name</th>
+                          <th className="w-36" />
                           <th className="text-right px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wide">Monthly Prompts</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                         {pageItems.map((competitor, i) => (
-                          <tr key={competitor.name} className="hover:bg-surface transition-colors">
+                          <tr key={competitor.name} className="group hover:bg-surface transition-colors">
                             <td className="px-4 py-2.5 text-xs text-muted tabular-nums">{competitorPage * COMPETITORS_PAGE_SIZE + i + 1}</td>
                             <td className="px-4 py-2.5 font-medium text-foreground">{competitor.name}</td>
+                            <td className="px-4 py-2.5">
+                              <button
+                                type="button"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium text-primary-600 hover:underline whitespace-nowrap"
+                              >
+                                + Add to Watchlist
+                              </button>
+                            </td>
                             <td className="px-4 py-2.5 text-right tabular-nums text-foreground">
                               <span>{competitor.volume}</span>
                               <span className={`ml-2 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${competitor.changePositive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
@@ -555,7 +614,7 @@ export default function PromptInsightsPage() {
                     {totalPages > 1 && (
                       <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-surface">
                         <p className="text-xs text-muted">
-                          {competitorPage * COMPETITORS_PAGE_SIZE + 1}–{Math.min((competitorPage + 1) * COMPETITORS_PAGE_SIZE, competitors.length)} of {competitors.length}
+                          {competitorPage * COMPETITORS_PAGE_SIZE + 1}–{Math.min((competitorPage + 1) * COMPETITORS_PAGE_SIZE, filtered.length)} of {filtered.length}
                         </p>
                         <div className="flex items-center gap-1">
                           <button type="button" disabled={competitorPage === 0} onClick={() => setCompetitorPage((p) => p - 1)} className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-white disabled:opacity-40 disabled:pointer-events-none transition-colors">
@@ -573,14 +632,28 @@ export default function PromptInsightsPage() {
               })()}
 
               {(() => {
-                const sortedCats = [...categories].sort((a, b) => parseVol(b.volume) - parseVol(a.volume));
+                const sortedCats = [...categories]
+                  .sort((a, b) => parseVol(b.volume) - parseVol(a.volume))
+                  .filter((c) => c.name.toLowerCase().includes(categorySearch2.toLowerCase()));
                 const totalPages = Math.ceil(sortedCats.length / CATEGORY_TABLE_PAGE_SIZE);
                 const pageItems = sortedCats.slice(categoryTablePage * CATEGORY_TABLE_PAGE_SIZE, (categoryTablePage + 1) * CATEGORY_TABLE_PAGE_SIZE);
-return (
+                return (
                   <div className="border border-border rounded-lg overflow-hidden flex-1">
-                    <div className="px-4 py-3 border-b border-border">
-                      <p className="text-base font-semibold text-foreground">Product Categories & Topics</p>
-                      <p className="text-xs text-muted mt-0.5">{categories.length} categories discovered</p>
+                    <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-base font-semibold text-foreground">Product Categories & Topics</p>
+                        <p className="text-xs text-muted mt-0.5">{categories.length} categories discovered</p>
+                      </div>
+                      <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-1.5 bg-white">
+                        <SearchIcon />
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          value={categorySearch2}
+                          onChange={(e) => { setCategorySearch2(e.target.value); setCategoryTablePage(0); }}
+                          className="text-sm text-foreground placeholder-muted focus:outline-none w-36"
+                        />
+                      </div>
                     </div>
                     <table className="w-full text-sm">
                       <thead>
@@ -612,6 +685,7 @@ return (
                         <p className="text-xs text-muted">
                           {categoryTablePage * CATEGORY_TABLE_PAGE_SIZE + 1}–{Math.min((categoryTablePage + 1) * CATEGORY_TABLE_PAGE_SIZE, sortedCats.length)} of {sortedCats.length}
                         </p>
+
                         <div className="flex items-center gap-1">
                           <button type="button" disabled={categoryTablePage === 0} onClick={() => setCategoryTablePage((p) => p - 1)} className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-white disabled:opacity-40 disabled:pointer-events-none transition-colors">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -627,94 +701,109 @@ return (
                 );
               })()}
             </div>
+            )} {/* end prompt-volume tab */}
 
-            <div className="flex flex-col gap-3 mt-4">
-              <div>
-                <h4 className="text-xl font-semibold text-foreground">Prompt Themes</h4>
-                <p className="text-sm text-slate-500 mt-1">Browse the topics and individual prompts driving AI search activity in your category.</p>
-              </div>
-
-              {/* Category dropdown — TrackerShell style */}
-              <div className="relative w-64" ref={categoryDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => { setCategoryDropdownOpen((v) => !v); setCategorySearch(""); }}
-                  className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left"
-                >
-                  <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                    Category
-                  </span>
-                  <span className="flex-1 min-w-0 text-sm truncate text-[#262626]">
-                    {selectedCategory ?? "All"}
-                  </span>
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
-                    <ChevronDownIcon />
-                  </span>
-                </button>
-
-                {categoryDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-[#e5e5e5] rounded-lg shadow-lg w-72 max-h-72 overflow-y-auto">
-                    <div className="flex items-center gap-2 px-3 py-2 border-b border-[#e5e5e5] sticky top-0 bg-white">
-                      <SearchIcon />
-                      <input
-                        autoFocus
-                        type="text"
-                        placeholder="Search categories..."
-                        value={categorySearch}
-                        onChange={(e) => setCategorySearch(e.target.value)}
-                        className="flex-1 text-sm text-[#262626] placeholder-[#9e9e9e] outline-none bg-transparent"
-                      />
-                      {categorySearch && (
-                        <button type="button" onClick={() => setCategorySearch("")} className="text-[#9e9e9e] hover:text-[#262626]">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                        </button>
-                      )}
-                    </div>
-                    <div className="py-1">
+            {/* Prompt Themes tab */}
+            {resultsTab === "prompt-themes" && (
+            <div className="flex flex-col gap-3">
+              {/* Category cards */}
+              {(() => {
+                const sortedCats = [...categories].sort((a, b) => parseVol(b.volume) - parseVol(a.volume));
+                const visibleCats = sortedCats.slice(0, 5);
+                const overflowCats = sortedCats.slice(5);
+                return (
+                  <div className="flex flex-wrap gap-2 items-stretch w-full">
+                    {/* Top 5 category cards */}
+                    {visibleCats.map((cat) => (
                       <button
+                        key={cat.name}
                         type="button"
-                        onClick={() => { setSelectedCategory(null); setVisibleTopicsCount(TOPICS_PAGE_SIZE); setCategoryDropdownOpen(false); setCategorySearch(""); }}
-                        className={`w-full flex items-center px-4 py-2 text-left transition-colors ${selectedCategory === null ? "bg-primary-50 text-primary-600" : "text-[#262626] hover:bg-[#f6f6f6]"}`}
+                        onClick={() => { setSelectedCategory(cat.name); setVisibleTopicsCount(TOPICS_PAGE_SIZE); setSelectedTab("non-branded"); }}
+                        className={`flex-1 min-w-[160px] flex flex-col items-start px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                          selectedCategory === cat.name
+                            ? "bg-primary-50 border-primary-300 text-primary-700"
+                            : "bg-white border-border text-foreground hover:bg-surface"
+                        }`}
                       >
-                        <span className={`text-sm ${selectedCategory === null ? "font-semibold" : "font-medium"}`}>All</span>
+                        <span>{cat.name}</span>
+                        <span className={`flex items-center gap-1 text-xs font-normal mt-0.5 ${selectedCategory === cat.name ? "text-primary-500" : "text-muted"}`}>
+                          {cat.volume}
+                          <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
+                            cat.changePositive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                          }`}>
+                            {cat.changePositive
+                              ? <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="4,0 8,8 0,8" /></svg>
+                              : <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="0,0 8,0 4,8" /></svg>
+                            }
+                            {cat.change.replace(/^[+-]/, "")}
+                          </span>
+                        </span>
                       </button>
-                      {[...categories]
-                        .sort((a, b) => parseVol(b.volume) - parseVol(a.volume))
-                        .filter((c) => c.name.toLowerCase().includes(categorySearch.toLowerCase()))
-                        .map((cat) => {
-                          const isSelected = selectedCategory === cat.name;
-                          return (
-                            <button
-                              key={cat.name}
-                              type="button"
-                              onClick={() => { setSelectedCategory(cat.name); setVisibleTopicsCount(TOPICS_PAGE_SIZE); setSelectedTab("non-branded"); setCategoryDropdownOpen(false); setCategorySearch(""); }}
-                              className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors ${isSelected ? "bg-primary-50 text-primary-600" : "text-[#262626] hover:bg-[#f6f6f6]"}`}
-                            >
-                              <span className={`text-sm truncate ${isSelected ? "font-semibold" : "font-medium"}`}>{cat.name}</span>
-                              <div className="flex items-center gap-1.5 shrink-0 ml-3">
-                                <span className="text-xs text-[#7F7F7F] tabular-nums">{cat.volume}</span>
-                                <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${cat.changePositive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
-                                  {cat.changePositive
-                                    ? <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="4,0 8,8 0,8" /></svg>
-                                    : <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="0,0 8,0 4,8" /></svg>
-                                  }
-                                  {cat.change.replace(/^[+-]/, "")}
-                                </span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                    </div>
+                    ))}
+
+                    {/* Overflow "+" card */}
+                    {overflowCats.length > 0 && (
+                      <div className="relative self-stretch shrink-0" ref={categoryDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => { setCategoryDropdownOpen((v) => !v); setCategorySearch(""); }}
+                          className={`h-full flex items-center justify-center px-3 rounded-lg border text-sm font-medium transition-colors ${
+                            categoryDropdownOpen || overflowCats.some((c) => c.name === selectedCategory)
+                              ? "bg-primary-50 border-primary-300 text-primary-700"
+                              : "bg-white border-border text-foreground hover:bg-surface"
+                          }`}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          </svg>
+                        </button>
+
+                        {categoryDropdownOpen && (
+                          <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-[#e5e5e5] rounded-lg shadow-lg w-64 max-h-64 overflow-y-auto">
+                            <div className="flex items-center gap-2 px-3 py-2 border-b border-[#e5e5e5] sticky top-0 bg-white">
+                              <SearchIcon />
+                              <input
+                                autoFocus
+                                type="text"
+                                placeholder="Search..."
+                                value={categorySearch}
+                                onChange={(e) => setCategorySearch(e.target.value)}
+                                className="flex-1 text-sm text-[#262626] placeholder-[#9e9e9e] outline-none bg-transparent"
+                              />
+                              {categorySearch && (
+                                <button type="button" onClick={() => setCategorySearch("")} className="text-[#9e9e9e] hover:text-[#262626]">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                                </button>
+                              )}
+                            </div>
+                            <div className="py-1">
+                              {overflowCats
+                                .filter((c) => c.name.toLowerCase().includes(categorySearch.toLowerCase()))
+                                .map((cat) => (
+                                  <button
+                                    key={cat.name}
+                                    type="button"
+                                    onClick={() => { setSelectedCategory(cat.name); setVisibleTopicsCount(TOPICS_PAGE_SIZE); setSelectedTab("non-branded"); setCategoryDropdownOpen(false); setCategorySearch(""); }}
+                                    className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors ${selectedCategory === cat.name ? "bg-primary-50 text-primary-600" : "text-[#262626] hover:bg-[#f6f6f6]"}`}
+                                  >
+                                    <span className={`text-sm truncate ${selectedCategory === cat.name ? "font-semibold" : "font-medium"}`}>{cat.name}</span>
+                                    <span className="text-xs text-[#7F7F7F] tabular-nums shrink-0 ml-3">{cat.volume}</span>
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+                );
+              })()}
 
             {selectedCategory && (
               <nav className="border-b border-[#e5e5e5] mt-2">
                 <div className="flex gap-6">
-                  {(["your-brand", "competitor", "non-branded"] as const).map((tab) => {
-                    const label = tab === "your-brand" ? "Your Brand" : tab === "competitor" ? "Competitor" : "Non Branded";
+                  {(["your-brand", "non-branded"] as const).map((tab) => {
+                    const label = tab === "your-brand" ? "Branded" : "Non Branded";
                     const isActive = selectedTab === tab;
                     return (
                       <button
@@ -739,17 +828,18 @@ return (
             )}
 
             {(() => {
-              const tabFiltered = [...results]
+              const allFiltered = [...results]
                 .filter((item) => {
                   const categoryMatch = !selectedCategory || item.category === selectedCategory;
                   const tabMatch =
                     selectedTab === "your-brand" ? item.tab === "your-brand" :
-                    selectedTab === "competitor" ? item.tab === "competitor" :
                     (item.tab === "non-branded" || !item.tab);
                   return categoryMatch && tabMatch;
                 })
-                .sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.popularity] - { high: 0, medium: 1, low: 2 }[b.popularity]))
-                .slice(0, visibleTopicsCount);
+                .sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.popularity] - { high: 0, medium: 1, low: 2 }[b.popularity]));
+
+              const tabFiltered = allFiltered.slice(0, visibleTopicsCount);
+              const hasMore = allFiltered.length > visibleTopicsCount;
 
               if (tabFiltered.length === 0) {
                 return <p className="text-sm text-muted py-6 text-center">No data available for this view yet.</p>;
@@ -770,9 +860,21 @@ return (
                       onOpen={() => setOpenTopic(openTopic === item.topic ? null : item.topic)}
                     />
                   ))}
+                  {hasMore && (
+                    <button
+                      type="button"
+                      onClick={() => setVisibleTopicsCount((n) => n + TOPICS_PAGE_SIZE)}
+                      className="w-full py-2.5 text-sm font-medium text-primary-600 border border-border rounded-lg hover:bg-surface transition-colors"
+                    >
+                      Show more ({allFiltered.length - visibleTopicsCount} remaining)
+                    </button>
+                  )}
                 </div>
               );
             })()}
+
+            </div>
+            )} {/* end prompt-themes tab */}
 
           </div>
         )}

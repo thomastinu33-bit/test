@@ -1,6 +1,7 @@
 "use client";
 
-import { AskAIButton, Button, PageNav } from "@/components/Evertune";
+import Link from "next/link";
+import { AskAIButton, Button } from "@/components/Evertune";
 import { TrackerDrawerProvider, useTrackerDrawer } from "./TrackerDrawerContext";
 import { TrackerDrawer } from "./TrackerDrawer";
 
@@ -10,11 +11,6 @@ const PlusIcon = () => (
   </svg>
 );
 
-const PROMPT_LAB_NAV_ITEMS = [
-  { id: "prompt-volume", label: "Prompt Volume" },
-  { id: "prompt-insights", label: "Prompt Insights" },
-  { id: "prompt-library", label: "Prompt Library" },
-];
 
 function PromptLabContent({ children }: { children: React.ReactNode }) {
   const { isOpen } = useTrackerDrawer();
@@ -22,7 +18,7 @@ function PromptLabContent({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-full bg-[#f6f6f6]">
       <header className="sticky top-0 z-10 flex-shrink-0 h-20 bg-white border-b border-[#eeeeee] flex items-center justify-between px-8">
-        <h1 className="text-xl font-semibold text-[#262626]">Prompt Lab</h1>
+        <Link href="/prompt-lab/prompt-insights" className="text-xl font-semibold text-[#262626] hover:text-primary-600 transition-colors">Prompt Lab</Link>
         <div className="flex items-center gap-3">
           <AskAIButton />
           <Button variant="primary" className="gap-2">
@@ -31,10 +27,7 @@ function PromptLabContent({ children }: { children: React.ReactNode }) {
           </Button>
         </div>
       </header>
-      <div className="flex-shrink-0">
-        <PageNav basePath="/prompt-lab" items={PROMPT_LAB_NAV_ITEMS} />
-      </div>
-      <div className="flex-1 min-h-0 flex flex-row mt-6 mx-5 mb-5 gap-3">
+<div className="flex-1 min-h-0 flex flex-row mt-6 mx-5 mb-5 gap-3">
         <div className="flex-1 min-w-0 bg-white rounded-lg overflow-hidden flex flex-row">
           {children}
         </div>
