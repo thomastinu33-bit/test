@@ -26,7 +26,7 @@ export function AddToTrackerModal({ prompts, onClose, defaultName = "" }: AddToT
       const tracker = trackers.find((t) => t.id === selectedTrackerId);
       if (!tracker) return;
       addToTracker(tracker.id, prompts);
-      addPrompts([...tracker.prompts, ...prompts], tracker.name);
+      addPrompts(prompts, tracker.name);
     } else if (newTrackerName.trim()) {
       createTracker(newTrackerName.trim(), prompts);
       addPrompts(prompts, newTrackerName.trim());

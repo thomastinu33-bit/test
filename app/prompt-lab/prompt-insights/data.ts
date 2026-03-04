@@ -29,8 +29,31 @@ export interface CompetitorData {
   changePositive: boolean;
 }
 
+export interface ModelShareData {
+  model: string;
+  share: number; // percentage 0-100
+  color: string;
+}
+
+export type TrendPeriod = "3m" | "6m" | "12m";
+
+export interface TrendSeries {
+  values: number[];
+  labels: string[];
+}
+
+export interface BrandStats {
+  volume: string;       // e.g. "1.8M"
+  volumeRaw: number;    // e.g. 1800000
+  change: string;       // e.g. "+12%"
+  changePositive: boolean;
+  trends: Record<TrendPeriod, TrendSeries>;
+  modelShare: ModelShareData[];
+}
+
 export interface BrandInsights {
   brand: string;
+  stats?: BrandStats;
   competitors: CompetitorData[];
   categories: CategoryData[];
   topics: TopicData[];
@@ -39,6 +62,23 @@ export interface BrandInsights {
 export const INSIGHTS_DATA: BrandInsights[] = [
   {
     brand: "Coach",
+    stats: {
+      volume: "1.8M",
+      volumeRaw: 1800000,
+      change: "+12%",
+      changePositive: true,
+      trends: {
+        "3m":  { values: [74, 88, 100], labels: ["Jan", "Feb", "Mar"] },
+        "6m":  { values: [48, 52, 55, 58, 54, 61, 65, 70, 68, 74, 80, 88, 100], labels: ["Sep", "", "Oct", "", "Nov", "", "Dec", "", "Jan", "", "Feb", "", "Mar"] },
+        "12m": { values: [52, 55, 58, 54, 61, 65, 70, 68, 74, 80, 88, 100], labels: ["Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb"] },
+      },
+      modelShare: [
+        { model: "ChatGPT", share: 48, color: "var(--viz-1)" },
+        { model: "Gemini", share: 24, color: "var(--viz-2)" },
+        { model: "Perplexity", share: 16, color: "var(--viz-4)" },
+        { model: "Copilot", share: 12, color: "var(--viz-6)" },
+      ],
+    },
     competitors: [
       { name: "Chanel", volume: "1M", change: "+8%", changePositive: true },
       { name: "Hermès", volume: "510k", change: "+14%", changePositive: true },
