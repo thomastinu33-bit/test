@@ -869,30 +869,20 @@ export function OverviewViz() {
           </>
         )}
 
-        {false && showTimelineToggle && overviewView === "timeline" && (
+        {showTimelineToggle && overviewView === "timeline" && (timelineData?.dates && timelineData?.series && timelineData.dates.length > 0 && timelineData.series.length > 0 ? (
           <div ref={chartRef} className="w-full min-w-0">
-            {loading && !timelineData ? (
-              <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
-                Loading…
-              </div>
-            ) : timelineData?.dates && timelineData?.series && timelineData.dates.length > 0 && timelineData.series.length > 0 ? (
-              <OverviewTimelineChart
-                dates={timelineData!.dates}
-                series={timelineData!.series}
-                metric={metric}
-                maxVal={maxVal}
-                isAvgPosition={isAvgPosition}
-                formatValue={formatValue}
-                width={chartWidth}
-                compareToDateLabel={compareToDateStr ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : undefined}
-              />
-            ) : (
-              <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
-                No timeline data for this selection.
-              </div>
-            )}
+            <OverviewTimelineChart
+              dates={timelineData!.dates}
+              series={timelineData!.series}
+              metric={metric}
+              maxVal={maxVal}
+              isAvgPosition={isAvgPosition}
+              formatValue={formatValue}
+              width={chartWidth}
+              compareToDateLabel={compareToDateStr ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : undefined}
+            />
           </div>
-        )}
+        ) : null)}
 
         {(isAvgPosition || compareToDateStr) && (
           <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[#7F7F7F]">
