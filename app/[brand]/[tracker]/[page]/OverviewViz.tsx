@@ -875,7 +875,7 @@ export function OverviewViz() {
               <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
                 Loading…
               </div>
-            ) : !timelineData || timelineData.dates.length === 0 || timelineData.series.length === 0 ? (
+            ) : !timelineData || !timelineData.dates || timelineData.dates.length === 0 || !timelineData.series || timelineData.series.length === 0 ? (
               <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
                 No timeline data for this selection.
               </div>
