@@ -4,8 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
-import { useTrackerDate } from "../TrackerDateContext";
+import { useTrackerDate, formatDateForApi } from "../TrackerDateContext";
 import { GroupedTopicTooltip } from "./GroupedTopicTooltip";
+import { RadarChart, BrandSeries, TopicColumn as RadarTopicColumn } from "./AiPerceptionMap";
 
 export type TimelineMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
 
@@ -37,8 +38,12 @@ const AVERAGE_ACROSS_ALL = "__average__";
 
 const MAIN_BRAND_PORSCHE = "PORSCHE";
 const MAIN_BRAND_CETAPHIL = "CETAPHIL";
+const MAIN_BRAND_HM = "H&M";
 const COMPETITOR_LIST_PORSCHE = ["PORSCHE", "BMW", "BENZ", "VOLVOCARS", "AUDI", "LEXUS"] as const;
 const COMPETITOR_LIST_CETAPHIL = ["CETAPHIL", "NEUTROGENA", "DRUNK ELEPHANT", "ORDINARY", "SKINCEUTICALS", "ELTAMD"] as const;
+const COMPETITOR_LIST_HM_PANTS = ["H&M", "ZARA", "UNIQLO", "FOREVER 21", "MANGO", "PULL & BEAR", "BERSHKA", "COTTON ON", "ARITZIA", "LEVI'S", "ABERCROMBIE & FITCH", "AMERICAN EAGLE", "GAP", "HOLLISTER", "MADEWELL", "OLD NAVY", "PACSUN", "SHEIN"] as const;
+const COMPETITOR_LIST_HM_HEATMAP = ["H&M", "ZARA", "UNIQLO", "NIKE", "ADIDAS", "LEVI'S", "LULULEMON", "NORDSTROM"] as const;
+const COMPETITOR_LIST_HM_JEANS = ["H&M", "LEVI'S", "ZARA", "MADEWELL", "AMERICAN EAGLE", "GAP", "BANANA REPUBLIC", "HOLLISTER", "UNIQLO", "MANGO", "ABERCROMBIE & FITCH"] as const;
 
 function sortBrandsWithMainFirst(brands: string[], mainBrand: string): string[] {
   const main = brands.find((b) => b.toUpperCase() === mainBrand);
@@ -61,7 +66,7 @@ const TOPIC_OPTIONS: { id: TimelineTopicId; label: string }[] = [
 const DEFAULT_TOPIC_COUNT = 10;
 const DEFAULT_TOPIC_IDS = TOPIC_OPTIONS.slice(0, DEFAULT_TOPIC_COUNT).map((t) => t.id);
 
-type ChartView = "grouped" | "timeline";
+type ChartView = "grouped" | "timeline" | "radar";
 
 interface TopicModelScores {
   topics: { id: string; label: string }[];
@@ -431,12 +436,9 @@ export function TimelineViz(props?: TimelineVizProps) {
   const params = useParams();
   const brandId = (params?.brand as string) ?? "porsche";
   const trackerId = (params?.tracker as string) ?? "luxury-suvs";
-  const mainBrand = brandId === "cetaphil" ? MAIN_BRAND_CETAPHIL : MAIN_BRAND_PORSCHE;
-  const competitorSet = new Set(
-    brandId === "cetaphil"
-      ? COMPETITOR_LIST_CETAPHIL.map((c) => c.toUpperCase())
-      : COMPETITOR_LIST_PORSCHE.map((c) => c.toUpperCase())
-  );
+  const mainBrand = brandId === "cetaphil" ? MAIN_BRAND_CETAPHIL : brandId === "hm" ? MAIN_BRAND_HM : MAIN_BRAND_PORSCHE;
+  const activeCompetitorList = brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : brandId === "hm" && trackerId === "heatmap" ? COMPETITOR_LIST_HM_HEATMAP : brandId === "hm" && trackerId === "jeans" ? COMPETITOR_LIST_HM_JEANS : brandId === "hm" ? COMPETITOR_LIST_HM_PANTS : COMPETITOR_LIST_PORSCHE;
+  const competitorSet = new Set(activeCompetitorList.map((c) => c.toUpperCase()));
 
   const [internalMetric, setInternalMetric] = useState<TimelineMetric>("AI Brand Score");
   const [internalBrandsList, setInternalBrandsList] = useState<string[]>([]);
@@ -450,6 +452,7 @@ export function TimelineViz(props?: TimelineVizProps) {
   );
   const [selectedBrandsTimeline, setSelectedBrandsTimeline] = useState<Set<string>>(new Set());
   const [selectedTopicTimeline, setSelectedTopicTimeline] = useState<string>("overall");
+  const [timelineSeriesBy, setTimelineSeriesBy] = useState<"brands" | "topics">("brands");
   const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
   const [brandSearchQuery, setBrandSearchQuery] = useState("");
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
@@ -477,9 +480,12 @@ export function TimelineViz(props?: TimelineVizProps) {
   const [hoveredDateIndex, setHoveredDateIndex] = useState<number | null>(null);
   const [hiddenBrandsInLegend, setHiddenBrandsInLegend] = useState<Set<string>>(new Set());
   const [chartView, setChartView] = useState<ChartView>("grouped");
+  const [metricDropdownOpen, setMetricDropdownOpen] = useState(false);
+  const [radarTableData, setRadarTableData] = useState<{ topicColumns: RadarTopicColumn[]; rows: { brand: string; [k: string]: unknown }[] } | null>(null);
+  const [radarLoading, setRadarLoading] = useState(false);
   const [topicModelScores, setTopicModelScores] = useState<TopicModelScores | null>(null);
   const [groupedLoading, setGroupedLoading] = useState(false);
-  const { selectedDateStr, compareToDateStr, compareToDate } = useTrackerDate();
+  const { selectedDateStr, compareToDateStr, compareToDate, comparisonDays } = useTrackerDate();
   const compareToDateLabel = compareToDateStr
     ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })
     : undefined;
@@ -515,7 +521,7 @@ export function TimelineViz(props?: TimelineVizProps) {
         if (defaultBrand) {
           setSelectedBrand((prev) => (brands.some((b) => b.toUpperCase() === prev.toUpperCase()) ? prev : defaultBrand));
         }
-        const competitorOrder = brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE;
+        const competitorOrder = activeCompetitorList;
         const inList = competitorOrder
           .filter((c) => brands.some((b) => b.toUpperCase() === c.toUpperCase()))
           .slice(0, 6)
@@ -560,6 +566,9 @@ export function TimelineViz(props?: TimelineVizProps) {
         ? [selectedModel]
         : [];
 
+  const supportsTopicsMode = trackerId === "luxury-suvs-v2" || brandId === "hm";
+  const isV2TopicsMode = supportsTopicsMode && timelineSeriesBy === "topics";
+
   useEffect(() => {
     if (chartView !== "timeline") {
       setDates([]);
@@ -567,6 +576,41 @@ export function TimelineViz(props?: TimelineVizProps) {
       setLoading(false);
       return;
     }
+
+    // v2 "by topics" mode: single brand, multiple topics
+    if (isV2TopicsMode) {
+      if (!selectedBrand || selectedTopics.size === 0 || modelIdsForRequest.length === 0) {
+        setDates([]);
+        setSeries([]);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const params = new URLSearchParams({
+        brandId,
+        trackerId,
+        metric,
+        brands: selectedBrand,
+        models: modelIdsForRequest.join(","),
+        chart: "timeline",
+        topics: Array.from(selectedTopics).join(","),
+        series: "topics",
+      });
+      if (selectedDateStr) params.set("date", selectedDateStr);
+      if (comparisonDays != null) params.set("comparisonDays", String(comparisonDays));
+      else if (compareToDateStr) params.set("compareToDate", compareToDateStr);
+      fetch(`/api/timeline?${params}`)
+        .then((res) => res.json())
+        .then((data: { dates: string[]; series: TimelineSeries[] }) => {
+          setDates(data.dates ?? []);
+          setSeries(data.series ?? []);
+        })
+        .catch(() => { setDates([]); setSeries([]); })
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    // Default "by brands" mode
     const timelineBrands = Array.from(selectedBrandsTimeline);
     if (timelineBrands.length === 0 || modelIdsForRequest.length === 0) {
       setDates([]);
@@ -584,9 +628,9 @@ export function TimelineViz(props?: TimelineVizProps) {
       chart: "timeline",
       topics: selectedTopicTimeline,
     });
-    if (trackerId === "luxury-suvs-v2") params.set("series", "topics");
     if (selectedDateStr) params.set("date", selectedDateStr);
-    if (compareToDateStr) params.set("compareToDate", compareToDateStr);
+    if (comparisonDays != null) params.set("comparisonDays", String(comparisonDays));
+    else if (compareToDateStr) params.set("compareToDate", compareToDateStr);
     fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
       .then((data: { dates: string[]; series: TimelineSeries[] }) => {
@@ -598,7 +642,7 @@ export function TimelineViz(props?: TimelineVizProps) {
         setSeries([]);
       })
       .finally(() => setLoading(false));
-  }, [chartView, brandId, trackerId, metric, selectedBrandsTimeline, selectedTopicTimeline, selectedModel, modelIdsForRequest.join(","), selectedDateStr, compareToDateStr]);
+  }, [chartView, brandId, trackerId, metric, selectedBrandsTimeline, selectedTopicTimeline, selectedBrand, selectedTopics, timelineSeriesBy, selectedModel, modelIdsForRequest.join(","), selectedDateStr, compareToDateStr, comparisonDays, isV2TopicsMode]);
 
   useEffect(() => {
     if (chartView !== "grouped") {
@@ -638,10 +682,54 @@ export function TimelineViz(props?: TimelineVizProps) {
       .finally(() => setGroupedLoading(false));
   }, [chartView, brandId, trackerId, metric, selectedBrand, modelsList, selectedDateStr, compareToDateStr]);
 
+  useEffect(() => {
+    if (chartView !== "radar" || selectedBrandsTimeline.size === 0 || modelIdsForRequest.length === 0) {
+      setRadarTableData(null);
+      return;
+    }
+    setRadarLoading(true);
+    const params = new URLSearchParams({
+      brandId,
+      trackerId,
+      metric,
+      brands: Array.from(selectedBrandsTimeline).join(","),
+      models: modelIdsForRequest.join(","),
+      table: "1",
+    });
+    if (selectedDateStr) params.set("date", selectedDateStr);
+    if (compareToDateStr) params.set("compareToDate", compareToDateStr);
+    fetch(`/api/timeline?${params}`)
+      .then((res) => res.json())
+      .then((data: { topicColumns: RadarTopicColumn[]; rows: { brand: string; [k: string]: unknown }[] }) => {
+        setRadarTableData(data);
+      })
+      .catch(() => setRadarTableData(null))
+      .finally(() => setRadarLoading(false));
+  }, [chartView, brandId, trackerId, metric, selectedBrandsTimeline, modelIdsForRequest.join(","), selectedModel, selectedDateStr, compareToDateStr]);
+
+  const radarTopicColumnsAll: RadarTopicColumn[] = radarTableData?.topicColumns ?? [];
+  const radarTopicColumnsFiltered = radarTopicColumnsAll.filter((t) => selectedTopics.has(String(t.id)));
+  const radarTopicColumns: RadarTopicColumn[] = radarTopicColumnsFiltered.length > 0 ? radarTopicColumnsFiltered : radarTopicColumnsAll.slice(0, 10);
+  const radarSeries: BrandSeries[] =
+    radarTableData && radarTopicColumns.length > 0
+      ? radarTableData.rows
+          .filter((row) => selectedBrandsTimeline.has(row.brand))
+          .map((row) => ({
+            brand: row.brand,
+            values: radarTopicColumns.map((t) => {
+              const v = row[t.id];
+              return typeof v === "number" ? v : 0;
+            }),
+            changes: radarTopicColumns.map((t) => {
+              const changeKey = `change${String(t.id).charAt(0).toUpperCase()}${String(t.id).slice(1)}`;
+              const v = row[changeKey];
+              return typeof v === "number" && Number.isFinite(v) ? (v as number) : null;
+            }),
+          }))
+      : [];
+
   const brandSearchLower = brandSearchQuery.trim().toLowerCase();
-  const competitorOrder = new Map<string, number>(
-    (brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE).map((c, i) => [c, i])
-  );
+  const competitorOrder = new Map<string, number>(activeCompetitorList.map((c, i) => [c, i]));
   const competitorBrands = brandsList
     .filter((b) => competitorSet.has(b.toUpperCase()))
     .sort((a, b) => (competitorOrder.get(a.toUpperCase()) ?? 999) - (competitorOrder.get(b.toUpperCase()) ?? 999));
@@ -839,24 +927,59 @@ export function TimelineViz(props?: TimelineVizProps) {
     <div ref={cardRef} className="rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-visible">
       <div className="flex flex-col items-start gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5] md:flex-row md:items-center md:justify-between">
         <h2 className="w-full text-[20px] font-semibold text-[#262626] leading-tight md:w-auto">
-          Results Across Topics
+          Results Across Models
         </h2>
         <div className="flex w-full flex-wrap items-center justify-start gap-2 md:w-auto">
-          <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
-            {(Object.keys(METRIC_CONFIG) as TimelineMetric[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMetric(m)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  metric === m
-                    ? "bg-white text-[#262626] shadow-sm"
-                    : "text-[#7F7F7F] hover:text-[#262626]"
-                }`}
-              >
-                {METRIC_CONFIG[m].label}
-              </button>
-            ))}
+          {/* By Brands / By Topics toggle — leftmost in timeline view */}
+          {supportsTopicsMode && chartView === "timeline" && (
+            <div className="flex rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
+              {(["brands", "topics"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setTimelineSeriesBy(mode)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    timelineSeriesBy === mode
+                      ? "bg-white text-[#262626] shadow-sm"
+                      : "text-[#7F7F7F] hover:text-[#262626]"
+                  }`}
+                >
+                  By {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMetricDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2 h-10 pl-3 pr-3 rounded-lg border border-[#e5e5e5] bg-white text-sm font-medium text-[#262626] hover:bg-[#fafafa] transition-colors"
+            >
+              {METRIC_CONFIG[metric].label}
+              <svg className="w-4 h-4 text-[#7F7F7F] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {metricDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMetricDropdownOpen(false)} />
+                <div className="absolute top-full left-0 mt-1 z-20 w-52 rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
+                  {(Object.keys(METRIC_CONFIG) as TimelineMetric[]).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => { setMetric(m); setMetricDropdownOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors hover:bg-[#f5f5f5] ${
+                        metric === m ? "text-[var(--primary)] font-medium" : "text-[#262626]"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${metric === m ? "bg-[var(--primary)]" : "bg-transparent"}`} />
+                      {METRIC_CONFIG[m].label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {chartView === "grouped" ? (
@@ -958,79 +1081,163 @@ export function TimelineViz(props?: TimelineVizProps) {
             </>
           ) : (
             <>
-              <div className="relative min-w-[10rem] overflow-visible z-10">
-                <button ref={brandTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (brandDropdownOpen) closeBrandDropdown(); else openBrandDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select brands" aria-expanded={brandDropdownOpen}>
-                  <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Brands</span>
-                  <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{selectedBrandsTimeline.size === 0 ? "Select brands" : `${selectedBrandsTimeline.size} brands`}</span>
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
-                </button>
-                {brandDropdownOpen && brandDropdownRect && typeof document !== "undefined" &&
-                  createPortal(
-                    <>
-                      <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeBrandDropdown} />
-                      <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: brandDropdownRect.top, left: brandDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
-                        <div className="p-2 border-b border-[#e5e5e5] bg-[#fafafa]">
-                          <input type="search" value={brandSearchQuery} onChange={(e) => setBrandSearchQuery(e.target.value)} placeholder="Search brands…" className="w-full rounded-md border border-[#e5e5e5] bg-white px-2.5 py-1.5 text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#262626]/20" autoFocus aria-label="Search brands" />
-                        </div>
-                        <div className="max-h-64 overflow-auto py-1">
-                          {!hasAnyBrandFiltered ? (
-                            <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
-                          ) : (
-                            <>
-                              <div className="px-3 pt-2 pb-1">
-                                <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">Competitor &amp; Keywords list</p>
-                              </div>
-                              {filteredCompetitor.map((b) => (
-                                <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
-                                  <input type="checkbox" checked={selectedBrandsTimeline.has(b)} onChange={() => toggleTimelineBrand(b)} className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]" />
-                                  <span className="truncate">{b}</span>
-                                </label>
-                              ))}
-                              <div className="px-3 pt-3 pb-1 border-t border-[#e5e5e5] mt-1">
-                                <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">All Other Brands &amp; Keywords</p>
-                              </div>
-                              {filteredOther.map((b) => (
-                                <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
-                                  <input type="checkbox" checked={selectedBrandsTimeline.has(b)} onChange={() => toggleTimelineBrand(b)} className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]" />
-                                  <span className="truncate">{b}</span>
-                                </label>
-                              ))}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </>,
-                    document.body
-                  )}
-              </div>
-              <div className="relative min-w-[10rem] overflow-visible z-10">
-                <button ref={topicTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (topicDropdownOpen) closeTopicDropdown(); else openTopicDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select topic" aria-expanded={topicDropdownOpen}>
-                  <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Topic</span>
-                  <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{timelineTopicDisplayLabel}</span>
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
-                </button>
-                {topicDropdownOpen && topicDropdownRect && typeof document !== "undefined" &&
-                  createPortal(
-                    <>
-                      <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeTopicDropdown} />
-                      <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: topicDropdownRect.top, left: topicDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
-                        <div className="max-h-64 overflow-auto py-1">
-                          {topicColumns.map((t) => {
-                            const idStr = String(t.id);
-                            const isSelected = selectedTopicTimeline === idStr;
-                            return (
-                              <button key={t.id} type="button" onClick={() => { setSelectedTopicTimeline(idStr); closeTopicDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSelected ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
-                                <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSelected && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
-                                <span className="truncate">{t.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </>,
-                    document.body
-                  )}
-              </div>
+              {/* By Topics mode (v2 timeline only): single brand + multi topic */}
+              {isV2TopicsMode && chartView !== "radar" ? (
+                <>
+                  {/* Single brand picker */}
+                  <div className="relative min-w-[10rem] overflow-visible z-10">
+                    <button ref={brandTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (brandDropdownOpen) closeBrandDropdown(); else openBrandDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select brand" aria-expanded={brandDropdownOpen}>
+                      <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Brand</span>
+                      <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{selectedBrand || "Select brand"}</span>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
+                    </button>
+                    {brandDropdownOpen && brandDropdownRect && typeof document !== "undefined" &&
+                      createPortal(
+                        <>
+                          <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeBrandDropdown} />
+                          <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: brandDropdownRect.top, left: brandDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
+                            <div className="p-2 border-b border-[#e5e5e5] bg-[#fafafa]">
+                              <input type="search" value={brandSearchQuery} onChange={(e) => setBrandSearchQuery(e.target.value)} placeholder="Search brands…" className="w-full rounded-md border border-[#e5e5e5] bg-white px-2.5 py-1.5 text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#262626]/20" autoFocus aria-label="Search brands" />
+                            </div>
+                            <div className="max-h-64 overflow-auto py-1">
+                              {filteredBrands.length === 0 ? (
+                                <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
+                              ) : filteredBrands.map((b) => {
+                                const isSel = b.toUpperCase() === selectedBrand.toUpperCase();
+                                return (
+                                  <button key={b} type="button" onClick={() => { setSelectedBrand(b); closeBrandDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSel ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
+                                    <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSel && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
+                                    <span className="truncate">{b}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </>,
+                        document.body
+                      )}
+                  </div>
+                  {/* Multi-topic picker */}
+                  <div className="relative min-w-[10rem] overflow-visible z-10">
+                    <button ref={topicTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (topicDropdownOpen) closeTopicDropdown(); else openTopicDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select topics" aria-expanded={topicDropdownOpen}>
+                      <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Topics</span>
+                      <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
+                    </button>
+                    {topicDropdownOpen && topicDropdownRect && typeof document !== "undefined" &&
+                      createPortal(
+                        <>
+                          <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeTopicDropdown} />
+                          <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: topicDropdownRect.top, left: topicDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
+                            <div className="max-h-64 overflow-auto py-1">
+                              {topicColumns.map((t) => {
+                                const idStr = String(t.id);
+                                return (
+                                  <label key={t.id} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                                    <input type="checkbox" checked={selectedTopics.has(idStr)} onChange={() => toggleTopic(idStr)} className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                                    <span className="truncate">{t.label}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </>,
+                        document.body
+                      )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Default "by brands" timeline + radar: multi-brand */}
+                  <div className="relative min-w-[10rem] overflow-visible z-10">
+                    <button ref={brandTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (brandDropdownOpen) closeBrandDropdown(); else openBrandDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select brands" aria-expanded={brandDropdownOpen}>
+                      <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Brands</span>
+                      <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{selectedBrandsTimeline.size === 0 ? "Select brands" : `${selectedBrandsTimeline.size} brands`}</span>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
+                    </button>
+                    {brandDropdownOpen && brandDropdownRect && typeof document !== "undefined" &&
+                      createPortal(
+                        <>
+                          <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeBrandDropdown} />
+                          <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: brandDropdownRect.top, left: brandDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
+                            <div className="p-2 border-b border-[#e5e5e5] bg-[#fafafa]">
+                              <input type="search" value={brandSearchQuery} onChange={(e) => setBrandSearchQuery(e.target.value)} placeholder="Search brands…" className="w-full rounded-md border border-[#e5e5e5] bg-white px-2.5 py-1.5 text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#262626]/20" autoFocus aria-label="Search brands" />
+                            </div>
+                            <div className="max-h-64 overflow-auto py-1">
+                              {!hasAnyBrandFiltered ? (
+                                <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
+                              ) : (
+                                <>
+                                  <div className="px-3 pt-2 pb-1">
+                                    <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">Competitor &amp; Keywords list</p>
+                                  </div>
+                                  {filteredCompetitor.map((b) => (
+                                    <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                                      <input type="checkbox" checked={selectedBrandsTimeline.has(b)} onChange={() => toggleTimelineBrand(b)} className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                                      <span className="truncate">{b}</span>
+                                    </label>
+                                  ))}
+                                  <div className="px-3 pt-3 pb-1 border-t border-[#e5e5e5] mt-1">
+                                    <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">All Other Brands &amp; Keywords</p>
+                                  </div>
+                                  {filteredOther.map((b) => (
+                                    <label key={b} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                                      <input type="checkbox" checked={selectedBrandsTimeline.has(b)} onChange={() => toggleTimelineBrand(b)} className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                                      <span className="truncate">{b}</span>
+                                    </label>
+                                  ))}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </>,
+                        document.body
+                      )}
+                  </div>
+                  <div className="relative min-w-[10rem] overflow-visible z-10">
+                    <button ref={topicTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (topicDropdownOpen) closeTopicDropdown(); else openTopicDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label={chartView === "radar" ? "Select topics" : "Select topic"} aria-expanded={topicDropdownOpen}>
+                      <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">{chartView === "radar" ? "Topics" : "Topic"}</span>
+                      <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{chartView === "radar" ? topicDisplayLabel : timelineTopicDisplayLabel}</span>
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></span>
+                    </button>
+                    {topicDropdownOpen && topicDropdownRect && typeof document !== "undefined" &&
+                      createPortal(
+                        <>
+                          <div className="fixed inset-0 z-[100]" aria-hidden onClick={closeTopicDropdown} />
+                          <div className="fixed z-[101] w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden" style={{ top: topicDropdownRect.top, left: topicDropdownRect.left }} onClick={(ev) => ev.stopPropagation()}>
+                            <div className="max-h-64 overflow-auto py-1">
+                              {chartView === "radar" ? (
+                                topicColumns.map((t) => {
+                                  const idStr = String(t.id);
+                                  return (
+                                    <label key={t.id} className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                                      <input type="checkbox" checked={selectedTopics.has(idStr)} onChange={() => toggleTopic(idStr)} className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]" />
+                                      <span className="truncate">{t.label}</span>
+                                    </label>
+                                  );
+                                })
+                              ) : (
+                                topicColumns.map((t) => {
+                                  const idStr = String(t.id);
+                                  const isSel = selectedTopicTimeline === idStr;
+                                  return (
+                                    <button key={t.id} type="button" onClick={() => { setSelectedTopicTimeline(idStr); closeTopicDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSel ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
+                                      <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSel && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
+                                      <span className="truncate">{t.label}</span>
+                                    </button>
+                                  );
+                                })
+                              )}
+                            </div>
+                          </div>
+                        </>,
+                        document.body
+                      )}
+                  </div>
+                </>
+              )}
+
+              {/* Model dropdown (always shown in timeline mode) */}
               <div className="relative min-w-[10rem] overflow-visible z-10">
                 <button ref={modelTriggerRef} type="button" onClick={(e) => { e.stopPropagation(); if (modelDropdownOpen) closeModelDropdown(); else openModelDropdown(); }} className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]" aria-label="Select model" aria-expanded={modelDropdownOpen}>
                   <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F] z-[1]">Model</span>
@@ -1048,10 +1255,10 @@ export function TimelineViz(props?: TimelineVizProps) {
                             <span className="truncate">Average Across All</span>
                           </button>
                           {modelsList.map((m) => {
-                            const isSelected = selectedModel === m.id;
+                            const isSel = selectedModel === m.id;
                             return (
-                              <button key={m.id} type="button" onClick={() => { setInternalSelectedModel(m.id); closeModelDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSelected ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
-                                <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSelected && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
+                              <button key={m.id} type="button" onClick={() => { setInternalSelectedModel(m.id); closeModelDropdown(); }} className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${isSel ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"}`}>
+                                <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">{isSel && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}</span>
                                 <span className="truncate">{m.label}</span>
                               </button>
                             );
@@ -1069,7 +1276,7 @@ export function TimelineViz(props?: TimelineVizProps) {
             type="button"
             onClick={handleCapture}
             className="flex items-center justify-center w-9 h-9 rounded-lg border border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5] hover:text-[#262626] transition-colors"
-            aria-label="Download screenshot of Results Across Topics"
+            aria-label="Download screenshot of Results Across Models"
             title="Download screenshot"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -1133,13 +1340,31 @@ export function TimelineViz(props?: TimelineVizProps) {
                 </div>
               );
             })()
+          ) : chartView === "radar" ? (
+            radarLoading ? (
+              <div className="h-[400px] flex items-center justify-center text-sm text-[#7F7F7F]">
+                Loading…
+              </div>
+            ) : selectedBrandsTimeline.size === 0 ? (
+              <div className="h-[400px] flex items-center justify-center text-sm text-[#7F7F7F]">
+                Select at least one brand to see the perception map.
+              </div>
+            ) : (
+              <RadarChart
+                topicColumns={radarTopicColumns}
+                series={radarSeries}
+                metric={metric}
+              />
+            )
           ) : loading ? (
             <div className="h-[300px] flex items-center justify-center text-sm text-[#7F7F7F]">
               Loading…
             </div>
           ) : dates.length === 0 || series.length === 0 ? (
             <div className="h-[300px] flex items-center justify-center text-sm text-[#7F7F7F]">
-              {selectedBrandsTimeline.size === 0 ? "Select at least one brand to see the timeline." : "No data for the selected brands, topic, and model."}
+              {isV2TopicsMode
+            ? (!selectedBrand ? "Select a brand to see the timeline." : selectedTopics.size === 0 ? "Select at least one topic." : "No data for the selected brand, topics, and model.")
+            : (selectedBrandsTimeline.size === 0 ? "Select at least one brand to see the timeline." : "No data for the selected brands, topic, and model.")}
             </div>
           ) : (
             <div className="relative">
@@ -1262,20 +1487,36 @@ export function TimelineViz(props?: TimelineVizProps) {
                   {formatDateLabel(dates[hoveredDateIndex]!)}
                 </p>
                 <div className="space-y-1">
+                    {(() => {
+                      // Compute the rolling comparison date for this hovered day
+                      const hoveredDateStr = dates[hoveredDateIndex!]!;
+                      const rollingCompareDateStr = comparisonDays != null
+                        ? (() => {
+                            const [y, m, d] = hoveredDateStr.split("-").map(Number);
+                            const dt = new Date(y!, m! - 1, d!);
+                            dt.setDate(dt.getDate() - comparisonDays);
+                            return formatDateForApi(dt);
+                          })()
+                        : null;
+                      const effectiveCompareToDateStr = rollingCompareDateStr ?? compareToDateStr;
+                      const effectiveCompareToLabel = rollingCompareDateStr
+                        ? formatDateLabel(rollingCompareDateStr)
+                        : compareToDateLabel;
+                      return (
+                        <>
                     {visibleSeries.map((s) => {
                       const idx = series.findIndex((ss) => ss.brand === s.brand);
                     const point = s.data.find((p) => dates.indexOf(p.date) === hoveredDateIndex);
                     const value = point?.value ?? 0;
-                    // Comparison = score(hovered date) − score(compare-to date)
                     const valueAtCompareTo =
-                      compareToDateStr != null
-                        ? s.data.find((p) => p.date === compareToDateStr)?.value
+                      effectiveCompareToDateStr != null
+                        ? s.data.find((p) => p.date === effectiveCompareToDateStr)?.value
                         : undefined;
                     const prevValue =
                       valueAtCompareTo != null && Number.isFinite(valueAtCompareTo)
                         ? valueAtCompareTo
-                        : hoveredDateIndex > 0
-                          ? s.data.find((p) => p.date === dates[hoveredDateIndex - 1])?.value
+                        : hoveredDateIndex! > 0
+                          ? s.data.find((p) => p.date === dates[hoveredDateIndex! - 1])?.value
                           : undefined;
                     const change =
                       prevValue != null && Number.isFinite(prevValue)
@@ -1324,12 +1565,15 @@ export function TimelineViz(props?: TimelineVizProps) {
                       </div>
                     );
                   })}
+                  {effectiveCompareToLabel && (
+                    <p className="mt-2 pt-2 border-t border-[#e5e5e5] text-xs text-[#7F7F7F] text-left pb-2">
+                      Compare to {effectiveCompareToLabel}
+                    </p>
+                  )}
+                        </>
+                      );
+                    })()}
                 </div>
-                {compareToDateLabel && (
-                  <p className="mt-2 pt-2 border-t border-[#e5e5e5] text-xs text-[#7F7F7F] text-left px-3 pb-2">
-                    Compare to {compareToDateLabel}
-                  </p>
-                )}
               </div>
             )}
             </div>
@@ -1398,6 +1642,21 @@ export function TimelineViz(props?: TimelineVizProps) {
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => setChartView("radar")}
+            className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
+              chartView === "radar"
+                ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]"
+                : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"
+            }`}
+            aria-label="Perception map (radar)"
+            title="Perception map"
+          >
+            <svg width="20" height="20" viewBox="0 0 96.946 96.946" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg">
+              <path d="M48.473,2.372L0,37.591l18.515,56.984h59.917l18.515-56.984L48.473,2.372z M49.023,6.642L92.48,38.214l-11.082,2.488c-0.352-0.85-1.188-1.451-2.166-1.451c-0.203,0-0.396,0.035-0.584,0.082L50.749,15.828c0.042-0.176,0.07-0.357,0.07-0.545c0-1.105-0.767-2.025-1.796-2.273V6.642z M64.893,77.723l-37.174,4.783c-0.079-0.162-0.177-0.312-0.29-0.451l6.233-9.592c0.235,0.078,0.483,0.131,0.745,0.131c1.296,0,2.347-1.051,2.347-2.346c0-0.002,0-0.004,0-0.004l19.603-4.85c0.408,0.69,1.152,1.16,2.013,1.16c0.338,0,0.657-0.074,0.946-0.203l6.267,9.641c-0.429,0.426-0.694,1.014-0.694,1.664C64.887,77.68,64.893,77.703,64.893,77.723z M34.354,44.817c-0.049-0.232-0.14-0.447-0.251-0.648l12.857-9.34c0.275,0.232,0.6,0.406,0.962,0.494v12.531L34.354,44.817z M47.645,48.92L35.212,68.053c-0.139-0.051-0.283-0.088-0.433-0.113l-1.927-20.438c0.708-0.256,1.252-0.838,1.458-1.568L47.645,48.92z M46.127,33.048c0,0.318,0.064,0.619,0.179,0.895l-12.947,9.408c-0.372-0.248-0.818-0.395-1.298-0.395c-0.761,0-1.431,0.367-1.859,0.93l-10.725-2.4c-0.025-0.109-0.059-0.215-0.099-0.316l28.167-23.732c0.121,0.051,0.248,0.088,0.377,0.121v13.217C46.894,31.022,46.127,31.942,46.127,33.048z M19.452,42.608l10.3,2.307c-0.021,0.127-0.039,0.254-0.039,0.387c0,1.191,0.892,2.166,2.042,2.316l1.924,20.41c-0.938,0.307-1.621,1.18-1.621,2.221c0,0.636,0.255,1.209,0.665,1.632l-6.172,9.497c-0.123-0.053-0.253-0.094-0.386-0.125l-7.472-37.453C19.059,43.494,19.327,43.081,19.452,42.608z M57.768,61.949l-8.4-12.927l13.302-2.985c0.163,0.494,0.478,0.922,0.901,1.209l-4.764,14.662c-0.143-0.026-0.289-0.045-0.438-0.045C58.158,61.863,57.96,61.897,57.768,61.949z M60.188,65.672c0.324-0.402,0.525-0.908,0.525-1.465c0-0.748-0.355-1.406-0.9-1.836l4.793-14.75c0.093,0.012,0.185,0.027,0.281,0.027c1.295,0,2.346-1.051,2.346-2.346c0-0.098-0.018-0.191-0.029-0.287L77.21,42.77c0.196,0.338,0.47,0.619,0.804,0.824L67.692,75.358c-0.149-0.028-0.302-0.047-0.46-0.047c-0.247,0-0.48,0.05-0.704,0.119L60.188,65.672z M49.023,17.558c0.131-0.033,0.258-0.07,0.379-0.121l27.652,23.297c-0.106,0.268-0.17,0.559-0.17,0.865c0,0.039,0.01,0.076,0.012,0.113l-10.078,2.264c-0.422-0.613-1.131-1.018-1.932-1.018c-0.48,0-0.927,0.145-1.299,0.393l-12.947-9.408c0.113-0.275,0.179-0.576,0.179-0.895c0-1.105-0.767-2.025-1.796-2.273V17.558L49.023,17.558z M49.023,35.324c0.363-0.088,0.688-0.262,0.963-0.494l12.857,9.342c-0.129,0.232-0.222,0.484-0.267,0.758l-13.554,3.043V35.324L49.023,35.324z M56.797,62.477c-0.474,0.431-0.775,1.043-0.775,1.73c0,0.045,0.011,0.088,0.013,0.131l-19.552,4.838c-0.096-0.186-0.213-0.356-0.354-0.512L48.473,49.67L56.797,62.477z M47.922,6.642v6.367c-1.028,0.248-1.795,1.168-1.795,2.273c0,0.188,0.028,0.369,0.07,0.545L17.8,39.752c-0.194-0.053-0.395-0.09-0.606-0.09c-0.747,0-1.405,0.355-1.834,0.9L4.562,38.145L47.922,6.642z M3.78,39.101l11.109,2.486c-0.025,0.137-0.042,0.277-0.042,0.422c0,1.109,0.771,2.033,1.805,2.277l7.47,37.441c-0.518,0.43-0.855,1.07-0.855,1.797c0,0.688,0.3,1.299,0.77,1.729l-3.507,5.395L3.78,39.101z M21.326,91.447l3.68-5.664c0.194,0.053,0.396,0.09,0.607,0.09c0.894,0,1.662-0.506,2.058-1.241l38.407-4.941c0.342,0.195,0.732,0.316,1.154,0.316c0.3,0,0.584-0.062,0.848-0.164l7.541,11.604H21.326z M76.417,90.647l-7.435-11.438c0.367-0.416,0.596-0.952,0.596-1.551c0-0.291-0.061-0.567-0.156-0.826l10.75-33.086c0.768-0.336,1.312-1.076,1.387-1.951l11.576-2.6L76.417,90.647z"/>
             </svg>
           </button>
         </div>

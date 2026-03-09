@@ -20,6 +20,45 @@ import {
   type SkincareScoreRow,
   type SkincareTopic,
 } from "@/data/skincareScores";
+import {
+  getTimelineData as getHmPantsTimelineData,
+  getDimensionTimelineData as getHmPantsDimensionTimelineData,
+  getResultsTableData as getHmPantsResultsTableData,
+  getTopBrandsByLatestScore as getHmPantsTopBrands,
+  getUniqueModels as getHmPantsModels,
+  getTopicModelScores as getHmPantsTopicModelScores,
+  getHmPantsScoreBrands,
+  HM_PANTS_TABLE_TOPICS as HM_PANTS_TOPIC_COLUMNS,
+  HM_PANTS_TOPIC_KEYS,
+  type HmPantsTopic,
+  type HmPantsScoreRow,
+} from "@/data/hmPantsScores";
+import {
+  getTimelineData as getHmHeatmapTimelineData,
+  getDimensionTimelineData as getHmHeatmapDimensionTimelineData,
+  getResultsTableData as getHmHeatmapResultsTableData,
+  getTopBrandsByLatestScore as getHmHeatmapTopBrands,
+  getUniqueModels as getHmHeatmapModels,
+  getTopicModelScores as getHmHeatmapTopicModelScores,
+  getHmHeatmapScoreBrands,
+  HM_HEATMAP_TABLE_TOPICS as HM_HEATMAP_TOPIC_COLUMNS,
+  HM_HEATMAP_TOPIC_KEYS,
+  type HmHeatmapTopic,
+  type HmHeatmapScoreRow,
+} from "@/data/hmHeatmapScores";
+import {
+  getTimelineData as getHmJeansTimelineData,
+  getDimensionTimelineData as getHmJeansDimensionTimelineData,
+  getResultsTableData as getHmJeansResultsTableData,
+  getTopBrandsByLatestScore as getHmJeansTopBrands,
+  getUniqueModels as getHmJeansModels,
+  getTopicModelScores as getHmJeansTopicModelScores,
+  getHmJeansScoreBrands,
+  HM_JEANS_TABLE_TOPICS as HM_JEANS_TOPIC_COLUMNS,
+  HM_JEANS_TOPIC_KEYS,
+  type HmJeansTopic,
+  type HmJeansScoreRow,
+} from "@/data/hmJeansScores";
 import { NextResponse } from "next/server";
 
 const DEFAULT_METRIC = "AI Brand Score" as const;
@@ -52,6 +91,18 @@ const SKINCARE_TOPICS: SkincareTopic[] = [
 
 function isSkincareTracker(brandId: string, trackerId: string): boolean {
   return brandId === "cetaphil" && trackerId === "skincare";
+}
+
+function isHmPantsTracker(brandId: string, trackerId: string): boolean {
+  return brandId === "hm" && trackerId === "pants";
+}
+
+function isHmHeatmapTracker(brandId: string, trackerId: string): boolean {
+  return brandId === "hm" && trackerId === "heatmap";
+}
+
+function isHmJeansTracker(brandId: string, trackerId: string): boolean {
+  return brandId === "hm" && trackerId === "jeans";
 }
 
 function parsePorscheTopic(t: string | null): TimelineTopic {
@@ -126,6 +177,154 @@ export async function GET(request: Request) {
       modelIds,
       topic
     );
+    return NextResponse.json({ dates, series });
+  }
+
+  if (isHmPantsTracker(brandId, trackerId)) {
+    const topic = topicParam && HM_PANTS_TOPIC_KEYS.includes(topicParam as HmPantsTopic)
+      ? (topicParam as HmPantsTopic)
+      : "overall";
+
+    if (!brandsParam || !modelsParam) {
+      const brands = getHmPantsScoreBrands();
+      const models = getHmPantsModels();
+      const top10Brands = getHmPantsTopBrands(metric as HmPantsScoreRow["metric"], 10);
+      return NextResponse.json({ brands, models, top10Brands, topicColumns: HM_PANTS_TOPIC_COLUMNS });
+    }
+
+    const brandIds = brandsParam.split(",").map((s) => s.trim()).filter(Boolean);
+    const modelIds = modelsParam.split(",").map((s) => s.trim()).filter(Boolean);
+    const table = searchParams.get("table") === "1";
+    const chart = searchParams.get("chart");
+
+    if (chart === "grouped" && brandIds.length > 0) {
+      const brand = brandIds[0]!;
+      const topicModelScores = getHmPantsTopicModelScores(metric as HmPantsScoreRow["metric"], brand);
+      return NextResponse.json({ chart: "grouped", ...topicModelScores });
+    }
+
+    if (table) {
+      const tableData = getHmPantsResultsTableData(metric as HmPantsScoreRow["metric"], brandIds, modelIds);
+      return NextResponse.json(tableData);
+    }
+
+    const topicsParam = searchParams.get("topics");
+    const seriesParam = searchParams.get("series");
+
+    if (chart === "timeline" && seriesParam === "topics" && brandIds.length > 0 && modelIds.length > 0) {
+      const brand = brandIds[0]!;
+      const modelId = modelIds[0]!;
+      const { dates, series: dimSeries } = getHmPantsDimensionTimelineData(
+        metric as HmPantsScoreRow["metric"],
+        modelId,
+        brand
+      );
+      const series = dimSeries.map((s) => ({ brand: s.label, data: s.data }));
+      return NextResponse.json({ dates, series });
+    }
+
+    const singleTopic = topicsParam
+      ? (topicsParam.split(",").map((s) => s.trim()).filter(Boolean)[0] as HmPantsTopic) || "overall"
+      : topic;
+    const resolvedTopic = HM_PANTS_TOPIC_KEYS.includes(singleTopic as HmPantsTopic)
+      ? (singleTopic as HmPantsTopic)
+      : "overall";
+    const { dates, series } = getHmPantsTimelineData(
+      metric as HmPantsScoreRow["metric"],
+      brandIds,
+      modelIds,
+      resolvedTopic
+    );
+    return NextResponse.json({ dates, series });
+  }
+
+  if (isHmHeatmapTracker(brandId, trackerId)) {
+    const topic = topicParam && HM_HEATMAP_TOPIC_KEYS.includes(topicParam as HmHeatmapTopic)
+      ? (topicParam as HmHeatmapTopic)
+      : "overall";
+
+    if (!brandsParam || !modelsParam) {
+      const brands = getHmHeatmapScoreBrands();
+      const models = getHmHeatmapModels();
+      const top10Brands = getHmHeatmapTopBrands(metric as HmHeatmapScoreRow["metric"], 10);
+      return NextResponse.json({ brands, models, top10Brands, topicColumns: HM_HEATMAP_TOPIC_COLUMNS });
+    }
+
+    const brandIds = brandsParam.split(",").map((s) => s.trim()).filter(Boolean);
+    const modelIds = modelsParam.split(",").map((s) => s.trim()).filter(Boolean);
+    const table = searchParams.get("table") === "1";
+    const chart = searchParams.get("chart");
+
+    if (chart === "grouped" && brandIds.length > 0) {
+      const brand = brandIds[0]!;
+      return NextResponse.json({ chart: "grouped", ...getHmHeatmapTopicModelScores(metric as HmHeatmapScoreRow["metric"], brand) });
+    }
+
+    if (table) {
+      return NextResponse.json(getHmHeatmapResultsTableData(metric as HmHeatmapScoreRow["metric"], brandIds, modelIds));
+    }
+
+    const topicsParam = searchParams.get("topics");
+    const seriesParam = searchParams.get("series");
+
+    if (chart === "timeline" && seriesParam === "topics" && brandIds.length > 0 && modelIds.length > 0) {
+      const brand = brandIds[0]!;
+      const modelId = modelIds[0]!;
+      const { dates, series: dimSeries } = getHmHeatmapDimensionTimelineData(metric as HmHeatmapScoreRow["metric"], modelId, brand);
+      return NextResponse.json({ dates, series: dimSeries.map((s) => ({ brand: s.label, data: s.data })) });
+    }
+
+    const singleTopic = topicsParam
+      ? (topicsParam.split(",").map((s) => s.trim()).filter(Boolean)[0] as HmHeatmapTopic) || "overall"
+      : topic;
+    const resolvedTopic = HM_HEATMAP_TOPIC_KEYS.includes(singleTopic as HmHeatmapTopic)
+      ? (singleTopic as HmHeatmapTopic)
+      : "overall";
+    const { dates, series } = getHmHeatmapTimelineData(metric as HmHeatmapScoreRow["metric"], brandIds, modelIds, resolvedTopic);
+    return NextResponse.json({ dates, series });
+  }
+
+  if (isHmJeansTracker(brandId, trackerId)) {
+    const topic: HmJeansTopic = "overall";
+
+    if (!brandsParam || !modelsParam) {
+      const brands = getHmJeansScoreBrands();
+      const models = getHmJeansModels();
+      const top10Brands = getHmJeansTopBrands(metric as HmJeansScoreRow["metric"], 10);
+      return NextResponse.json({ brands, models, top10Brands, topicColumns: HM_JEANS_TOPIC_COLUMNS });
+    }
+
+    const brandIds = brandsParam.split(",").map((s) => s.trim()).filter(Boolean);
+    const modelIds = modelsParam.split(",").map((s) => s.trim()).filter(Boolean);
+    const table = searchParams.get("table") === "1";
+    const chart = searchParams.get("chart");
+
+    if (chart === "grouped" && brandIds.length > 0) {
+      const brand = brandIds[0]!;
+      return NextResponse.json({ chart: "grouped", ...getHmJeansTopicModelScores(metric as HmJeansScoreRow["metric"], brand) });
+    }
+
+    if (table) {
+      return NextResponse.json(getHmJeansResultsTableData(metric as HmJeansScoreRow["metric"], brandIds, modelIds));
+    }
+
+    const topicsParam = searchParams.get("topics");
+    const seriesParam = searchParams.get("series");
+
+    if (chart === "timeline" && seriesParam === "topics" && brandIds.length > 0 && modelIds.length > 0) {
+      const brand = brandIds[0]!;
+      const modelId = modelIds[0]!;
+      const { dates, series: dimSeries } = getHmJeansDimensionTimelineData(metric as HmJeansScoreRow["metric"], modelId, brand);
+      return NextResponse.json({ dates, series: dimSeries.map((s) => ({ brand: s.label, data: s.data })) });
+    }
+
+    const singleTopic = topicsParam
+      ? (topicsParam.split(",").map((s) => s.trim()).filter(Boolean)[0] as HmJeansTopic) || "overall"
+      : topic;
+    const resolvedTopic: HmJeansTopic = HM_JEANS_TOPIC_KEYS.includes(singleTopic as HmJeansTopic)
+      ? (singleTopic as HmJeansTopic)
+      : "overall";
+    const { dates, series } = getHmJeansTimelineData(metric as HmJeansScoreRow["metric"], brandIds, modelIds, resolvedTopic);
     return NextResponse.json({ dates, series });
   }
 

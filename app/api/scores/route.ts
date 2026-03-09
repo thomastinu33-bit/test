@@ -16,6 +16,31 @@ import {
   SKINCARE_DIM_LABELS,
 } from "@/data/skincareScores";
 import type { SkincareTopic } from "@/data/skincareScores";
+import {
+  getDimensionTimelineData as getHmPantsDimensionTimelineData,
+  getGaugeDimensionsForModelWithChange as getHmPantsGaugeDimensions,
+  getUniqueModels as getHmPantsModels,
+  getUniqueBrands as getHmPantsBrands,
+  HM_PANTS_GAUGE_DIMENSION_KEYS,
+  HM_PANTS_DIM_LABELS,
+  HM_PANTS_TOPIC_KEYS,
+} from "@/data/hmPantsScores";
+import {
+  getGaugeDimensionsForModelWithChange as getHmHeatmapGaugeDimensions,
+  getUniqueModels as getHmHeatmapModels,
+  getUniqueBrands as getHmHeatmapBrands,
+  HM_HEATMAP_GAUGE_DIMENSION_KEYS,
+  HM_HEATMAP_DIM_LABELS,
+  HM_HEATMAP_TOPIC_KEYS,
+} from "@/data/hmHeatmapScores";
+import {
+  getGaugeDimensionsForModelWithChange as getHmJeansGaugeDimensions,
+  getUniqueModels as getHmJeansModels,
+  getUniqueBrands as getHmJeansBrands,
+  HM_JEANS_GAUGE_DIMENSION_KEYS,
+  HM_JEANS_DIM_LABELS,
+  HM_JEANS_TOPIC_KEYS,
+} from "@/data/hmJeansScores";
 import { NextRequest, NextResponse } from "next/server";
 
 const VALID_METRICS: MetricType[] = [
@@ -36,6 +61,18 @@ const PORSCHE_DIM_LABELS: Record<string, string> = {
 
 function isSkincareTracker(brandId: string, trackerId: string): boolean {
   return brandId === "cetaphil" && trackerId === "skincare";
+}
+
+function isHmPantsTracker(brandId: string, trackerId: string): boolean {
+  return brandId === "hm" && trackerId === "pants";
+}
+
+function isHmHeatmapTracker(brandId: string, trackerId: string): boolean {
+  return brandId === "hm" && trackerId === "heatmap";
+}
+
+function isHmJeansTracker(brandId: string, trackerId: string): boolean {
+  return brandId === "hm" && trackerId === "jeans";
 }
 
 function changeKeyForTopic(topic: string): string {
@@ -102,6 +139,88 @@ export async function GET(request: NextRequest) {
       dimensionLabels,
       modelScores,
     });
+  }
+
+  if (isHmPantsTracker(brandId, trackerId)) {
+    const models = getHmPantsModels();
+    const brands = getHmPantsBrands();
+    const defaultBrand = "H&M";
+    const brand = selectedBrand ?? defaultBrand;
+    const dimensions = getHmPantsGaugeDimensions(validMetric, model, brand);
+    const dimensionKeys = HM_PANTS_GAUGE_DIMENSION_KEYS as string[];
+    const dimensionLabels: Record<string, string> = {};
+    for (const k of HM_PANTS_TOPIC_KEYS) {
+      dimensionLabels[k] = HM_PANTS_DIM_LABELS[k];
+    }
+
+    const modelScores = dimensionKeys.includes(topic)
+      ? models.map((m) => {
+          const dims = getHmPantsGaugeDimensions(validMetric, m.id, brand);
+          const value = (dims[topic] as number) ?? 0;
+          const cKey = changeKeyForTopic(topic);
+          const change = (dims[cKey] as number) ?? null;
+          return { id: m.id, label: m.label, value, change };
+        })
+      : undefined;
+
+    return NextResponse.json({
+      models,
+      brands,
+      dimensions,
+      dimensionKeys,
+      dimensionLabels,
+      modelScores,
+    });
+  }
+
+  if (isHmHeatmapTracker(brandId, trackerId)) {
+    const models = getHmHeatmapModels();
+    const brands = getHmHeatmapBrands();
+    const defaultBrand = "H&M";
+    const brand = selectedBrand ?? defaultBrand;
+    const dimensions = getHmHeatmapGaugeDimensions(validMetric, model, brand);
+    const dimensionKeys = HM_HEATMAP_GAUGE_DIMENSION_KEYS as string[];
+    const dimensionLabels: Record<string, string> = {};
+    for (const k of HM_HEATMAP_TOPIC_KEYS) {
+      dimensionLabels[k] = HM_HEATMAP_DIM_LABELS[k];
+    }
+
+    const modelScores = dimensionKeys.includes(topic)
+      ? models.map((m) => {
+          const dims = getHmHeatmapGaugeDimensions(validMetric, m.id, brand);
+          const value = (dims[topic] as number) ?? 0;
+          const cKey = changeKeyForTopic(topic);
+          const change = (dims[cKey] as number) ?? null;
+          return { id: m.id, label: m.label, value, change };
+        })
+      : undefined;
+
+    return NextResponse.json({ models, brands, dimensions, dimensionKeys, dimensionLabels, modelScores });
+  }
+
+  if (isHmJeansTracker(brandId, trackerId)) {
+    const models = getHmJeansModels();
+    const brands = getHmJeansBrands();
+    const defaultBrand = "H&M";
+    const brand = selectedBrand ?? defaultBrand;
+    const dimensions = getHmJeansGaugeDimensions(validMetric, model, brand);
+    const dimensionKeys = HM_JEANS_GAUGE_DIMENSION_KEYS as string[];
+    const dimensionLabels: Record<string, string> = {};
+    for (const k of HM_JEANS_TOPIC_KEYS) {
+      dimensionLabels[k] = HM_JEANS_DIM_LABELS[k];
+    }
+
+    const modelScores = dimensionKeys.includes(topic)
+      ? models.map((m) => {
+          const dims = getHmJeansGaugeDimensions(validMetric, m.id, brand);
+          const value = (dims[topic] as number) ?? 0;
+          const cKey = changeKeyForTopic(topic);
+          const change = (dims[cKey] as number) ?? null;
+          return { id: m.id, label: m.label, value, change };
+        })
+      : undefined;
+
+    return NextResponse.json({ models, brands, dimensions, dimensionKeys, dimensionLabels, modelScores });
   }
 
   const models = getUniqueModels();

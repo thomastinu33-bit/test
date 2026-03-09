@@ -199,6 +199,18 @@ const defaultNavItems: NavItem[] = [
     children: [],
   },
   {
+    id: "hm",
+    label: "H&M",
+    href: "/hm",
+    children: [
+      { id: "hm-pants", label: "H&M Pants", icon: "list", href: "/hm/pants" },
+      { id: "hm-heatmap", label: "H&M Heatmap", icon: "list", href: "/hm/heatmap" },
+      { id: "hm-jeans", label: "H&M Jeans", icon: "list", href: "/hm/jeans" },
+      { id: "hm-womens-fashion", label: "Women's Fashion", icon: "list", href: "/hm/womens-fashion" },
+      { id: "hm-mens-fashion", label: "Men's Fashion", icon: "list", href: "/hm/mens-fashion" },
+    ],
+  },
+  {
     id: "cetaphil",
     label: "Cetaphil",
     children: [
@@ -391,6 +403,17 @@ export function SideNav({
           <Link
             href={item.href}
             onClick={() => setSelectedId(item.id)}
+            className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors no-underline ${activeStyles} ${parentOfActiveStyles}`}
+          >
+            {content}
+          </Link>
+        ) : item.href && hasChildren ? (
+          <Link
+            href={item.href}
+            onClick={() => {
+              setSelectedId(item.id);
+              toggleExpand(item.id, depth === 0);
+            }}
             className={`w-full flex items-center gap-3 py-2.5 pr-4 ${paddingLeft} text-left text-sm font-normal transition-colors no-underline ${activeStyles} ${parentOfActiveStyles}`}
           >
             {content}

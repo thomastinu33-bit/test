@@ -18,6 +18,8 @@ const MODEL_TO_LOGO: Record<string, string> = {
   Gemini: LOGOS.gemini,
   "Gemini Search": LOGOS.gemini,
   "AI Mode": LOGOS.google,
+  "Google AI Mode": LOGOS.google,
+  "Google Gemini": LOGOS.gemini,
   "Google AI Overview": LOGOS.google,
   "AI Overviews": LOGOS.google,
   Perplexity: LOGOS.perplexity,
@@ -26,6 +28,15 @@ const MODEL_TO_LOGO: Record<string, string> = {
   Copilot: LOGOS.copilot,
   Claude: LOGOS.claude,
   Deepseek: LOGOS.deepseek,
+  "Deep Seek v3.1": LOGOS.deepseek,
+  "Claude Haiku 4.5": LOGOS.claude,
+  "GPT 4.1": LOGOS.chatgpt,
+  "GPT 5": LOGOS.chatgpt,
+  "ChatGPT GPT 4.1": LOGOS.chatgpt,
+  "ChatGPT GPT 5": LOGOS.chatgpt,
+  "Gemini 2.5": LOGOS.gemini,
+  "Llama 4": LOGOS.metaai,
+  "Meta AI Llama 4": LOGOS.metaai,
 };
 
 const defaultLogo = LOGOS.chatgpt;

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
 import { useTrackerDate } from "../TrackerDateContext";
 import { getModelIcon } from "./ModelLogos";
+import { getTracker } from "@/app/manage-account/data";
 import { ScoreGauge } from "./ScoreGauge";
 
 export type OverviewMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
@@ -63,6 +64,9 @@ const AVERAGE_ACROSS_ALL = "__average__";
 
 const COMPETITOR_LIST_PORSCHE = ["PORSCHE", "BMW", "BENZ", "VOLVOCARS", "AUDI", "LEXUS"] as const;
 const COMPETITOR_LIST_CETAPHIL = ["CETAPHIL", "NEUTROGENA", "DRUNK ELEPHANT", "ORDINARY", "SKINCEUTICALS", "ELTAMD"] as const;
+const COMPETITOR_LIST_HM_PANTS = ["H&M", "ZARA", "UNIQLO", "FOREVER 21", "MANGO", "PULL & BEAR", "BERSHKA", "COTTON ON", "ARITZIA", "LEVI'S", "ABERCROMBIE & FITCH", "AMERICAN EAGLE", "GAP", "HOLLISTER", "MADEWELL", "OLD NAVY", "PACSUN", "SHEIN"] as const;
+const COMPETITOR_LIST_HM_HEATMAP = ["H&M", "ZARA", "UNIQLO", "NIKE", "ADIDAS", "LEVI'S", "LULULEMON", "NORDSTROM"] as const;
+const COMPETITOR_LIST_HM_JEANS = ["H&M", "LEVI'S", "ZARA", "MADEWELL", "AMERICAN EAGLE", "GAP", "BANANA REPUBLIC", "HOLLISTER", "UNIQLO", "MANGO", "ABERCROMBIE & FITCH"] as const;
 
 const GAUGE_COLORS = [
   "var(--primary)",
@@ -435,7 +439,8 @@ export function OverviewViz() {
   const params = useParams();
   const brandId = (params?.brand as string) ?? "porsche";
   const trackerId = (params?.tracker as string) ?? "luxury-suvs";
-  const mainBrand = brandId === "cetaphil" ? "CETAPHIL" : "PORSCHE";
+  const tracker = getTracker(brandId, trackerId);
+  const mainBrand = brandId === "cetaphil" ? "CETAPHIL" : brandId === "hm" ? "H&M" : "PORSCHE";
 
   const cardRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
@@ -448,6 +453,7 @@ export function OverviewViz() {
   const [timelineData, setTimelineData] = useState<{ dates: string[]; series: DimensionTimelineSeries[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [metric, setMetric] = useState<OverviewMetric>("AI Brand Score");
+  const [metricDropdownOpen, setMetricDropdownOpen] = useState(false);
   const [topicId, setTopicId] = useState<string>("overall");
   const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<string>(mainBrand);
@@ -552,14 +558,18 @@ export function OverviewViz() {
   const topicDisplayLabel = dimensionLabels[topicId] ?? topicId;
   const brandDisplayLabel = selectedBrand;
 
-  const competitorSet = new Set(
+  const activeCompetitorList =
     brandId === "cetaphil"
-      ? COMPETITOR_LIST_CETAPHIL.map((c) => c.toUpperCase())
-      : COMPETITOR_LIST_PORSCHE.map((c) => c.toUpperCase())
-  );
-  const competitorOrder = new Map<string, number>(
-    (brandId === "cetaphil" ? COMPETITOR_LIST_CETAPHIL : COMPETITOR_LIST_PORSCHE).map((c, i) => [c, i])
-  );
+      ? COMPETITOR_LIST_CETAPHIL
+      : brandId === "hm" && trackerId === "heatmap"
+        ? COMPETITOR_LIST_HM_HEATMAP
+        : brandId === "hm" && trackerId === "jeans"
+          ? COMPETITOR_LIST_HM_JEANS
+          : brandId === "hm"
+            ? COMPETITOR_LIST_HM_PANTS
+            : COMPETITOR_LIST_PORSCHE;
+  const competitorSet = new Set(activeCompetitorList.map((c) => c.toUpperCase()));
+  const competitorOrder = new Map<string, number>(activeCompetitorList.map((c, i) => [c, i]));
   const competitorBrands = brands
     .filter((b) => competitorSet.has(b.toUpperCase()))
     .sort((a, b) => (competitorOrder.get(a.toUpperCase()) ?? 999) - (competitorOrder.get(b.toUpperCase()) ?? 999));
@@ -584,24 +594,40 @@ export function OverviewViz() {
     <div ref={cardRef} className="w-full min-w-0 rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
       <div className="flex flex-col items-start gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5] md:flex-row md:items-center md:justify-between">
         <h2 className="w-full text-[20px] font-semibold text-[#262626] leading-tight md:w-auto">
-          Results Across Models
+          Brand Score in {tracker?.name ?? trackerId}
         </h2>
         <div className="flex w-full flex-wrap items-center justify-start gap-2 md:w-auto">
-          <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
-            {(Object.keys(METRIC_CONFIG) as OverviewMetric[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMetric(m)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  metric === m
-                    ? "bg-white text-[#262626] shadow-sm"
-                    : "text-[#7F7F7F] hover:text-[#262626]"
-                }`}
-              >
-                {METRIC_CONFIG[m].label}
-              </button>
-            ))}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMetricDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2 h-10 pl-3 pr-3 rounded-lg border border-[#e5e5e5] bg-white text-sm font-medium text-[#262626] hover:bg-[#fafafa] transition-colors"
+            >
+              {METRIC_CONFIG[metric].label}
+              <svg className="w-4 h-4 text-[#7F7F7F] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {metricDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMetricDropdownOpen(false)} />
+                <div className="absolute top-full left-0 mt-1 z-20 w-52 rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
+                  {(Object.keys(METRIC_CONFIG) as OverviewMetric[]).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => { setMetric(m); setMetricDropdownOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors hover:bg-[#f5f5f5] ${
+                        metric === m ? "text-[var(--primary)] font-medium" : "text-[#262626]"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${metric === m ? "bg-[var(--primary)]" : "bg-transparent"}`} />
+                      {METRIC_CONFIG[m].label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
           {brands.length > 0 && (
             <div className="relative min-w-[10rem]">
@@ -843,7 +869,7 @@ export function OverviewViz() {
           </>
         )}
 
-        {showTimelineToggle && overviewView === "timeline" && (
+        {false && showTimelineToggle && overviewView === "timeline" && (
           <div ref={chartRef} className="w-full min-w-0">
             {loading && !timelineData ? (
               <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
@@ -868,12 +894,12 @@ export function OverviewViz() {
           </div>
         )}
 
-        {(isAvgPosition || (compareToDateStr && overviewView !== "timeline")) && (
+        {(isAvgPosition || compareToDateStr) && (
           <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[#7F7F7F]">
             {isAvgPosition && (
               <span>Lower is better (e.g. 2.7 = average position 2.7 in rankings).</span>
             )}
-            {compareToDateStr && overviewView !== "timeline" && (
+            {compareToDateStr && (
               <span className="ml-auto text-right">
                 Compared to {compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
               </span>
@@ -881,43 +907,6 @@ export function OverviewViz() {
           </div>
         )}
 
-        {showTimelineToggle && (
-          <div className="mt-6 pt-4 border-t border-[#e5e5e5] flex items-center justify-center gap-1">
-            <button
-              type="button"
-              onClick={() => setOverviewView("gauge")}
-              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
-                overviewView === "gauge"
-                  ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]"
-                  : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"
-              }`}
-              aria-label="Gauge view"
-              title="Gauge view"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                {/* Light track: 100% circle */}
-                <circle cx="12" cy="12" r="10" strokeWidth="2" className="opacity-40" />
-                {/* Dark arc: first 25% (90° from top to right) */}
-                <path d="M12 2 A10 10 0 0 1 22 12" strokeWidth="2.5" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => setOverviewView("timeline")}
-              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors ${
-                overviewView === "timeline"
-                  ? "border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]"
-                  : "border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]"
-              }`}
-              aria-label="Timeline view"
-              title="Timeline view"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-              </svg>
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
