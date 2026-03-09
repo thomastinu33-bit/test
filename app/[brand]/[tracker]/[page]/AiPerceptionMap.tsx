@@ -18,7 +18,7 @@ interface ModelOption {
   label: string;
 }
 
-interface TopicColumn {
+export interface TopicColumn {
   id: string;
   label: string;
 }
@@ -78,13 +78,13 @@ interface TimelineSeriesItem {
   data: TimelineSeriesPoint[];
 }
 
-interface BrandSeries {
+export interface BrandSeries {
   brand: string;
   values: number[];
   changes: (number | null)[];
 }
 
-interface RadarChartProps {
+export interface RadarChartProps {
   topicColumns: TopicColumn[];
   series: BrandSeries[];
   metric: RadarMetric;
@@ -92,7 +92,7 @@ interface RadarChartProps {
   height?: number;
 }
 
-function RadarChart({ topicColumns, series, metric, width = 560, height = 460 }: RadarChartProps) {
+export function RadarChart({ topicColumns, series, metric, width = 560, height = 460 }: RadarChartProps) {
   const maxVal = METRIC_MAX[metric];
   const cx = width / 2;
   const cy = height / 2;
@@ -359,6 +359,7 @@ export function AiPerceptionMap() {
   const mainBrand = brandId === "cetaphil" ? "CETAPHIL" : "PORSCHE";
 
   const [metric, setMetric] = useState<RadarMetric>("AI Brand Score");
+  const [metricDropdownOpen, setMetricDropdownOpen] = useState(false);
   const [models, setModels] = useState<ModelOption[]>([]);
   const [brandsList, setBrandsList] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
@@ -622,21 +623,37 @@ export function AiPerceptionMap() {
           {trackerId === "luxury-suvs-v2" ? "Results Across Brands" : "AI Perception Map"}
         </h2>
         <div className="flex w-full flex-wrap items-center justify-start gap-2 md:w-auto">
-          <div className="flex flex-wrap rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
-            {(Object.keys(METRIC_CONFIG) as RadarMetric[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMetric(m)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  metric === m
-                    ? "bg-white text-[#262626] shadow-sm"
-                    : "text-[#7F7F7F] hover:text-[#262626]"
-                }`}
-              >
-                {METRIC_CONFIG[m].label}
-              </button>
-            ))}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMetricDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2 h-10 pl-3 pr-3 rounded-lg border border-[#e5e5e5] bg-white text-sm font-medium text-[#262626] hover:bg-[#fafafa] transition-colors"
+            >
+              {METRIC_CONFIG[metric].label}
+              <svg className="w-4 h-4 text-[#7F7F7F] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {metricDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMetricDropdownOpen(false)} />
+                <div className="absolute top-full left-0 mt-1 z-20 w-52 rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
+                  {(Object.keys(METRIC_CONFIG) as RadarMetric[]).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => { setMetric(m); setMetricDropdownOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors hover:bg-[#f5f5f5] ${
+                        metric === m ? "text-[var(--primary)] font-medium" : "text-[#262626]"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${metric === m ? "bg-[var(--primary)]" : "bg-transparent"}`} />
+                      {METRIC_CONFIG[m].label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="relative min-w-[10rem] overflow-visible z-10">

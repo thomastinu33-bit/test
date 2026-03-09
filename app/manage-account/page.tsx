@@ -36,9 +36,15 @@ const BookIcon = () => (
 
 const brands = [
   { id: "adidas", name: "Adidas", trackerCount: 2 },
+  { id: "asus", name: "ASUS", trackerCount: 2 },
   { id: "bmw", name: "BMW", trackerCount: 6 },
   { id: "nike", name: "Nike", trackerCount: 12 },
   { id: "porsche", name: "Porsche", trackerCount: 18 },
+];
+
+const asusTrackers = [
+  { id: "laptops", name: "Laptops", location: "USA | English", dictionaryOn: true },
+  { id: "gaming-laptops", name: "Gaming Laptops", location: "USA | English", dictionaryOn: true },
 ];
 
 const bmwTrackers = [
@@ -58,7 +64,7 @@ export default function ManageAccountPage() {
   const [innerSearchQuery, setInnerSearchQuery] = useState("");
   const [expandedBrand, setExpandedBrand] = useState<string | null>("bmw");
   const [dictionaryToggles, setDictionaryToggles] = useState<Record<string, boolean>>(
-    Object.fromEntries(bmwTrackers.map((t) => [t.id, t.dictionaryOn]))
+    Object.fromEntries([...asusTrackers, ...bmwTrackers].map((t) => [t.id, t.dictionaryOn]))
   );
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = 10;
@@ -169,6 +175,68 @@ export default function ManageAccountPage() {
                     )}
                   </button>
                 </div>
+
+                {/* Expanded content - ASUS */}
+                {isExpanded && brand.id === "asus" && (
+                  <div className="border-t border-[#eeeeee] p-4 bg-[#f6f6f6]">
+                    <div className="relative mb-4">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7F7F7F]">
+                        <SearchIcon />
+                      </span>
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        value={innerSearchQuery}
+                        onChange={(e) => setInnerSearchQuery(e.target.value)}
+                        className="w-full max-w-md pl-12 pr-4 py-2.5 border border-[#eeeeee] rounded-lg bg-white text-[#262626] placeholder:text-[#7F7F7F] text-sm focus:outline-none focus:ring-2 focus:ring-[#19B5EF] focus:border-transparent"
+                      />
+                    </div>
+                    <div className="bg-white border border-[#eeeeee] rounded-lg overflow-hidden">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-[#f6f6f6] border-b border-[#eeeeee]">
+                            <th className="text-left py-3 px-4 text-sm font-medium text-[#262626]">Tracker Name</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-[#262626]">Location</th>
+                            <th className="text-left py-3 px-4 text-sm font-medium text-[#262626]">Brand Level Dictionary</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {asusTrackers
+                            .filter((t) => !innerSearchQuery || t.name.toLowerCase().includes(innerSearchQuery.toLowerCase()))
+                            .map((tracker) => (
+                            <tr key={tracker.id} className="border-b border-[#eeeeee] hover:bg-[#f6f6f6] last:border-b-0">
+                              <td className="py-3 px-4 text-sm text-[#262626]">{tracker.name}</td>
+                              <td className="py-3 px-4 text-sm text-[#262626]">{tracker.location}</td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="flex items-center gap-3">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleDictionary(tracker.id)}
+                                      className={`relative inline-flex h-6 rounded-full transition-colors ${dictionaryToggles[tracker.id] ? "w-12 bg-[#19B5EF]" : "w-12 bg-[#eeeeee]"}`}
+                                    >
+                                      <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${dictionaryToggles[tracker.id] ? "left-7" : "left-1"}`} />
+                                    </button>
+                                    <span className="text-xs font-medium text-[#7F7F7F] min-w-[24px]">
+                                      {dictionaryToggles[tracker.id] ? "ON" : "OFF"}
+                                    </span>
+                                  </div>
+                                  <Link
+                                    href={`/manage-account/dictionary/asus/${tracker.id}`}
+                                    className="text-[var(--primary)] font-medium hover:underline text-sm flex items-center gap-1"
+                                  >
+                                    <BookIcon />
+                                    View Dictionary
+                                  </Link>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
                 {/* Expanded content - BMW */}
                 {isExpanded && brand.id === "bmw" && (
@@ -335,7 +403,7 @@ export default function ManageAccountPage() {
                   </div>
                 )}
 
-                {isExpanded && brand.id !== "bmw" && (
+                {isExpanded && brand.id !== "bmw" && brand.id !== "asus" && (
                   <div className="border-t border-[#eeeeee] p-4 bg-[#f6f6f6] text-sm text-[#7F7F7F]">
                     No trackers to display.
                   </div>

@@ -12,6 +12,7 @@ const PlusIcon = () => (
   </svg>
 );
 
+
 const SearchIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="11" cy="11" r="7" stroke="#7F7F7F" strokeWidth="1.5" />
@@ -28,6 +29,24 @@ const BookIcon = () => (
 const CloseIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const SortAscIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 20V4M6 10l6-6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const SortDescIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 4v16M6 14l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const SortNeutralIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 9l4-4 4 4M8 15l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -55,6 +74,10 @@ type TermAction = "is-competitor" | "mark-competitor" | "include";
 export type SurveyTermRow = {
   searchTerm: string;
   displayTerm: string;
+  brand: string | null;
+  productFamily: string | null;
+  product: string | null;
+  variant: string | null;
   isCompetitor: boolean;
   action: TermAction;
 };
@@ -62,34 +85,75 @@ export type SurveyTermRow = {
 function parseDictionaryCsv(csvText: string): SurveyTermRow[] {
   const lines = csvText.trim().split(/\r?\n/);
   const rows: SurveyTermRow[] = [];
+  let isNewFormat = false;
+
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i]!;
     if (i === 0 && line === "ev_brand_search_term_dictionary") continue;
-    if (i === 1 && line === "search_term,standardized_make_and_model") continue;
-    const idx = line.indexOf(",");
-    if (idx === -1) continue;
-    const searchTerm = line.slice(0, idx).trim();
-    const displayTerm = line.slice(idx + 1).trim();
-    if (!searchTerm && !displayTerm) continue;
-    rows.push({
-      searchTerm: searchTerm || displayTerm,
-      displayTerm: displayTerm || searchTerm,
-      isCompetitor: false,
-      action: "mark-competitor",
-    });
+    if (i === 1 && line === "search_term,standardized_make_and_model") { isNewFormat = false; continue; }
+    if (i === 1 && line === "search_term,brand,product_family,product,variant") { isNewFormat = true; continue; }
+
+    if (isNewFormat) {
+      // CSV: search_term,brand,product_family,product,variant
+      const parts = line.split(",");
+      const searchTerm = (parts[0] ?? "").trim();
+      if (!searchTerm) continue;
+      const brand = (parts[1] ?? "").trim() || null;
+      const productFamily = (parts[2] ?? "").trim() || null;
+      const product = (parts[3] ?? "").trim() || null;
+      const variant = (parts[4] ?? "").trim() || null;
+      rows.push({
+        searchTerm,
+        displayTerm: brand ?? searchTerm,
+        brand,
+        productFamily,
+        product,
+        variant,
+        isCompetitor: false,
+        action: "mark-competitor",
+      });
+    } else {
+      // Legacy CSV: search_term,standardized_make_and_model
+      const idx = line.indexOf(",");
+      if (idx === -1) continue;
+      const searchTerm = line.slice(0, idx).trim();
+      const displayTerm = line.slice(idx + 1).trim();
+      if (!searchTerm && !displayTerm) continue;
+      rows.push({
+        searchTerm: searchTerm || displayTerm,
+        displayTerm: displayTerm || searchTerm,
+        brand: displayTerm || null,
+        productFamily: null,
+        product: null,
+        variant: null,
+        isCompetitor: false,
+        action: "mark-competitor",
+      });
+    }
   }
   return rows;
 }
 
-const BASE_COMPETITORS = ["BMW", "AUDI", "VOLVO", "MERCEDES-BENZ"];
+const GRANULARITY_LEVELS = [
+  { level: 1, field: "brand" as const, label: "Brand" },
+  { level: 2, field: "productFamily" as const, label: "Product Family" },
+  { level: 3, field: "product" as const, label: "Product" },
+  { level: 4, field: "variant" as const, label: "Variant" },
+] as const;
 
-const COMPETITOR_DISPLAY_NAMES = [
-  "BMW",
-  "BMW (IX)",
-  "AUDI",
-  "VOLVO",
-  "MERCEDES-BENZ",
-];
+const BRAND_BASE_COMPETITORS: Record<string, string[]> = {
+  asus: ["ACER", "LENOVO", "HP", "DELL", "APPLE", "MSI", "RAZER", "MICROSOFT", "SAMSUNG"],
+};
+const DEFAULT_BASE_COMPETITORS = ["BMW", "AUDI", "VOLVO", "MERCEDES-BENZ"];
+
+const BRAND_COMPETITOR_DISPLAY_NAMES: Record<string, string[]> = {
+  asus: ["ACER", "LENOVO", "HP", "DELL", "APPLE", "MSI", "RAZER", "MICROSOFT", "SAMSUNG"],
+};
+const DEFAULT_COMPETITOR_DISPLAY_NAMES = ["BMW", "BMW (IX)", "AUDI", "VOLVO", "MERCEDES-BENZ"];
+
+const BRAND_DICTIONARY_CSV: Record<string, string> = {
+  asus: "/asus-dictionary.csv",
+};
 
 export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: string }) {
   const params = useParams();
@@ -98,8 +162,24 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
   const [surveyTerms, setSurveyTerms] = useState<SurveyTermRow[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [ignoredTerms, setIgnoredTerms] = useState<Set<string>>(new Set());
+  const [favoriteTerms, setFavoriteTerms] = useState<Set<string>>(new Set());
+  const [columnHeaders, setColumnHeaders] = useState({
+    searchTerms: "Search Terms",
+    brand: "Brand",
+    productFamily: "Product Family",
+    product: "Product",
+    variant: "Variant",
+  });
+  const [editingHeader, setEditingHeader] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [ignoredColumns, setIgnoredColumns] = useState<Set<string>>(new Set());
   const [competitorTerms, setCompetitorTerms] = useState<Set<string>>(new Set());
   const [displayTerms, setDisplayTerms] = useState<Record<string, string>>({});
+  const [brandValues, setBrandValues] = useState<Record<string, string>>({});
+  const [productFamilyValues, setProductFamilyValues] = useState<Record<string, string>>({});
+  const [productValues, setProductValues] = useState<Record<string, string>>({});
+  const [variantValues, setVariantValues] = useState<Record<string, string>>({});
   const [openDropdownFor, setOpenDropdownFor] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const bulkSelectAllRef = useRef<HTMLInputElement>(null);
@@ -119,13 +199,17 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
   } | null>(null);
   const [editedDisplayTerms, setEditedDisplayTerms] = useState<Set<string>>(new Set());
   const [userAddedTerms, setUserAddedTerms] = useState<
-    { id: string; searchTerm: string; displayTerm: string }[]
+    { id: string; searchTerm: string; displayTerm: string; brand: string; productFamily: string; product: string; variant: string }[]
   >([]);
   const [savedUserTerms, setSavedUserTerms] = useState<SurveyTermRow[]>([]);
 
+  const dictionaryCsvUrl = BRAND_DICTIONARY_CSV[brandId] ?? "/test-dictionary.csv";
+  const BASE_COMPETITORS = BRAND_BASE_COMPETITORS[brandId] ?? DEFAULT_BASE_COMPETITORS;
+  const COMPETITOR_DISPLAY_NAMES = BRAND_COMPETITOR_DISPLAY_NAMES[brandId] ?? DEFAULT_COMPETITOR_DISPLAY_NAMES;
+
   useEffect(() => {
     let cancelled = false;
-    fetch("/test-dictionary.csv")
+    fetch(dictionaryCsvUrl)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load dictionary");
         return res.text();
@@ -134,9 +218,11 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
         if (cancelled) return;
         const rows = parseDictionaryCsv(text);
         setSurveyTerms(rows);
-        setDisplayTerms(
-          Object.fromEntries(rows.map((t) => [t.searchTerm, t.displayTerm]))
-        );
+        setDisplayTerms(Object.fromEntries(rows.map((t) => [t.searchTerm, t.displayTerm])));
+        setBrandValues(Object.fromEntries(rows.map((t) => [t.searchTerm, t.brand ?? ""])));
+        setProductFamilyValues(Object.fromEntries(rows.map((t) => [t.searchTerm, t.productFamily ?? ""])));
+        setProductValues(Object.fromEntries(rows.map((t) => [t.searchTerm, t.product ?? ""])));
+        setVariantValues(Object.fromEntries(rows.map((t) => [t.searchTerm, t.variant ?? t.product ?? ""])));
       })
       .catch((err) => {
         if (!cancelled) setLoadError(err instanceof Error ? err.message : "Failed to load");
@@ -144,7 +230,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [dictionaryCsvUrl]);
 
   const competitorDisplayNames = useMemo(
     () => new Set([...COMPETITOR_DISPLAY_NAMES, ...addedCompetitors]),
@@ -256,6 +342,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openDropdownFor]);
 
+
   const brand = getBrand(brandId);
   const tracker = getTracker(brandId, trackerId);
 
@@ -344,10 +431,66 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
     });
   };
 
+  const toggleFavorite = (field: string, value: string) => {
+    const key = `${field}:${value}`;
+    setFavoriteTerms((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const isFavorite = (field: string, value: string) =>
+    !!value && favoriteTerms.has(`${field}:${value}`);
+
   const allTerms = useMemo(
     () => [...savedUserTerms, ...(surveyTerms ?? [])],
     [savedUserTerms, surveyTerms]
   );
+
+  const competitorTermCounts = useMemo(() => {
+    const fieldValues: Record<string, Record<string, number>> = {
+      brand: {},
+      productFamily: {},
+      product: {},
+      variant: {},
+    };
+    allTerms.forEach((row) => {
+      const st = row.searchTerm;
+      const vals: Record<string, string | undefined> = {
+        brand: brandValues[st] ?? row.brand ?? undefined,
+        productFamily: productFamilyValues[st] ?? row.productFamily ?? undefined,
+        product: productValues[st] ?? row.product ?? undefined,
+        variant: variantValues[st] ?? row.variant ?? undefined,
+      };
+      for (const [field, val] of Object.entries(vals)) {
+        if (val) fieldValues[field]![val] = (fieldValues[field]![val] ?? 0) + 1;
+      }
+    });
+    const counts: Record<string, number> = {};
+    for (const [field, valMap] of Object.entries(fieldValues)) {
+      for (const [val, count] of Object.entries(valMap)) {
+        counts[`${field}:${val}`] = count;
+      }
+    }
+    return counts;
+  }, [allTerms, brandValues, productFamilyValues, productValues, variantValues]);
+
+  const favoritesList = useMemo(() => {
+    const seen = new Set<string>();
+    const result: { field: string; value: string }[] = [];
+    favoriteTerms.forEach((key) => {
+      const colonIdx = key.indexOf(":");
+      const field = key.slice(0, colonIdx);
+      const value = key.slice(colonIdx + 1);
+      if (!seen.has(value)) {
+        seen.add(value);
+        result.push({ field, value });
+      }
+    });
+    return result;
+  }, [favoriteTerms]);
 
   const existingSearchTermsLower = useMemo(
     () =>
@@ -371,7 +514,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
 
   const addYourOwnTerm = () => {
     setUserAddedTerms((prev) => [
-      { id: `user-added-${Date.now()}-${Math.random().toString(36).slice(2)}`, searchTerm: "", displayTerm: "" },
+      { id: `user-added-${Date.now()}-${Math.random().toString(36).slice(2)}`, searchTerm: "", displayTerm: "", brand: "", productFamily: "", product: "", variant: "" },
       ...prev,
     ]);
   };
@@ -382,7 +525,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
 
   const updateUserAddedTerm = (
     id: string,
-    field: "searchTerm" | "displayTerm",
+    field: "searchTerm" | "displayTerm" | "brand" | "productFamily" | "product" | "variant",
     value: string
   ) => {
     setUserAddedTerms((prev) =>
@@ -408,11 +551,19 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
     const newRow: SurveyTermRow = {
       searchTerm,
       displayTerm,
+      brand: row.brand.trim() || null,
+      productFamily: row.productFamily.trim() || null,
+      product: row.product.trim() || null,
+      variant: row.variant.trim() || null,
       isCompetitor: false,
       action: "mark-competitor",
     };
     setSavedUserTerms((prev) => [newRow, ...prev]);
     setDisplayTerms((prev) => ({ ...prev, [searchTerm]: displayTerm }));
+    setBrandValues((prev) => ({ ...prev, [searchTerm]: row.brand.trim() }));
+    setProductFamilyValues((prev) => ({ ...prev, [searchTerm]: row.productFamily.trim() }));
+    setProductValues((prev) => ({ ...prev, [searchTerm]: row.product.trim() }));
+    setVariantValues((prev) => ({ ...prev, [searchTerm]: row.variant.trim() }));
     setUserAddedTerms((prev) => prev.filter((t) => t.id !== id));
     setOpenDropdownFor(null);
   };
@@ -422,11 +573,37 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
     setOpenDropdownFor(null);
   };
 
+  const sortedTerms = useMemo(() => {
+    if (!sortField) return filteredTerms;
+    return [...filteredTerms].sort((a, b) => {
+      let aVal = "";
+      let bVal = "";
+      if (sortField === "searchTerms") {
+        aVal = a.searchTerm;
+        bVal = b.searchTerm;
+      } else if (sortField === "brand") {
+        aVal = brandValues[a.searchTerm] ?? a.brand ?? "";
+        bVal = brandValues[b.searchTerm] ?? b.brand ?? "";
+      } else if (sortField === "productFamily") {
+        aVal = productFamilyValues[a.searchTerm] ?? a.productFamily ?? "";
+        bVal = productFamilyValues[b.searchTerm] ?? b.productFamily ?? "";
+      } else if (sortField === "product") {
+        aVal = productValues[a.searchTerm] ?? a.product ?? "";
+        bVal = productValues[b.searchTerm] ?? b.product ?? "";
+      } else if (sortField === "variant") {
+        aVal = variantValues[a.searchTerm] ?? a.variant ?? "";
+        bVal = variantValues[b.searchTerm] ?? b.variant ?? "";
+      }
+      const cmp = aVal.localeCompare(bVal);
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+  }, [filteredTerms, sortField, sortDirection, brandValues, productFamilyValues, productValues, variantValues]);
+
   const totalRows = filteredTerms.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
   const clampedPage = Math.min(currentPage, totalPages);
   const startIndex = (clampedPage - 1) * pageSize;
-  const paginatedRows = filteredTerms.slice(startIndex, startIndex + pageSize);
+  const paginatedRows = sortedTerms.slice(startIndex, startIndex + pageSize);
   const startRow = totalRows === 0 ? 0 : startIndex + 1;
   const endRow = Math.min(startIndex + pageSize, totalRows);
 
@@ -555,9 +732,9 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
       </header>
 
       <div className="flex-1 flex flex-col min-h-0 mt-5 mx-5 mb-5 bg-white rounded-lg overflow-hidden">
-        <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8 pt-0">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-6 pt-0">
           {/* Breadcrumbs + Close - sticky so content doesn't scroll behind */}
-          <div className="sticky top-0 z-30 flex items-center justify-between mb-6 -mx-8 px-8 pb-4 pt-4 bg-white border-b border-[#eeeeee] -mt-px">
+          <div className="sticky top-0 z-30 flex items-center justify-between mb-4 -mx-8 px-8 pb-3 pt-3 bg-white border-b border-[#eeeeee] -mt-px">
             <nav className="text-sm text-[#7F7F7F]">
               <Link href="/manage-account" className="text-[var(--primary)] hover:underline">
                 Dictionaries
@@ -575,7 +752,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
           </div>
 
           {/* Tracker info card */}
-          <div className="bg-white border border-[#eeeeee] rounded-lg p-6 mb-6">
+          <div className="bg-white border border-[#eeeeee] rounded-lg p-5 mb-4">
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-lg bg-[#595959] flex-shrink-0" />
               <div>
@@ -587,65 +764,70 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
           </div>
 
           {/* Competitors */}
-          <div className="bg-white border border-[#eeeeee] rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-[#262626]">Competitors</h3>
-              <button
-                type="button"
-                onClick={() => setIsEditingCompetitors((prev) => !prev)}
-                className="flex items-center gap-1.5 text-sm font-medium text-[var(--primary)] hover:underline"
-              >
-                <EditIcon />
-                {isEditingCompetitors ? "Done" : "Edit"}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {displayedCompetitorsList.map((c) => (
-                <span
-                  key={c}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#eeeeee] bg-[#fafafa] text-sm font-medium text-[#262626]"
-                >
-                  {c}
-                  {isEditingCompetitors && (
-                    <button
-                      type="button"
-                      onClick={() => removeCompetitor(c)}
-                      className="p-0.5 rounded-full hover:bg-[#eeeeee] text-[#7F7F7F] hover:text-[#262626] transition-colors"
-                      aria-label={`Remove ${c}`}
-                    >
-                      <CloseIcon />
-                    </button>
-                  )}
-                </span>
-              ))}
-              {isEditingCompetitors && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <input
-                    type="text"
-                    value={newCompetitorInput}
-                    onChange={(e) => setNewCompetitorInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCompetitor())}
-                    placeholder="Add competitor..."
-                    className="px-3 py-2 rounded-full border border-[#eeeeee] bg-white text-sm text-[#262626] placeholder:text-[#7F7F7F] focus:outline-none focus:ring-2 focus:ring-[#19B5EF] focus:border-transparent w-40"
-                  />
-                  <button
-                    type="button"
-                    onClick={addCompetitor}
-                    className="flex items-center justify-center w-9 h-9 rounded-full border border-[#eeeeee] bg-[#fafafa] text-[#262626] hover:bg-[#eeeeee] transition-colors"
-                    title="Add"
-                  >
-                    <PlusIcon />
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="bg-white border border-[#eeeeee] rounded-lg p-5 mb-4">
+            <h3 className="text-base font-semibold text-[#262626] mb-4">Competitors</h3>
+            {favoritesList.length === 0 ? (
+              <p className="text-sm text-[#7F7F7F]">Star a brand, product family, product, or variant in the table below to add competitors.</p>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {(["brand", "productFamily", "product", "variant"] as const)
+                  .map((field) => {
+                    const items = favoritesList.filter((f) => f.field === field);
+                    if (items.length === 0) return null;
+                    const label = field === "productFamily" ? "Product Family" : field.charAt(0).toUpperCase() + field.slice(1);
+                    return (
+                      <div key={field}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-[#7F7F7F] mb-2">{label}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {items.map(({ value }) => (
+                            <span
+                              key={value}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#eeeeee] bg-[#fafafa] text-sm font-medium text-[#262626]"
+                            >
+                              {value}
+                              {competitorTermCounts[`${field}:${value}`] !== undefined && (
+                                <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-[#e8e8e8] text-[10px] font-semibold text-[#595959]">
+                                  {competitorTermCounts[`${field}:${value}`]}
+                                </span>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
 
           {/* Survey Dictionary */}
-          <div className="bg-white border border-[#eeeeee] rounded-lg overflow-hidden">
-            <div className="sticky top-0 z-20 bg-white pt-4 border-b border-[#eeeeee]">
-              <div className="p-6 pt-0">
-                <h3 className="text-base font-semibold text-[#262626] mb-4">Survey Dictionary</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-base font-semibold text-[#262626]">Survey Dictionary</h3>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" className="gap-2 shrink-0" onClick={addYourOwnTerm}>
+                <PlusIcon />
+                Your Own Term
+              </Button>
+              <button
+                type="button"
+                className="p-2.5 border border-[#eeeeee] rounded-lg hover:bg-[#f6f6f6] text-[#262626]"
+                title="Download"
+                onClick={downloadCsv}
+              >
+                <DownloadIcon />
+              </button>
+              <button
+                type="button"
+                className="p-2.5 border border-[#eeeeee] rounded-lg hover:bg-[#f6f6f6] text-[#262626]"
+                title="Upload"
+              >
+                <UploadIcon />
+              </button>
+            </div>
+          </div>
+          <div className="bg-white border border-[#eeeeee] rounded-lg">
+            <div className="sticky top-11 z-20 bg-white rounded-t-lg">
+              <div className="px-6 py-2">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="relative flex-1 min-w-[200px]">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7F7F7F]">
@@ -662,25 +844,6 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                       className="w-full pl-10 pr-4 py-2.5 border border-[#eeeeee] rounded-lg bg-white text-[#262626] placeholder:text-[#7F7F7F] text-sm focus:outline-none focus:ring-1 focus:ring-[#19B5EF]/30 focus:border-[#19B5EF]/50 transition-colors"
                     />
                   </div>
-                  <Button variant="secondary" className="gap-2 shrink-0" onClick={addYourOwnTerm}>
-                    <PlusIcon />
-                    Your Own Term
-                  </Button>
-                  <button
-                    type="button"
-                    className="p-2.5 border border-[#eeeeee] rounded-lg hover:bg-[#f6f6f6] text-[#262626]"
-                    title="Download"
-                    onClick={downloadCsv}
-                  >
-                    <DownloadIcon />
-                  </button>
-                  <button
-                    type="button"
-                    className="p-2.5 border border-[#eeeeee] rounded-lg hover:bg-[#f6f6f6] text-[#262626]"
-                    title="Upload"
-                  >
-                    <UploadIcon />
-                  </button>
                 </div>
                 {showBulkMapping && (
                   <div className="flex flex-wrap items-center gap-3 mt-4">
@@ -717,7 +880,7 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
               <thead>
                 <tr className="border-b border-[#eeeeee]">
                   {showBulkMapping && (
-                    <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] w-12 py-3 px-4 border-b border-[#eeeeee]">
+                    <th className="sticky top-[6.25rem] z-10 bg-[#f6f6f6] w-12 py-3 px-4 border-b border-[#eeeeee]">
                       <input
                         type="checkbox"
                         ref={bulkSelectAllRef}
@@ -728,13 +891,107 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                       />
                     </th>
                   )}
-                  <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] text-left py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee] w-[35%]">
-                    Search Terms
-                  </th>
-                  <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] text-left py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee] w-[35%]">
-                    Display Terms
-                  </th>
-                  <th className="sticky top-[7.5rem] z-10 bg-[#f6f6f6] text-right py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee] w-[30%]">
+                  {(
+                    [
+                      { key: "searchTerms", width: "w-[20%]" },
+                      { key: "brand", width: "w-[12%]" },
+                      { key: "productFamily", width: "w-[14%]" },
+                      { key: "product", width: "w-[12%]" },
+                      { key: "variant", width: "w-[12%]" },
+                    ] as const
+                  ).map(({ key, width }) => {
+                    const lvl = GRANULARITY_LEVELS.find((l) => l.field === key);
+                    const isIgnored = lvl ? ignoredColumns.has(lvl.field) : false;
+                    return (
+                    <th
+                      key={key}
+                      className={`group sticky top-[6.25rem] z-10 bg-[#f6f6f6] text-left py-3 px-4 text-sm font-medium border-b border-[#eeeeee] transition-colors ${width} ${isIgnored ? "text-[#7F7F7F]" : "text-[#262626]"}`}
+                    >
+                      {editingHeader === key ? (
+                        <input
+                          autoFocus
+                          value={columnHeaders[key]}
+                          onChange={(e) =>
+                            setColumnHeaders((prev) => ({ ...prev, [key]: e.target.value }))
+                          }
+                          onBlur={() => setEditingHeader(null)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === "Escape") setEditingHeader(null);
+                          }}
+                          className="w-full bg-transparent text-sm font-medium text-[#262626] focus:outline-none border-b border-[#19B5EF]"
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          {lvl && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIgnoredColumns((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(lvl.field)) next.delete(lvl.field);
+                                  else next.add(lvl.field);
+                                  return next;
+                                });
+                              }}
+                              title={isIgnored ? "Include column" : "Ignore column"}
+                              className={`shrink-0 flex items-center justify-center w-4 h-4 transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#19B5EF] ${
+                                isIgnored
+                                  ? "text-[#c0c0c0] hover:text-[#7F7F7F]"
+                                  : "text-[#7F7F7F]"
+                              }`}
+                            >
+                              {isIgnored ? (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                  <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                </svg>
+                              ) : (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+                                </svg>
+                              )}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (sortField === key && !isIgnored) {
+                                setSortDirection((d) => d === "asc" ? "desc" : "asc");
+                              } else if (!isIgnored) {
+                                setSortField(key);
+                                setSortDirection("asc");
+                              }
+                            }}
+                            className={`flex items-center gap-1 min-w-0 flex-1 ${isIgnored ? "cursor-default" : "hover:text-[var(--primary)] transition-colors"}`}
+                          >
+                            <span className={`truncate ${isIgnored ? "line-through" : ""}`}>{columnHeaders[key]}</span>
+                            {!isIgnored && (
+                              <span className={`shrink-0 transition-opacity ${sortField === key ? "opacity-100 text-[var(--primary)]" : "opacity-0 group-hover:opacity-50 text-[#7F7F7F]"}`}>
+                                {sortField === key
+                                  ? sortDirection === "asc" ? <SortAscIcon /> : <SortDescIcon />
+                                  : <SortNeutralIcon />}
+                              </span>
+                            )}
+                          </button>
+                          {key !== "searchTerms" && !isIgnored && (
+                            <button
+                              type="button"
+                              onClick={() => setEditingHeader(key)}
+                              className="opacity-0 group-hover:opacity-100 text-[#7F7F7F] hover:text-[#262626] transition-opacity shrink-0"
+                              aria-label="Rename column"
+                            >
+                              <EditIcon />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </th>
+                    );
+                  })}
+                  <th className="sticky top-[6.25rem] z-10 bg-[#f6f6f6] text-right py-3 px-4 text-sm font-medium text-[#262626] border-b border-[#eeeeee] w-[12%]">
                     Actions
                   </th>
                 </tr>
@@ -768,78 +1025,23 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                           </p>
                         )}
                       </td>
-                      <td className="py-3 px-4">
-                        <div
-                          ref={openDropdownFor === `user-added:${userRow.id}` ? dropdownRef : null}
-                          className="relative w-full min-w-0"
+                      {(["brand", "productFamily", "product", "variant"] as const).map((field) => (
+                        <td
+                          key={field}
+                          className="py-3 px-4"
                         >
-                          <input
-                            type="text"
-                            value={userRow.displayTerm}
-                            onChange={(e) => updateUserAddedTerm(userRow.id, "displayTerm", e.target.value)}
-                            onFocus={() => setOpenDropdownFor(`user-added:${userRow.id}`)}
-                            placeholder="Display term"
-                            className="w-full min-w-0 bg-white border border-[#eeeeee] rounded-lg px-3 py-2 text-[#262626] text-sm focus:outline-none focus:ring-1 focus:ring-[#19B5EF] focus:border-[#19B5EF]"
-                          />
-                          {openDropdownFor === `user-added:${userRow.id}` && (
-                            <ul
-                              className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-[#eeeeee] rounded-lg shadow-lg max-h-48 overflow-y-auto py-1"
-                              role="listbox"
-                            >
-                              {(() => {
-                                const { competitorOptions, otherOptions } = getDropdownOptions(
-                                  userRow.searchTerm,
-                                  userRow.displayTerm
-                                );
-                                return (
-                                  <>
-                                    {competitorOptions.length > 0 && (
-                                      <>
-                                        <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#7F7F7F]">
-                                          Competitor
-                                        </li>
-                                        {competitorOptions.map((opt) => (
-                                          <li
-                                            key={`comp-${opt}`}
-                                            role="option"
-                                            onMouseDown={(e) => {
-                                              e.preventDefault();
-                                              selectDisplayOptionUserAdded(userRow.id, opt);
-                                            }}
-                                            className="px-3 py-2 text-sm text-[#262626] hover:bg-[#f6f6f6] cursor-pointer"
-                                          >
-                                            {opt}
-                                          </li>
-                                        ))}
-                                      </>
-                                    )}
-                                    {otherOptions.length > 0 && (
-                                      <>
-                                        <li className="mt-2 pt-2 border-t border-[#eeeeee] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#7F7F7F]">
-                                          All other terms
-                                        </li>
-                                        {otherOptions.map((opt) => (
-                                          <li
-                                            key={`other-${opt}`}
-                                            role="option"
-                                            onMouseDown={(e) => {
-                                              e.preventDefault();
-                                              selectDisplayOptionUserAdded(userRow.id, opt);
-                                            }}
-                                            className="px-3 py-2 text-sm text-[#262626] hover:bg-[#f6f6f6] cursor-pointer"
-                                          >
-                                            {opt}
-                                          </li>
-                                        ))}
-                                      </>
-                                    )}
-                                  </>
-                                );
-                              })()}
-                            </ul>
-                          )}
-                        </div>
-                      </td>
+                          <div className={ignoredColumns.has(field) ? "opacity-40" : undefined}>
+                            <input
+                              type="text"
+                              value={userRow[field]}
+                              onChange={(e) => updateUserAddedTerm(userRow.id, field, e.target.value)}
+                              placeholder={field === "productFamily" ? "Product family" : field.charAt(0).toUpperCase() + field.slice(1)}
+                              disabled={ignoredColumns.has(field)}
+                              className={`w-full min-w-0 border rounded-lg px-3 py-2 text-[#262626] text-sm focus:outline-none focus:ring-1 focus:ring-[#19B5EF] focus:border-[#19B5EF] disabled:cursor-not-allowed bg-white border-[#eeeeee]`}
+                            />
+                          </div>
+                        </td>
+                      ))}
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-3">
                           <button
@@ -890,15 +1092,9 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                         />
                       </td>
                     )}
-                    <td className="py-3 px-4 text-sm text-[#262626]">
+                    <td className={`py-3 px-4 text-sm ${ignoredTerms.has(row.searchTerm) ? "text-[#7F7F7F]" : "text-[#262626]"}`}>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span
-                          className={
-                            ignoredTerms.has(row.searchTerm)
-                              ? "text-[#7F7F7F] line-through"
-                              : undefined
-                          }
-                        >
+                        <span className={ignoredTerms.has(row.searchTerm) ? "line-through" : undefined}>
                           {row.searchTerm}
                         </span>
                         {isCompetitorTerm(row.searchTerm) && (
@@ -908,95 +1104,68 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                         )}
                       </div>
                     </td>
-                    <td
-                      className={`py-3 px-4 text-sm ${
-                        ignoredTerms.has(row.searchTerm) ? "text-[#7F7F7F]" : "text-[#262626]"
-                      }`}
-                    >
-                      {ignoredTerms.has(row.searchTerm) ? (
-                        displayTerms[row.searchTerm]
-                      ) : (
-                        <div
-                          ref={openDropdownFor === row.searchTerm ? dropdownRef : null}
-                          className="relative w-full min-w-0"
-                        >
-                          <input
-                            type="text"
-                            value={displayTerms[row.searchTerm] ?? row.displayTerm}
-                            onChange={(e) =>
-                              setDisplayTerm(row.searchTerm, e.target.value)
-                            }
-                            onFocus={() => setOpenDropdownFor(row.searchTerm)}
-                            className="w-full min-w-0 bg-white border border-[#eeeeee] rounded-lg px-3 py-2 text-[#262626] text-sm focus:outline-none focus:ring-1 focus:ring-[#19B5EF] focus:border-[#19B5EF]"
-                          />
-                          {openDropdownFor === row.searchTerm && (
-                            <ul
-                              className="absolute z-10 left-0 right-0 top-full mt-1 bg-white border border-[#eeeeee] rounded-lg shadow-lg max-h-48 overflow-y-auto py-1"
-                              role="listbox"
-                            >
-                              {(() => {
-                                const { competitorOptions, otherOptions } =
-                                  getDropdownOptions(
-                                    row.searchTerm,
-                                    displayTerms[row.searchTerm] ??
-                                      row.displayTerm
-                                  );
-                                return (
-                                  <>
-                                    {competitorOptions.length > 0 && (
-                                      <>
-                                        <li className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#7F7F7F]">
-                                          Competitor
-                                        </li>
-                                        {competitorOptions.map((opt) => (
-                                          <li
-                                            key={`comp-${opt}`}
-                                            role="option"
-                                            onMouseDown={(e) => {
-                                              e.preventDefault();
-                                              selectDisplayOption(
-                                                row.searchTerm,
-                                                opt
-                                              );
-                                            }}
-                                            className="px-3 py-2 text-sm text-[#262626] hover:bg-[#f6f6f6] cursor-pointer"
-                                          >
-                                            {opt}
-                                          </li>
-                                        ))}
-                                      </>
-                                    )}
-                                    {otherOptions.length > 0 && (
-                                      <>
-                                        <li className="mt-2 pt-2 border-t border-[#eeeeee] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#7F7F7F]">
-                                          All other terms
-                                        </li>
-                                        {otherOptions.map((opt) => (
-                                          <li
-                                            key={`other-${opt}`}
-                                            role="option"
-                                            onMouseDown={(e) => {
-                                              e.preventDefault();
-                                              selectDisplayOption(
-                                                row.searchTerm,
-                                                opt
-                                              );
-                                            }}
-                                            className="px-3 py-2 text-sm text-[#262626] hover:bg-[#f6f6f6] cursor-pointer"
-                                          >
-                                            {opt}
-                                          </li>
-                                        ))}
-                                      </>
-                                    )}
-                                  </>
-                                );
-                              })()}
-                            </ul>
+                    {([
+                      { field: "brand" as const, values: brandValues, set: setBrandValues },
+                      { field: "productFamily" as const, values: productFamilyValues, set: setProductFamilyValues },
+                      { field: "product" as const, values: productValues, set: (updater: (prev: Record<string, string>) => Record<string, string>) => {
+                        setProductValues((prev) => {
+                          const next = updater(prev);
+                          const searchTerm = Object.keys(next).find((k) => next[k] !== prev[k]);
+                          if (searchTerm) {
+                            setVariantValues((vPrev) => {
+                              if (!vPrev[searchTerm]) return { ...vPrev, [searchTerm]: next[searchTerm]! };
+                              return vPrev;
+                            });
+                          }
+                          return next;
+                        });
+                      }},
+                      { field: "variant" as const, values: variantValues, set: setVariantValues },
+                    ]).map(({ field, values, set }) => {
+                      const isColIgnored = ignoredColumns.has(field);
+                      const isRowIgnored = ignoredTerms.has(row.searchTerm);
+                      return (
+                      <td
+                        key={field}
+                        className={`group py-3 px-4 text-sm ${isRowIgnored ? "text-[#7F7F7F]" : "text-[#262626]"}`}
+                      >
+                        <div className={isColIgnored ? "opacity-40" : undefined}>
+                          {isRowIgnored ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-4 shrink-0" />
+                              <span className="line-through">{values[row.searchTerm] || "—"}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const val = values[row.searchTerm] ?? "";
+                                  if (val && !isColIgnored) toggleFavorite(field, val);
+                                }}
+                                disabled={!values[row.searchTerm] || isColIgnored}
+                                className={`shrink-0 w-4 text-sm leading-none ${
+                                  isFavorite(field, values[row.searchTerm] ?? "")
+                                    ? "text-yellow-400"
+                                    : "text-[#a0a0a0]"
+                                } ${!values[row.searchTerm] ? "invisible" : ""}`}
+                                aria-label={isFavorite(field, values[row.searchTerm] ?? "") ? "Unfavorite" : "Favorite"}
+                              >
+                                {isFavorite(field, values[row.searchTerm] ?? "") ? "★" : "☆"}
+                              </button>
+                              <input
+                                type="text"
+                                value={values[row.searchTerm] ?? ""}
+                                onChange={(e) => set((prev) => ({ ...prev, [row.searchTerm]: e.target.value }))}
+                                disabled={isColIgnored}
+                                className={`w-full min-w-0 border rounded-lg px-3 py-2 text-[#262626] text-sm focus:outline-none focus:ring-1 focus:ring-[#19B5EF] focus:border-[#19B5EF] disabled:cursor-not-allowed bg-white border-[#eeeeee]`}
+                              />
+                            </div>
                           )}
                         </div>
-                      )}
-                    </td>
+                      </td>
+                      );
+                    })}
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-3">
                         {isCompetitorTerm(row.searchTerm) ? (
@@ -1021,19 +1190,6 @@ export function DictionaryTrackerView(props?: { brandId?: string; trackerId?: st
                             Is Competitor
                           </Button>
                         )}
-                        {!isCompetitorTerm(row.searchTerm) &&
-                          (row.action === "mark-competitor" ||
-                            row.action === "is-competitor" ||
-                            row.action === "include") &&
-                          !ignoredTerms.has(row.searchTerm) && (
-                            <Button
-                              variant="primaryOutline"
-                              className="!py-1.5 !px-3 !text-sm min-w-[152px]"
-                              onClick={() => toggleCompetitor(row.searchTerm)}
-                            >
-                              Mark Competitor
-                            </Button>
-                          )}
                         {ignoredTerms.has(row.searchTerm) && (
                           <Button
                             variant="include"

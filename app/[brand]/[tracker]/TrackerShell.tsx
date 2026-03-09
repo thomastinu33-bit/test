@@ -80,6 +80,12 @@ const LUXURY_SUV_TRACKER_IDS = new Set(["luxury-suvs", "luxury-suvs-v2"]);
 const LUXURY_SUV_DATE_MIN = new Date(2025, 0, 15);
 const LUXURY_SUV_DATE_MAX = new Date(2025, 0, 22);
 
+const COMPARISON_OPTIONS = [
+  { label: "Compare to last 7 days", value: 7 },
+  { label: "Compare to last 14 days", value: 14 },
+  { label: "Compare to last 30 days", value: 30 },
+] as const;
+
 function dateInRange(d: Date, min: Date, max: Date): boolean {
   const t = d.getTime();
   return t >= min.getTime() && t <= max.getTime();
@@ -472,6 +478,208 @@ function DatePicker({
   );
 }
 
+function DatePickerWithComparisonRadio({
+  value,
+  onChange,
+  comparisonDays,
+  onComparisonDaysChange,
+  id,
+  minDate,
+  maxDate,
+}: {
+  value: Date;
+  onChange: (d: Date) => void;
+  comparisonDays: number;
+  onComparisonDaysChange: (days: number) => void;
+  id: string;
+  minDate?: Date;
+  maxDate?: Date;
+}) {
+  const [open, setOpen] = useState(false);
+  const [viewMonth, setViewMonth] = useState(() => {
+    const v = value.getTime();
+    if (minDate && v < minDate.getTime()) return new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    if (maxDate && v > maxDate.getTime()) return new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+    return new Date(value.getFullYear(), value.getMonth(), 1);
+  });
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const v = value.getTime();
+    if (minDate && v < minDate.getTime()) setViewMonth(new Date(minDate.getFullYear(), minDate.getMonth(), 1));
+    else if (maxDate && v > maxDate.getTime()) setViewMonth(new Date(maxDate.getFullYear(), maxDate.getMonth(), 1));
+    else setViewMonth(new Date(value.getFullYear(), value.getMonth(), 1));
+  }, [open, value, minDate, maxDate]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const cells: { day: number; isCurrentMonth: boolean; isPrevMonth: boolean }[] = [];
+  for (let i = firstDay - 1; i >= 0; i--) {
+    cells.push({ day: daysInPrevMonth - i, isCurrentMonth: false, isPrevMonth: true });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, isCurrentMonth: true, isPrevMonth: false });
+  }
+  const remaining = 42 - cells.length;
+  for (let d = 1; d <= remaining; d++) {
+    cells.push({ day: d, isCurrentMonth: false, isPrevMonth: false });
+  }
+
+  const isSelected = (day: number, isCurrent: boolean, isPrev: boolean) => {
+    if (isCurrent) return value.getMonth() === month && value.getFullYear() === year && value.getDate() === day;
+    if (isPrev) return value.getMonth() === month - 1 && value.getFullYear() === year && value.getDate() === day;
+    return value.getMonth() === month + 1 && value.getFullYear() === year && value.getDate() === day;
+  };
+
+  const isDateDisabled = (day: number, isCurrentMonth: boolean, isPrevMonth: boolean): boolean => {
+    if (!minDate || !maxDate) return false;
+    let d: Date;
+    if (isCurrentMonth) d = new Date(year, month, day);
+    else if (isPrevMonth) d = new Date(year, month - 1, day);
+    else d = new Date(year, month + 1, day);
+    return !dateInRange(d, minDate, maxDate);
+  };
+
+  const handleSelect = (day: number, isCurrentMonth: boolean, isPrevMonth: boolean) => {
+    let d: Date;
+    if (isCurrentMonth) d = new Date(year, month, day);
+    else if (isPrevMonth) d = new Date(year, month - 1, day);
+    else d = new Date(year, month + 1, day);
+    if (minDate && maxDate && !dateInRange(d, minDate, maxDate)) return;
+    onChange(d);
+    setOpen(false);
+  };
+
+  const canGoPrev = !minDate || viewMonth.getTime() > new Date(minDate.getFullYear(), minDate.getMonth(), 1).getTime();
+  const canGoNext = !maxDate || viewMonth.getTime() < new Date(maxDate.getFullYear(), maxDate.getMonth(), 1).getTime();
+
+  const comparisonLabel = COMPARISON_OPTIONS.find((o) => o.value === comparisonDays)?.label.replace("Compare to last ", "Last ") ?? `Last ${comparisonDays} days`;
+
+  return (
+    <div className="relative min-w-[220px]" ref={ref}>
+      <button
+        type="button"
+        id={id}
+        onClick={() => setOpen((o) => !o)}
+        className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label="Date Picker"
+      >
+        <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
+          Date Picker
+        </span>
+        <span className="mr-2 shrink-0 text-[#7F7F7F]">
+          <CalendarIcon />
+        </span>
+        <span className="flex-1 min-w-0 text-sm truncate flex items-center gap-1.5 text-[#262626]">
+          <span>{formatDateForInput(value)}</span>
+          <span className="text-[#7F7F7F]">·</span>
+          <span className="text-[#7F7F7F] text-xs">{comparisonLabel}</span>
+        </span>
+        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+          <ChevronDownIcon />
+        </span>
+      </button>
+      {open && (
+        <div
+          className="absolute top-full left-0 mt-1 z-50 w-[280px] bg-white border border-[#e5e5e5] rounded-lg shadow-lg p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Select date and comparison period"
+        >
+          {/* Calendar */}
+          <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              onClick={() => setViewMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
+              disabled={!canGoPrev}
+              className="p-1.5 rounded-md text-[#7F7F7F] hover:bg-[#f6f6f6] hover:text-[#262626] disabled:opacity-40 disabled:pointer-events-none"
+              aria-label="Previous month"
+            >
+              <ChevronLeftIcon />
+            </button>
+            <span className="text-sm font-medium text-[#262626]">
+              {MONTHS[viewMonth.getMonth()]} {viewMonth.getFullYear()}
+            </span>
+            <button
+              type="button"
+              onClick={() => setViewMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
+              disabled={!canGoNext}
+              className="p-1.5 rounded-md text-[#7F7F7F] hover:bg-[#f6f6f6] hover:text-[#262626] disabled:opacity-40 disabled:pointer-events-none"
+              aria-label="Next month"
+            >
+              <ChevronRightIcon />
+            </button>
+          </div>
+          <div className="grid grid-cols-7 gap-0.5 mb-2">
+            {DAYS.map((d, i) => (
+              <div key={i} className="text-center text-xs font-medium text-[#7F7F7F] py-1">
+                {d}
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {cells.map(({ day, isCurrentMonth, isPrevMonth }, i) => {
+              const disabled = isDateDisabled(day, isCurrentMonth, isPrevMonth);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleSelect(day, isCurrentMonth, isPrevMonth)}
+                  disabled={disabled}
+                  className={`w-9 h-9 rounded-full text-sm flex items-center justify-center ${
+                    disabled
+                      ? "text-[#d4d4d4] cursor-not-allowed"
+                      : isSelected(day, isCurrentMonth, isPrevMonth)
+                        ? "bg-[var(--primary)] text-white"
+                        : isCurrentMonth
+                          ? "text-[#262626] hover:bg-[#f6f6f6]"
+                          : "text-[#a3a3a3] hover:bg-[#f6f6f6]"
+                  }`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Comparison radio */}
+          <div className="mt-4 pt-4 border-t border-[#e5e5e5] flex flex-col gap-2.5">
+            <p className="text-xs font-medium text-[#262626]">Comparison period</p>
+            {COMPARISON_OPTIONS.map((opt) => (
+              <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer group">
+                <input
+                  type="radio"
+                  name={`comparison-${id}`}
+                  value={opt.value}
+                  checked={comparisonDays === opt.value}
+                  onChange={() => onComparisonDaysChange(opt.value)}
+                  className="accent-[var(--primary)] w-4 h-4 cursor-pointer"
+                />
+                <span className="text-sm text-[#262626] group-hover:text-[#171717] transition-colors">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TrackerShell({
   brandId,
   trackerId,
@@ -485,17 +693,32 @@ export function TrackerShell({
   const tracker = getTracker(brandId, trackerId);
   const [movingAverage, setMovingAverage] = useState("30-Day");
   const isLuxurySuv = LUXURY_SUV_TRACKER_IDS.has(trackerId);
+  const isLuxurySuvV2 = trackerId === "luxury-suvs-v2";
   const datePickerMin = isLuxurySuv ? LUXURY_SUV_DATE_MIN : undefined;
   const datePickerMax = isLuxurySuv ? LUXURY_SUV_DATE_MAX : undefined;
+  const [comparisonDays, setComparisonDays] = useState(30);
   const [selectedDate, setSelectedDate] = useState(() => {
     if (isLuxurySuv) return new Date(LUXURY_SUV_DATE_MAX);
     const d = parseDateInput("01/15/2025");
     return d ?? new Date();
   });
   const [compareToDate, setCompareToDate] = useState(() => {
+    if (isLuxurySuvV2) {
+      const d = new Date(LUXURY_SUV_DATE_MAX);
+      d.setDate(d.getDate() - 30);
+      return d;
+    }
     if (isLuxurySuv) return new Date(LUXURY_SUV_DATE_MIN);
     return new Date();
   });
+
+  // For v2: compute compareToDate from selectedDate minus comparisonDays
+  useEffect(() => {
+    if (!isLuxurySuvV2) return;
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() - comparisonDays);
+    setCompareToDate(d);
+  }, [selectedDate, comparisonDays, isLuxurySuvV2]);
 
   if (!brand || !tracker) {
     return (
@@ -518,12 +741,15 @@ export function TrackerShell({
       if (prev.getTime() > LUXURY_SUV_DATE_MAX.getTime()) return new Date(LUXURY_SUV_DATE_MAX);
       return prev;
     });
-    setCompareToDate((prev) => {
-      if (prev.getTime() < LUXURY_SUV_DATE_MIN.getTime()) return new Date(LUXURY_SUV_DATE_MIN);
-      if (prev.getTime() > LUXURY_SUV_DATE_MAX.getTime()) return new Date(LUXURY_SUV_DATE_MAX);
-      return prev;
-    });
-  }, [isLuxurySuv]);
+    // Only clamp compareToDate for v1; v2 computes it from comparisonDays
+    if (!isLuxurySuvV2) {
+      setCompareToDate((prev) => {
+        if (prev.getTime() < LUXURY_SUV_DATE_MIN.getTime()) return new Date(LUXURY_SUV_DATE_MIN);
+        if (prev.getTime() > LUXURY_SUV_DATE_MAX.getTime()) return new Date(LUXURY_SUV_DATE_MAX);
+        return prev;
+      });
+    }
+  }, [isLuxurySuv, isLuxurySuvV2]);
 
   return (
     <TrackerDateProvider
@@ -532,6 +758,7 @@ export function TrackerShell({
       compareToDate={compareToDate}
       setCompareToDate={setCompareToDate}
       useDateForData={isLuxurySuv}
+      comparisonDays={isLuxurySuvV2 ? comparisonDays : null}
     >
       <div className="flex flex-col min-h-full bg-[#f6f6f6]">
         <header className="flex-shrink-0 h-20 bg-white border-b border-[#eeeeee] px-6 flex items-center">
@@ -564,7 +791,17 @@ export function TrackerShell({
                     <ChevronDownIcon />
                   </button>
                 </div>
-                {isLuxurySuv && datePickerMin && datePickerMax ? (
+                {isLuxurySuvV2 ? (
+                  <DatePickerWithComparisonRadio
+                    id="tracker-date-picker"
+                    value={selectedDate}
+                    onChange={setSelectedDate}
+                    comparisonDays={comparisonDays}
+                    onComparisonDaysChange={setComparisonDays}
+                    minDate={datePickerMin}
+                    maxDate={datePickerMax}
+                  />
+                ) : isLuxurySuv && datePickerMin && datePickerMax ? (
                   <ReportAndCompareDatePicker
                     id="tracker-date-picker"
                     reportDate={selectedDate}

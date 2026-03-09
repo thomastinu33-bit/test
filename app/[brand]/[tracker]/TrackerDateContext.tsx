@@ -19,6 +19,8 @@ interface TrackerDateContextValue {
   setCompareToDate: (d: Date) => void;
   /** YYYY-MM-DD for compare-to API param; null when not used. */
   compareToDateStr: string | null;
+  /** Number of days for rolling per-day comparison in timeline view; null when not set. */
+  comparisonDays: number | null;
 }
 
 const TrackerDateContext = createContext<TrackerDateContextValue | null>(null);
@@ -30,6 +32,7 @@ export function TrackerDateProvider({
   compareToDate,
   setCompareToDate,
   useDateForData,
+  comparisonDays = null,
 }: {
   children: ReactNode;
   selectedDate: Date;
@@ -38,6 +41,7 @@ export function TrackerDateProvider({
   setCompareToDate: (d: Date) => void;
   /** When true, data fetches use these dates (e.g. Luxury SUV trackers). */
   useDateForData: boolean;
+  comparisonDays?: number | null;
 }) {
   const value: TrackerDateContextValue = {
     selectedDate,
@@ -46,6 +50,7 @@ export function TrackerDateProvider({
     compareToDate,
     setCompareToDate,
     compareToDateStr: useDateForData ? formatDateForApi(compareToDate) : null,
+    comparisonDays: useDateForData ? comparisonDays : null,
   };
 
   return (
