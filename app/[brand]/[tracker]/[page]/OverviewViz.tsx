@@ -875,10 +875,10 @@ export function OverviewViz() {
               <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
                 Loading…
               </div>
-            ) : timelineData && timelineData.dates && timelineData.series && timelineData.dates.length > 0 && timelineData.series.length > 0 ? (
+            ) : timelineData?.dates && timelineData?.series && timelineData.dates.length > 0 && timelineData.series.length > 0 ? (
               <OverviewTimelineChart
-                dates={timelineData.dates}
-                series={timelineData.series}
+                dates={timelineData!.dates}
+                series={timelineData!.series}
                 metric={metric}
                 maxVal={maxVal}
                 isAvgPosition={isAvgPosition}
