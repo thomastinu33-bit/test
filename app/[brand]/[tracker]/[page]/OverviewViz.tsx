@@ -875,11 +875,7 @@ export function OverviewViz() {
               <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
                 Loading…
               </div>
-            ) : !timelineData || !timelineData.dates || timelineData.dates.length === 0 || !timelineData.series || timelineData.series.length === 0 ? (
-              <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
-                No timeline data for this selection.
-              </div>
-            ) : (
+            ) : timelineData && timelineData.dates && timelineData.series && timelineData.dates.length > 0 && timelineData.series.length > 0 ? (
               <OverviewTimelineChart
                 dates={timelineData.dates}
                 series={timelineData.series}
@@ -890,6 +886,10 @@ export function OverviewViz() {
                 width={chartWidth}
                 compareToDateLabel={compareToDateStr ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : undefined}
               />
+            ) : (
+              <div className="h-[280px] flex items-center justify-center text-sm text-[#7F7F7F]">
+                No timeline data for this selection.
+              </div>
             )}
           </div>
         )}
