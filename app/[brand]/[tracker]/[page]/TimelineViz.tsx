@@ -806,6 +806,7 @@ export function TimelineViz(props?: TimelineVizProps) {
       metric,
       brands: Array.from(selectedBrandsTimeline).join(","),
       models: modelIdsForRequest.length > 0 ? modelIdsForRequest.join(",") : "__average__",
+      topics: topicColumns.map((t) => t.id).join(","),
       table: "1",
     });
     if (selectedDateStr) params.set("date", selectedDateStr);
