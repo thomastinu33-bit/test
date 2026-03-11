@@ -466,21 +466,26 @@ function generateMockTimelineData(
   return { dates, series };
 }
 
-/** Generate mock radar/perception map data for H&M trackers using actual topics */
+/** Generate mock radar/perception map data for H&M tracker showing topic scores */
 function generateMockRadarData(
   brands: string[],
   topicColumns: RadarTopicColumn[],
   metric: TimelineMetric = "AI Brand Score"
 ): { topicColumns: RadarTopicColumn[]; rows: { brand: string; [k: string]: unknown }[] } {
-  const getBaseValue = () => {
-    if (metric === "Average Position") return Math.random() * 15 + 2;
-    return Math.random() * 20 + 60;
-  };
+  const isPosition = metric === "Average Position";
+  const baselineScore = isPosition ? 8 : 65;
+
+  // Generate topic scores with variation - some topics naturally score higher/lower
+  const topicVariance: Record<string, number> = {};
+  topicColumns.forEach((topic) => {
+    topicVariance[topic.id] = (Math.random() - 0.5) * 20; // ±10 variance per topic
+  });
 
   const rows = brands.map((brand) => {
     const row: Record<string, unknown> = { brand };
     topicColumns.forEach((topic) => {
-      row[topic.id] = getBaseValue();
+      const score = baselineScore + topicVariance[topic.id] + (Math.random() - 0.5) * 5;
+      row[topic.id] = Math.max(isPosition ? 1 : 0, score);
     });
     return row;
   });
