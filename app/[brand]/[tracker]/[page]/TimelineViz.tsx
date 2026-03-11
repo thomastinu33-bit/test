@@ -795,7 +795,7 @@ export function TimelineViz(props?: TimelineVizProps) {
   }, [chartView, brandId, trackerId, metric, selectedBrand, modelsList, selectedDateStr, compareToDateStr]);
 
   useEffect(() => {
-    if (chartView !== "radar" || selectedBrandsTimeline.size === 0 || modelIdsForRequest.length === 0) {
+    if (chartView !== "radar" || selectedBrandsTimeline.size === 0) {
       setRadarTableData(null);
       return;
     }
@@ -805,7 +805,7 @@ export function TimelineViz(props?: TimelineVizProps) {
       trackerId,
       metric,
       brands: Array.from(selectedBrandsTimeline).join(","),
-      models: modelIdsForRequest.join(","),
+      models: modelIdsForRequest.length > 0 ? modelIdsForRequest.join(",") : "__average__",
       table: "1",
     });
     if (selectedDateStr) params.set("date", selectedDateStr);
