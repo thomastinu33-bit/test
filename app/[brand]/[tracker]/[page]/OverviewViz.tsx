@@ -492,6 +492,7 @@ export function OverviewViz(props?: OverviewVizProps) {
   const [modelScores, setModelScores] = useState<ModelScore[] | null>(null);
   const [trackerScores, setTrackerScores] = useState<Array<{ id: string; label: string; location?: string; value: number; change: number | null }> | null>(null);
   const [trackerModelScores, setTrackerModelScores] = useState<Record<string, Array<{ id: string; label: string; value: number; change: number | null }>>>({});
+  const [brandScores, setBrandScores] = useState<ModelScore[] | null>(null);
   const [overviewView, setOverviewView] = useState<OverviewView>("gauge");
   const [overviewGroupBy, setOverviewGroupBy] = useState<OverviewGroupBy>("model");
   const [chartWidth, setChartWidth] = useState(600);
@@ -666,6 +667,43 @@ export function OverviewViz(props?: OverviewVizProps) {
           const firstResponse = responses[0];
           const consolidatedModels = Array.from(modelsByLabel.values());
 
+          // Calculate brand scores for H&M
+          let calculatedBrandScores: ModelScore[] | null = null;
+          if (brandId === "hm") {
+            const COMPETITOR_LIST_HM_BRAND = ["H&M", "ZARA", "UNIQLO", "FOREVER 21", "MANGO"] as const;
+            const brandScoresMap: Record<string, { value: number; count: number; change: number; changeCount: number }> = {};
+
+            responses.forEach((json) => {
+              if (json.brands && json.modelScores) {
+                json.brands.forEach((brand) => {
+                  if (COMPETITOR_LIST_HM_BRAND.includes(brand as any)) {
+                    if (!brandScoresMap[brand]) {
+                      brandScoresMap[brand] = { value: 0, count: 0, change: 0, changeCount: 0 };
+                    }
+                    json.modelScores.forEach((ms) => {
+                      brandScoresMap[brand].value += ms.value;
+                      brandScoresMap[brand].count += 1;
+                      if (ms.change !== null) {
+                        brandScoresMap[brand].change += ms.change;
+                        brandScoresMap[brand].changeCount += 1;
+                      }
+                    });
+                  }
+                });
+              }
+            });
+
+            calculatedBrandScores = COMPETITOR_LIST_HM_BRAND.map((brand) => {
+              const data = brandScoresMap[brand];
+              return {
+                id: brand,
+                label: brand,
+                value: data ? Math.round((data.value / data.count) * 10) / 10 : 0,
+                change: data && data.changeCount > 0 ? Math.round((data.change / data.changeCount) * 10) / 10 : null,
+              };
+            });
+          }
+
           setModels(consolidatedModels.length > 0 ? consolidatedModels : (firstResponse?.models ?? []));
           setBrands(brandList);
           setSelectedBrand((prev) => {
@@ -679,6 +717,7 @@ export function OverviewViz(props?: OverviewVizProps) {
           setModelScores(aggregatedModelScores.length > 0 ? aggregatedModelScores : null);
           setTrackerScores(calculatedTrackerScores.length > 0 ? calculatedTrackerScores : null);
           setTrackerModelScores(trackerModelScoresMap);
+          setBrandScores(calculatedBrandScores && calculatedBrandScores.length > 0 ? calculatedBrandScores : null);
           setTimelineData(firstResponse?.timeline ?? null);
           setLoading(false);
         })
@@ -905,7 +944,7 @@ export function OverviewViz(props?: OverviewVizProps) {
         <div className="flex flex-wrap items-center justify-start gap-2">
           {trackerList && trackerList.length > 0 && (
             <div className="flex rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
-              {(["tracker", "model", "brand"] as const).map((mode) => (
+              {(brandId === "hm" ? (["tracker", "model", "brand"] as const) : (["tracker", "model"] as const)).map((mode) => (
                 <button
                   key={mode}
                   type="button"
@@ -1244,7 +1283,35 @@ export function OverviewViz(props?: OverviewVizProps) {
       <div className="px-4 pt-6 pb-6 sm:px-6">
         {overviewView === "gauge" && (
           <>
-            {trackerList && trackerList.length > 0 && overviewGroupBy === "tracker" && filteredTrackerScores && filteredTrackerScores.length > 0 ? (
+            {brandId === "hm" && overviewGroupBy === "brand" && brandScores && brandScores.length > 0 ? (
+              <div className="grid grid-cols-6 w-full gap-x-4 gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
+                {brandScores.map((bs, i) => {
+                  const change =
+                    bs.change != null && Number.isFinite(bs.change)
+                      ? isAvgPosition
+                        ? -bs.change
+                        : bs.change
+                      : null;
+                  const gaugeColors = getModelGaugeColors(i);
+                  return (
+                    <div key={bs.id} className="flex justify-center min-w-0">
+                      <ScoreGauge
+                        label={bs.label}
+                        value={bs.value}
+                        max={maxVal}
+                        change={change}
+                        arcColor={gaugeColors.arcColor}
+                        arcGradientStart={gaugeColors.arcGradientStart}
+                        arcGradientEnd={gaugeColors.arcGradientEnd}
+                        valueFormat={(v) => formatValue(v)}
+                        inverse={isAvgPosition}
+                        changeTooltip={changeTooltip}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (trackerList && trackerList.length > 0 && overviewGroupBy === "tracker" && filteredTrackerScores && filteredTrackerScores.length > 0 ? (
               <div className="grid grid-cols-6 w-full gap-x-4 gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
                 {filteredTrackerScores.filter(ts => ts.id === "__average__" || selectedTrackerIds.has(ts.id)).map((ts, i) => {
                   const change =
@@ -1369,7 +1436,7 @@ export function OverviewViz(props?: OverviewVizProps) {
                   );
                 })}
               </div>
-            ))}
+            )))}
           </>
         )}
 
