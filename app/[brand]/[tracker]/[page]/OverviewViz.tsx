@@ -905,7 +905,7 @@ export function OverviewViz(props?: OverviewVizProps) {
         <div className="flex flex-wrap items-center justify-start gap-2">
           {trackerList && trackerList.length > 0 && (
             <div className="flex rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
-              {(["model", "tracker", "brand"] as const).map((mode) => (
+              {(["tracker", "model", "brand"] as const).map((mode) => (
                 <button
                   key={mode}
                   type="button"
@@ -921,16 +921,23 @@ export function OverviewViz(props?: OverviewVizProps) {
               ))}
             </div>
           )}
-          <div className="relative">
+          <div className="relative min-w-[10rem]">
             <button
               type="button"
               onClick={() => setMetricDropdownOpen((prev) => !prev)}
-              className="flex items-center gap-2 h-10 pl-3 pr-3 rounded-lg border border-[#e5e5e5] bg-white text-sm font-medium text-[#262626] hover:bg-[#fafafa] transition-colors"
+              className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
+              aria-label="Select metric"
+              aria-expanded={metricDropdownOpen}
             >
-              {METRIC_CONFIG[metric].label}
-              <svg className="w-4 h-4 text-[#7F7F7F] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
+                Metric
+              </span>
+              <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{METRIC_CONFIG[metric].label}</span>
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
             </button>
             {metricDropdownOpen && (
               <>
@@ -1148,16 +1155,25 @@ export function OverviewViz(props?: OverviewVizProps) {
             </div>
           )}
           {overviewGroupBy === "tracker" && models.length > 0 && (
-            <div className="relative">
+            <div className="relative min-w-[10rem]">
               <button
                 type="button"
                 onClick={() => setModelDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-2 h-10 pl-3 pr-3 rounded-lg border border-[#e5e5e5] bg-white text-sm font-medium text-[#262626] hover:bg-[#fafafa] transition-colors"
+                className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
+                aria-label="Select model"
+                aria-expanded={modelDropdownOpen}
               >
-                {selectedModelId === "__average__" ? "Average" : models.find((m) => m.id === selectedModelId)?.label || "Model"}
-                <svg className="w-4 h-4 text-[#7F7F7F] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
+                  Model
+                </span>
+                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">
+                  {selectedModelId === "__average__" ? "Average" : models.find((m) => m.id === selectedModelId)?.label || "Select Model"}
+                </span>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
               </button>
               {modelDropdownOpen && (
                 <>
@@ -1238,17 +1254,20 @@ export function OverviewViz(props?: OverviewVizProps) {
                         : ts.change
                       : null;
                   const gaugeColors = i === 0 ? { arcColor: "var(--primary-dark)", arcGradientStart: "var(--primary-dark)", arcGradientEnd: "var(--primary-dark)" } : getModelGaugeColors(i - 1);
+                  const flagIcon = ts.location ? (
+                    <div className="w-4 h-4 rounded-full overflow-hidden flex items-center justify-center bg-[#f5f5f5]">
+                      <img
+                        src={`https://flagicons.lipis.dev/flags/4x3/${getCountryCode(ts.location)}.svg`}
+                        alt={ts.location}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : undefined;
                   return (
-                    <div key={ts.id} className="flex flex-col items-center gap-2 min-w-0">
-                      {ts.location && (
-                        <img
-                          src={`https://flagicons.lipis.dev/flags/4x3/${getCountryCode(ts.location)}.svg`}
-                          alt={ts.location}
-                          className="w-6 h-4"
-                        />
-                      )}
+                    <div key={ts.id} className="flex justify-center min-w-0">
                       <ScoreGauge
                         label={ts.label}
+                        icon={flagIcon}
                         value={ts.value}
                         max={maxVal}
                         change={change}
