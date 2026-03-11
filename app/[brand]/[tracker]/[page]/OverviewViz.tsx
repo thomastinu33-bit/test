@@ -486,7 +486,7 @@ export function OverviewViz(props?: OverviewVizProps) {
   const [trackerTopics, setTrackerTopics] = useState<Record<string, { keys: string[]; labels: Record<string, string> }>>({});
   const [expandedTrackers, setExpandedTrackers] = useState<Set<string>>(new Set());
   const [selectedBrand, setSelectedBrand] = useState<string>(mainBrand);
-  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
+  const [modelViewBrandDropdownOpen, setModelViewBrandDropdownOpen] = useState(false);
   const [brandSearchQuery, setBrandSearchQuery] = useState("");
   const [brands, setBrands] = useState<string[]>([]);
   const [modelScores, setModelScores] = useState<ModelScore[] | null>(null);
@@ -1121,10 +1121,10 @@ export function OverviewViz(props?: OverviewVizProps) {
             <div className="relative min-w-[10rem]">
               <button
                 type="button"
-                onClick={() => { setBrandDropdownOpen((o) => !o); setTopicDropdownOpen(false); setBrandSearchQuery(""); }}
+                onClick={() => { setModelViewBrandDropdownOpen((o) => !o); setTopicDropdownOpen(false); setBrandSearchQuery(""); }}
                 className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
                 aria-label="Select brand"
-                aria-expanded={brandDropdownOpen}
+                aria-expanded={modelViewBrandDropdownOpen}
               >
                 <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
                   Brand
@@ -1136,9 +1136,9 @@ export function OverviewViz(props?: OverviewVizProps) {
                   </svg>
                 </span>
               </button>
-              {brandDropdownOpen && (
+              {modelViewBrandDropdownOpen && (
                 <>
-                  <div className="fixed inset-0 z-40" aria-hidden onClick={() => { setBrandDropdownOpen(false); setBrandSearchQuery(""); }} />
+                  <div className="fixed inset-0 z-40" aria-hidden onClick={() => { setModelViewBrandDropdownOpen(false); setBrandSearchQuery(""); }} />
                   <div className="absolute right-0 top-full mt-1 z-50 w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden">
                     <div className="p-2 border-b border-[#e5e5e5] bg-[#fafafa]">
                       <input
@@ -1333,7 +1333,7 @@ export function OverviewViz(props?: OverviewVizProps) {
             topicDropdownOpen={topicDropdownOpen}
             setTopicDropdownOpen={(open) => {
               setTopicDropdownOpen(open);
-              if (open) setBrandDropdownOpen(false);
+              if (open) setModelViewBrandDropdownOpen(false);
             }}
             topicId={topicId}
             selectTopic={selectTopic}
