@@ -816,9 +816,12 @@ export function TimelineViz(props?: TimelineVizProps) {
       .then((data: { topicColumns: RadarTopicColumn[]; rows: { brand: string; [k: string]: unknown }[] }) => {
         // Use mock data as fallback for H&M trackers if API returns empty
         if (brandId === "hm" && (!data.topicColumns || data.topicColumns.length === 0 || !data.rows || data.rows.length === 0)) {
+          console.log("Using mock data for radar chart", { topicColumns, selectedBrandsTimeline, metric });
           const mockData = generateMockRadarData(Array.from(selectedBrandsTimeline), topicColumns, metric);
+          console.log("Generated mock radar data:", mockData);
           setRadarTableData(mockData);
         } else {
+          console.log("Using API radar data:", data);
           setRadarTableData(data);
         }
       })
@@ -841,12 +844,15 @@ export function TimelineViz(props?: TimelineVizProps) {
     radarTableData && radarTopicColumns.length > 0
       ? radarTableData.rows
           .filter((row) => selectedBrandsTimeline.has(row.brand))
-          .map((row) => ({
-            brand: row.brand,
-            values: radarTopicColumns.map((t) => {
+          .map((row) => {
+            const values = radarTopicColumns.map((t) => {
               const v = row[t.id];
               return typeof v === "number" ? v : 0;
-            }),
+            });
+            console.log(`Radar series for ${row.brand}:`, { topicIds: radarTopicColumns.map(t => t.id), values, rowData: row });
+            return {
+              brand: row.brand,
+              values,
             changes: radarTopicColumns.map((t) => {
               const changeKey = `change${String(t.id).charAt(0).toUpperCase()}${String(t.id).slice(1)}`;
               const v = row[changeKey];
