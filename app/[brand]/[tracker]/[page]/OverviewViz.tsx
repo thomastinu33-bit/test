@@ -7,10 +7,22 @@ import { useTrackerDate } from "../TrackerDateContext";
 import { getModelIcon } from "./ModelLogos";
 import { getTracker } from "@/app/manage-account/data";
 import { ScoreGauge } from "./ScoreGauge";
+import { TopicDropdown } from "./TopicDropdown";
+
+function getCountryFlag(location: string): string {
+  const countryMap: Record<string, string> = {
+    "United States": "🇺🇸",
+    "United Kingdom": "🇬🇧",
+    "Germany": "🇩🇪",
+    "United States English": "🇺🇸",
+  };
+  return countryMap[location] ?? "🌍";
+}
 
 export type OverviewMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
 
 type OverviewView = "gauge" | "timeline";
+type OverviewGroupBy = "model" | "tracker" | "brand";
 
 interface ModelOption {
   id: string;
@@ -435,12 +447,27 @@ function OverviewTimelineChart({
   );
 }
 
-export function OverviewViz() {
+interface TrackerItem {
+  id: string;
+  name: string;
+  location?: string;
+}
+
+interface OverviewVizProps {
+  overrideBrandId?: string;
+  overrideTrackerId?: string;
+  onTrackerChange?: (trackerId: string) => void;
+  trackerList?: TrackerItem[];
+}
+
+export function OverviewViz(props?: OverviewVizProps) {
+  const { overrideBrandId, overrideTrackerId, onTrackerChange, trackerList } = props ?? {};
   const params = useParams();
-  const brandId = (params?.brand as string) ?? "porsche";
-  const trackerId = (params?.tracker as string) ?? "luxury-suvs";
+  const brandId = overrideBrandId || ((params?.brand as string) ?? "porsche");
+  const trackerId = overrideTrackerId || ((params?.tracker as string) ?? "luxury-suvs");
   const tracker = getTracker(brandId, trackerId);
   const mainBrand = brandId === "cetaphil" ? "CETAPHIL" : brandId === "hm" ? "H&M" : "PORSCHE";
+  const [trackerDropdownOpen, setTrackerDropdownOpen] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<HTMLDivElement>(null);
@@ -454,15 +481,20 @@ export function OverviewViz() {
   const [loading, setLoading] = useState(true);
   const [metric, setMetric] = useState<OverviewMetric>("AI Brand Score");
   const [metricDropdownOpen, setMetricDropdownOpen] = useState(false);
-  const [topicId, setTopicId] = useState<string>("overall");
+  const [topicId, setTopicId] = useState<string>("__average__");
   const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
+  const [trackerTopics, setTrackerTopics] = useState<Record<string, { keys: string[]; labels: Record<string, string> }>>({});
+  const [expandedTrackers, setExpandedTrackers] = useState<Set<string>>(new Set());
   const [selectedBrand, setSelectedBrand] = useState<string>(mainBrand);
   const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
   const [brandSearchQuery, setBrandSearchQuery] = useState("");
   const [brands, setBrands] = useState<string[]>([]);
   const [modelScores, setModelScores] = useState<ModelScore[] | null>(null);
+  const [trackerScores, setTrackerScores] = useState<Array<{ id: string; label: string; location?: string; value: number; change: number | null }> | null>(null);
   const [overviewView, setOverviewView] = useState<OverviewView>("gauge");
+  const [overviewGroupBy, setOverviewGroupBy] = useState<OverviewGroupBy>("model");
   const [chartWidth, setChartWidth] = useState(600);
+  const [selectedTrackerIds, setSelectedTrackerIds] = useState<Set<string>>(new Set());
 
   const { selectedDateStr, compareToDateStr, compareToDate } = useTrackerDate();
   const changeTooltip = compareToDateStr
@@ -471,34 +503,210 @@ export function OverviewViz() {
 
   const fetchData = () => {
     setLoading(true);
-    const q = new URLSearchParams({ brandId, trackerId, metric, model: AVERAGE_ACROSS_ALL, topic: topicId });
-    if (selectedBrand) q.set("brand", selectedBrand);
-    if (overviewView === "timeline") q.set("view", "timeline");
-    if (selectedDateStr) q.set("date", selectedDateStr);
-    if (compareToDateStr) q.set("compareToDate", compareToDateStr);
-    fetch(`/api/scores?${q}`)
-      .then((res) => res.json())
-      .then((json: OverviewApiResponse) => {
-        const brandList = json.brands ?? [];
-        setModels(json.models ?? []);
-        setBrands(brandList);
-        setSelectedBrand((prev) => {
-          const match = brandList.find((b) => b.toUpperCase() === prev.toUpperCase());
-          return match ?? (brandList.length > 0 ? brandList[0]! : prev);
-        });
-        setDimensions(json.dimensions ?? null);
-        setDimensionKeys(json.dimensionKeys ?? DIMENSION_GAUGES.map((g) => g.key));
-        setDimensionLabels(json.dimensionLabels ?? Object.fromEntries(DIMENSION_GAUGES.map((g) => [g.key, g.label])));
-        setModelScores(json.modelScores ?? null);
-        setTimelineData(json.timeline ?? null);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+
+    // Handle "All Trackers" aggregation
+    if (trackerId === "all" && trackerList && trackerList.length > 0) {
+      const trackerIds = trackerList.map(t => t.id);
+
+      // Determine what to fetch based on topicId format
+      if (topicId.includes(":")) {
+        // Fetch from specific tracker with specific topic
+        const [selectedTrackerId, selectedTopic] = topicId.split(":");
+        const q = new URLSearchParams({ brandId, trackerId: selectedTrackerId, metric, model: AVERAGE_ACROSS_ALL, topic: selectedTopic });
+        if (selectedBrand) q.set("brand", selectedBrand);
+        if (selectedDateStr) q.set("date", selectedDateStr);
+        if (compareToDateStr) q.set("compareToDate", compareToDateStr);
+        fetch(`/api/scores?${q}`)
+          .then(res => res.json())
+          .then((json: OverviewApiResponse) => {
+            setModels(json.models ?? []);
+            setBrands(json.brands ?? []);
+            setSelectedBrand((prev) => {
+              const match = (json.brands ?? []).find((b) => b.toUpperCase() === prev.toUpperCase());
+              return match ?? ((json.brands ?? []).length > 0 ? json.brands![0]! : prev);
+            });
+            setDimensions(json.dimensions ?? null);
+            setDimensionKeys(json.dimensionKeys ?? DIMENSION_GAUGES.map((g) => g.key));
+            setDimensionLabels(json.dimensionLabels ?? Object.fromEntries(DIMENSION_GAUGES.map((g) => [g.key, g.label])));
+            setModelScores(json.modelScores ?? null);
+            setTimelineData(json.timeline ?? null);
+            setLoading(false);
+          })
+          .catch(() => setLoading(false));
+      } else {
+        // Fetch from all trackers with the selected topic (or "overall" for average)
+        const topicToFetch = topicId === "__average__" ? "overall" : topicId;
+        Promise.all(
+          trackerIds.map(tid => {
+            const q = new URLSearchParams({ brandId, trackerId: tid, metric, model: AVERAGE_ACROSS_ALL, topic: topicToFetch });
+            if (selectedBrand) q.set("brand", selectedBrand);
+            if (selectedDateStr) q.set("date", selectedDateStr);
+            if (compareToDateStr) q.set("compareToDate", compareToDateStr);
+            return fetch(`/api/scores?${q}`).then(res => res.json());
+          })
+        )
+        .then((responses: OverviewApiResponse[]) => {
+          // Aggregate dimensions by averaging
+          const aggregatedDimensions: Record<string, { sum: number; count: number }> = {};
+          const brandListSet = new Set<string>();
+          const modelScoresMap: Record<string, { value: number; count: number; change: number; changeCount: number }> = {};
+          const modelsByLabel = new Map<string, ModelOption>();
+          const trackerTopicsMap: Record<string, { keys: string[]; labels: Record<string, string> }> = {};
+
+          responses.forEach((json, idx) => {
+            const trackerName = trackerIds[idx];
+            // Store tracker topics if available
+            if (json.dimensionKeys) {
+              trackerTopicsMap[trackerName] = {
+                keys: json.dimensionKeys,
+                labels: json.dimensionLabels ?? Object.fromEntries(json.dimensionKeys.map(k => [k, k])),
+              };
+            }
+            if (json.brands) {
+              json.brands.forEach(b => brandListSet.add(b));
+            }
+            if (json.dimensions) {
+              Object.entries(json.dimensions).forEach(([key, value]) => {
+                if (!aggregatedDimensions[key]) {
+                  aggregatedDimensions[key] = { sum: 0, count: 0 };
+                }
+                aggregatedDimensions[key].sum += value;
+                aggregatedDimensions[key].count += 1;
+              });
+            }
+            if (json.models) {
+              json.models.forEach((m) => {
+                // Consolidate models by label
+                if (!modelsByLabel.has(m.label)) {
+                  modelsByLabel.set(m.label, m);
+                }
+              });
+            }
+            if (json.modelScores) {
+              json.modelScores.forEach((ms) => {
+                // Use label as key to consolidate duplicate models across trackers
+                const key = ms.label;
+                if (!modelScoresMap[key]) {
+                  modelScoresMap[key] = { value: 0, count: 0, change: 0, changeCount: 0 };
+                }
+                modelScoresMap[key].value += ms.value;
+                modelScoresMap[key].count += 1;
+                if (ms.change !== null) {
+                  modelScoresMap[key].change += ms.change;
+                  modelScoresMap[key].changeCount += 1;
+                }
+              });
+            }
+          });
+
+          // Convert aggregated model scores back to array format
+          const aggregatedModelScores = Object.entries(modelScoresMap).map(([label, data]) => ({
+            id: label,
+            label,
+            value: data.value / data.count,
+            change: data.changeCount > 0 ? data.change / data.changeCount : null,
+          }));
+
+          // Calculate final averages for dimensions
+          const finalDimensions: Record<string, number> = {};
+          Object.entries(aggregatedDimensions).forEach(([key, data]) => {
+            finalDimensions[key] = Math.round((data.sum / data.count) * 10) / 10;
+          });
+
+          // Calculate tracker scores (average of all models for each tracker)
+          const trackerScoresMap: Record<string, { value: number; count: number; change: number; changeCount: number }> = {};
+          responses.forEach((json, idx) => {
+            const trackerId = trackerIds[idx];
+            const trackerObj = trackerList?.find(t => t.id === trackerId);
+            if (!trackerObj) return;
+
+            if (json.modelScores) {
+              if (!trackerScoresMap[trackerId]) {
+                trackerScoresMap[trackerId] = { value: 0, count: 0, change: 0, changeCount: 0 };
+              }
+              json.modelScores.forEach((ms) => {
+                trackerScoresMap[trackerId].value += ms.value;
+                trackerScoresMap[trackerId].count += 1;
+                if (ms.change !== null) {
+                  trackerScoresMap[trackerId].change += ms.change;
+                  trackerScoresMap[trackerId].changeCount += 1;
+                }
+              });
+            }
+          });
+
+          // Convert tracker scores to array with average + individual trackers
+          const calculatedTrackerScores = [
+            {
+              id: "__average__",
+              label: "Average",
+              value: Math.round((aggregatedModelScores.reduce((sum, m) => sum + m.value, 0) / aggregatedModelScores.length) * 10) / 10,
+              change: aggregatedModelScores.length > 0 ? Math.round((aggregatedModelScores.reduce((sum, m) => sum + (m.change ?? 0), 0) / aggregatedModelScores.length) * 10) / 10 : null,
+            },
+            ...trackerIds.map((tid) => {
+              const trackerObj = trackerList?.find(t => t.id === tid);
+              const data = trackerScoresMap[tid];
+              return {
+                id: tid,
+                label: trackerObj?.name ?? tid,
+                location: trackerObj?.location,
+                value: data ? Math.round((data.value / data.count) * 10) / 10 : 0,
+                change: data && data.changeCount > 0 ? Math.round((data.change / data.changeCount) * 10) / 10 : null,
+              };
+            }),
+          ];
+
+          const brandList = Array.from(brandListSet);
+          const firstResponse = responses[0];
+          const consolidatedModels = Array.from(modelsByLabel.values());
+
+          setModels(consolidatedModels.length > 0 ? consolidatedModels : (firstResponse?.models ?? []));
+          setBrands(brandList);
+          setSelectedBrand((prev) => {
+            const match = brandList.find((b) => b.toUpperCase() === prev.toUpperCase());
+            return match ?? (brandList.length > 0 ? brandList[0]! : prev);
+          });
+          setDimensions(finalDimensions);
+          setDimensionKeys(firstResponse?.dimensionKeys ?? DIMENSION_GAUGES.map((g) => g.key));
+          setDimensionLabels(firstResponse?.dimensionLabels ?? Object.fromEntries(DIMENSION_GAUGES.map((g) => [g.key, g.label])));
+          setTrackerTopics(trackerTopicsMap);
+          setModelScores(aggregatedModelScores.length > 0 ? aggregatedModelScores : null);
+          setTrackerScores(calculatedTrackerScores.length > 0 ? calculatedTrackerScores : null);
+          setTimelineData(firstResponse?.timeline ?? null);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+      }
+    } else {
+      const q = new URLSearchParams({ brandId, trackerId, metric, model: AVERAGE_ACROSS_ALL, topic: topicId });
+      if (selectedBrand) q.set("brand", selectedBrand);
+      if (overviewView === "timeline") q.set("view", "timeline");
+      if (selectedDateStr) q.set("date", selectedDateStr);
+      if (compareToDateStr) q.set("compareToDate", compareToDateStr);
+      fetch(`/api/scores?${q}`)
+        .then((res) => res.json())
+        .then((json: OverviewApiResponse) => {
+          const brandList = json.brands ?? [];
+          setModels(json.models ?? []);
+          setBrands(brandList);
+          setSelectedBrand((prev) => {
+            const match = brandList.find((b) => b.toUpperCase() === prev.toUpperCase());
+            return match ?? (brandList.length > 0 ? brandList[0]! : prev);
+          });
+          setDimensions(json.dimensions ?? null);
+          setDimensionKeys(json.dimensionKeys ?? DIMENSION_GAUGES.map((g) => g.key));
+          setDimensionLabels(json.dimensionLabels ?? Object.fromEntries(DIMENSION_GAUGES.map((g) => [g.key, g.label])));
+          setModelScores(json.modelScores ?? null);
+          setTimelineData(json.timeline ?? null);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
   };
 
   useEffect(() => {
     fetchData();
-  }, [brandId, trackerId, metric, topicId, selectedBrand, overviewView, selectedDateStr, compareToDateStr]);
+  }, [brandId, trackerId, metric, topicId, selectedBrand, overviewView, selectedDateStr, compareToDateStr, trackerList]);
 
   useEffect(() => {
     const el = chartRef.current;
@@ -512,6 +720,17 @@ export function OverviewViz() {
     requestAnimationFrame(updateWidth);
     return () => ro.disconnect();
   }, [overviewView]);
+
+  // Initialize selectedTrackerIds when switching to "By Tracker" view
+  useEffect(() => {
+    if (overviewGroupBy === "tracker" && trackerList && trackerList.length > 0) {
+      // Initialize with all trackers if not already selected
+      if (selectedTrackerIds.size === 0) {
+        const trackerIds = new Set(trackerList.map(t => t.id));
+        setSelectedTrackerIds(trackerIds);
+      }
+    }
+  }, [overviewGroupBy, trackerList, selectedTrackerIds.size]);
 
   const handleCapture = async () => {
     if (!cardRef.current) return;
@@ -555,7 +774,14 @@ export function OverviewViz() {
       ? value.toFixed(isAvgPosition ? 1 : 0)
       : "—";
 
-  const topicDisplayLabel = dimensionLabels[topicId] ?? topicId;
+  const topicDisplayLabel = (() => {
+    if (topicId === "__average__") return "Average";
+    if (topicId.includes(":")) {
+      const [tId, key] = topicId.split(":");
+      return trackerTopics[tId]?.labels[key] ?? key;
+    }
+    return dimensionLabels[topicId] ?? topicId;
+  })();
   const brandDisplayLabel = selectedBrand;
 
   const activeCompetitorList =
@@ -568,12 +794,32 @@ export function OverviewViz() {
           : brandId === "hm"
             ? COMPETITOR_LIST_HM_PANTS
             : COMPETITOR_LIST_PORSCHE;
+
+  // Consolidate duplicate brand names (e.g., "H&M", "H & M", "HM" -> use first occurrence)
+  const consolidateBrands = (brandList: string[]): string[] => {
+    const normalizedMap = new Map<string, string>();
+    const seen = new Set<string>();
+
+    for (const brand of brandList) {
+      // Normalize: remove spaces and special characters except alphanumeric
+      const normalized = brand.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (!normalizedMap.has(normalized)) {
+        normalizedMap.set(normalized, brand);
+        seen.add(brand);
+      }
+    }
+
+    // Return consolidated brands in original order
+    return brandList.filter((b) => seen.has(b));
+  };
+
+  const consolidatedBrands = consolidateBrands(brands);
   const competitorSet = new Set(activeCompetitorList.map((c) => c.toUpperCase()));
   const competitorOrder = new Map<string, number>(activeCompetitorList.map((c, i) => [c, i]));
-  const competitorBrands = brands
+  const competitorBrands = consolidatedBrands
     .filter((b) => competitorSet.has(b.toUpperCase()))
     .sort((a, b) => (competitorOrder.get(a.toUpperCase()) ?? 999) - (competitorOrder.get(b.toUpperCase()) ?? 999));
-  const otherBrands = brands.filter((b) => !competitorSet.has(b.toUpperCase()));
+  const otherBrands = consolidatedBrands.filter((b) => !competitorSet.has(b.toUpperCase()));
   const qSearch = brandSearchQuery.trim().toLowerCase();
   const matchesSearch = (b: string) => !qSearch || b.toLowerCase().includes(qSearch);
   const filteredCompetitor = competitorBrands.filter(matchesSearch);
@@ -590,13 +836,43 @@ export function OverviewViz() {
     setBrandDropdownOpen(false);
   };
 
+  const toggleTrackerExpanded = (trackerId: string) => {
+    setExpandedTrackers((prev) => {
+      const next = new Set(prev);
+      if (next.has(trackerId)) {
+        next.delete(trackerId);
+      } else {
+        next.add(trackerId);
+      }
+      return next;
+    });
+  };
+
   return (
-    <div ref={cardRef} className="w-full min-w-0 rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
-      <div className="flex flex-col items-start gap-4 px-4 py-4 sm:px-6 border-b border-[#e5e5e5] md:flex-row md:items-center md:justify-between">
-        <h2 className="w-full text-[20px] font-semibold text-[#262626] leading-tight md:w-auto">
-          Brand Score in {tracker?.name ?? trackerId}
+    <div ref={cardRef} className="w-full min-w-0 rounded-xl border border-[#e5e5e5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+      <div className="px-4 py-4 sm:px-6 border-b border-[#e5e5e5]">
+        <h2 className="text-[20px] font-semibold text-[#262626] leading-tight mb-4">
+          Brand Score {trackerId === "all" ? "across All Trackers" : `in ${tracker?.name ?? trackerId}`}
         </h2>
-        <div className="flex w-full flex-wrap items-center justify-start gap-2 md:w-auto">
+        <div className="flex flex-wrap items-center justify-start gap-2">
+          {trackerList && trackerList.length > 0 && (
+            <div className="flex rounded-lg border border-[#e5e5e5] p-0.5 bg-[#f6f6f6]">
+              {(["model", "tracker", "brand"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setOverviewGroupBy(mode)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    overviewGroupBy === mode
+                      ? "bg-white text-[#262626] shadow-sm"
+                      : "text-[#7F7F7F] hover:text-[#262626]"
+                  }`}
+                >
+                  By {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="relative">
             <button
               type="button"
@@ -610,8 +886,8 @@ export function OverviewViz() {
             </button>
             {metricDropdownOpen && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => setMetricDropdownOpen(false)} />
-                <div className="absolute top-full left-0 mt-1 z-20 w-52 rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
+                <div className="fixed inset-0 z-40" onClick={() => setMetricDropdownOpen(false)} />
+                <div className="absolute top-full left-0 mt-1 z-50 w-52 rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
                   {(Object.keys(METRIC_CONFIG) as OverviewMetric[]).map((m) => (
                     <button
                       key={m}
@@ -629,6 +905,116 @@ export function OverviewViz() {
               </>
             )}
           </div>
+          {trackerList && trackerList.length > 0 && (
+            <div className="relative min-w-[10rem]">
+              <button
+                type="button"
+                onClick={() => setTrackerDropdownOpen((o) => !o)}
+                className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
+                aria-label="Select tracker"
+                aria-expanded={trackerDropdownOpen}
+              >
+                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
+                  Tracker
+                </span>
+                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">
+                  {overviewGroupBy === "tracker"
+                    ? selectedTrackerIds.size === trackerList.length ? "All Trackers" : `${selectedTrackerIds.size} Selected`
+                    : trackerId === "all" ? "All Trackers" : trackerList.find((t) => t.id === trackerId)?.name || "Select Tracker"}
+                </span>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </button>
+              {trackerDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" aria-hidden onClick={() => setTrackerDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-50 w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden">
+                    <div className="max-h-64 overflow-auto py-1">
+                      {overviewGroupBy === "tracker" ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (selectedTrackerIds.size === trackerList.length) {
+                                setSelectedTrackerIds(new Set());
+                              } else {
+                                setSelectedTrackerIds(new Set(trackerList.map(t => t.id)));
+                              }
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] text-[#262626]"
+                          >
+                            <span className="w-4 h-4 rounded border-2 border-[#e5e5e5] flex items-center justify-center shrink-0 flex-none">
+                              {selectedTrackerIds.size === trackerList.length && selectedTrackerIds.size > 0 && (
+                                <span className="w-2.5 h-2.5 rounded-sm bg-[var(--primary)]" />
+                              )}
+                            </span>
+                            <span className="truncate font-medium">Select All</span>
+                          </button>
+                          <div className="border-t border-[#e5e5e5] my-1" />
+                          {trackerList.map((tracker) => (
+                            <button
+                              key={tracker.id}
+                              type="button"
+                              onClick={() => {
+                                const next = new Set(selectedTrackerIds);
+                                if (next.has(tracker.id)) {
+                                  next.delete(tracker.id);
+                                } else {
+                                  next.add(tracker.id);
+                                }
+                                setSelectedTrackerIds(next);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] text-[#262626]"
+                            >
+                              <span className="w-4 h-4 rounded border-2 border-[#e5e5e5] flex items-center justify-center shrink-0 flex-none">
+                                {selectedTrackerIds.has(tracker.id) && (
+                                  <span className="w-2.5 h-2.5 rounded-sm bg-[var(--primary)]" />
+                                )}
+                              </span>
+                              <span className="truncate">{tracker.name}</span>
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onTrackerChange) onTrackerChange("all");
+                              setTrackerDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
+                              trackerId === "all" ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
+                            }`}
+                          >
+                            <span className="truncate">All Trackers</span>
+                          </button>
+                          {trackerList.map((tracker) => (
+                            <button
+                              key={tracker.id}
+                              type="button"
+                              onClick={() => {
+                                if (onTrackerChange) onTrackerChange(tracker.id);
+                                setTrackerDropdownOpen(false);
+                              }}
+                              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
+                                trackerId === tracker.id ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
+                              }`}
+                            >
+                              <span className="truncate">{tracker.name}</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           {brands.length > 0 && (
             <div className="relative min-w-[10rem]">
               <button
@@ -650,8 +1036,8 @@ export function OverviewViz() {
               </button>
               {brandDropdownOpen && (
                 <>
-                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => { setBrandDropdownOpen(false); setBrandSearchQuery(""); }} />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden">
+                  <div className="fixed inset-0 z-40" aria-hidden onClick={() => { setBrandDropdownOpen(false); setBrandSearchQuery(""); }} />
+                  <div className="absolute right-0 top-full mt-1 z-50 w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden">
                     <div className="p-2 border-b border-[#e5e5e5] bg-[#fafafa]">
                       <input
                         type="search"
@@ -717,49 +1103,24 @@ export function OverviewViz() {
               )}
             </div>
           )}
-          {dimensionKeys.length > 0 && (
-            <div className="relative min-w-[10rem]">
-              <button
-                type="button"
-                onClick={() => { setTopicDropdownOpen((o) => !o); setBrandDropdownOpen(false); }}
-                className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-                aria-label="Select topic"
-                aria-expanded={topicDropdownOpen}
-              >
-                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                  Topic
-                </span>
-                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{topicDisplayLabel}</span>
-                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </button>
-              {topicDropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => setTopicDropdownOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-56 max-h-64 overflow-auto rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
-                    {dimensionKeys.map((key) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => selectTopic(key)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] ${
-                          topicId === key ? "bg-[#f0fafa] text-[var(--primary)] font-medium" : "text-[#262626]"
-                        }`}
-                      >
-                        <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0">
-                          {topicId === key && <span className="w-2 h-2 rounded-full bg-[var(--primary)]" />}
-                        </span>
-                        <span className="truncate">{dimensionLabels[key] ?? key}</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          <TopicDropdown
+            topicDropdownOpen={topicDropdownOpen}
+            setTopicDropdownOpen={(open) => {
+              setTopicDropdownOpen(open);
+              if (open) setBrandDropdownOpen(false);
+            }}
+            topicId={topicId}
+            selectTopic={selectTopic}
+            topicDisplayLabel={topicDisplayLabel}
+            dimensionKeys={dimensionKeys}
+            dimensionLabels={dimensionLabels}
+            trackerId={trackerId}
+            trackerList={trackerList}
+            trackerTopics={trackerTopics}
+            expandedTrackers={expandedTrackers}
+            toggleTrackerExpanded={toggleTrackerExpanded}
+            hidden={trackerList && trackerList.length > 0}
+          />
           <button
             type="button"
             onClick={handleCapture}
@@ -778,8 +1139,37 @@ export function OverviewViz() {
       <div className="px-4 pt-6 pb-6 sm:px-6">
         {overviewView === "gauge" && (
           <>
-            {modelScores && modelScores.length > 0 ? (
-              <div className="flex w-full flex-wrap justify-between gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
+            {trackerList && trackerList.length > 0 && overviewGroupBy === "tracker" && trackerScores && trackerScores.length > 0 ? (
+              <div className="grid grid-cols-6 w-full gap-x-4 gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
+                {trackerScores.filter(ts => ts.id === "__average__" || selectedTrackerIds.has(ts.id)).map((ts, i) => {
+                  const change =
+                    ts.change != null && Number.isFinite(ts.change)
+                      ? isAvgPosition
+                        ? -ts.change
+                        : ts.change
+                      : null;
+                  const gaugeColors = i === 0 ? { arcColor: "var(--primary-dark)", arcGradientStart: "var(--primary-dark)", arcGradientEnd: "var(--primary-dark)" } : getModelGaugeColors(i - 1);
+                  const label = ts.location ? `${getCountryFlag(ts.location)} ${ts.label}` : ts.label;
+                  return (
+                    <div key={ts.id} className="flex justify-center min-w-0">
+                      <ScoreGauge
+                        label={label}
+                        value={ts.value}
+                        max={maxVal}
+                        change={change}
+                        arcColor={gaugeColors.arcColor}
+                        arcGradientStart={gaugeColors.arcGradientStart}
+                        arcGradientEnd={gaugeColors.arcGradientEnd}
+                        valueFormat={(v) => formatValue(v)}
+                        inverse={isAvgPosition}
+                        changeTooltip={changeTooltip}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (modelScores && modelScores.length > 0 ? (
+              <div className="grid grid-cols-6 w-full gap-x-4 gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
                 {(() => {
                   const n = modelScores.length;
                   const avgValue =
@@ -793,7 +1183,7 @@ export function OverviewViz() {
                     changes.length > 0 ? Math.round((changes.reduce((a, b) => a + b, 0) / changes.length) * 10) / 10 : null;
                   return (
                     <>
-                      <div key="average" className="flex justify-center min-w-0 w-32 shrink-0">
+                      <div key="average" className="flex justify-center min-w-0">
                         <ScoreGauge
                           label="Average"
                           value={avgValue}
@@ -817,7 +1207,7 @@ export function OverviewViz() {
                         const override = MODEL_GAUGE_OVERRIDES[ms.label];
                         const gaugeColors = getModelGaugeColors(i);
                         return (
-                          <div key={ms.id} className="flex justify-center min-w-0 w-32 shrink-0">
+                          <div key={ms.id} className="flex justify-center min-w-0">
                             <ScoreGauge
                               label={ms.label}
                               value={ms.value}
@@ -839,7 +1229,7 @@ export function OverviewViz() {
                 })()}
               </div>
             ) : (
-              <div className="flex w-full flex-wrap justify-between gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
+              <div className="grid grid-cols-6 w-full gap-x-4 gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
                 {dimensionKeys.map((key, i) => {
                   const changeKey = `change${key.charAt(0).toUpperCase()}${key.slice(1)}`;
                   const value = dimensions[key] as number;
@@ -848,7 +1238,7 @@ export function OverviewViz() {
                     isAvgPosition && changeRaw != null ? -changeRaw : changeRaw;
                   const label = dimensionLabels[key] ?? key;
                   return (
-                    <div key={key} className="flex justify-center min-w-0 w-32 shrink-0">
+                    <div key={key} className="flex justify-center min-w-0">
                       <ScoreGauge
                         label={label}
                         value={value}
@@ -865,7 +1255,7 @@ export function OverviewViz() {
                   );
                 })}
               </div>
-            )}
+            ))}
           </>
         )}
 
