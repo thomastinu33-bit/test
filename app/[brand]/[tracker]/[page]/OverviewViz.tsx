@@ -1158,22 +1158,6 @@ export function OverviewViz(props?: OverviewVizProps) {
                     <div className="max-h-64 overflow-auto py-1">
                       {overviewGroupBy === "brand" && brandId === "hm" ? (
                         <>
-                          <label className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
-                            <input
-                              type="checkbox"
-                              checked={selectedBrandIds.size === brands.length && selectedBrandIds.size > 0}
-                              onChange={() => {
-                                if (selectedBrandIds.size === brands.length) {
-                                  setSelectedBrandIds(new Set());
-                                } else {
-                                  setSelectedBrandIds(new Set(brands));
-                                }
-                              }}
-                              className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
-                            />
-                            <span className="truncate font-medium">Select All</span>
-                          </label>
-                          <div className="border-t border-[#e5e5e5] my-1" />
                           {!hasAnyFiltered ? (
                             <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
                           ) : (
