@@ -1523,31 +1523,33 @@ export function OverviewViz(props?: OverviewVizProps) {
             <button
               type="button"
               onClick={() => setOverviewView("gauge")}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
                 overviewView === "gauge"
                   ? "bg-[var(--primary)] text-white"
                   : "border border-[#e5e5e5] bg-white text-[#262626] hover:bg-[#f5f5f5]"
               }`}
+              title="Gauges"
+              aria-label="Switch to gauges view"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <circle cx="12" cy="12" r="9" strokeWidth={2} />
                 <path d="M12 6v6l4 2" strokeWidth={2} strokeLinecap="round" />
               </svg>
-              Gauges
             </button>
             <button
               type="button"
               onClick={() => setOverviewView("timeline")}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
                 overviewView === "timeline"
                   ? "bg-[var(--primary)] text-white"
                   : "border border-[#e5e5e5] bg-white text-[#262626] hover:bg-[#f5f5f5]"
               }`}
+              title="Timeline"
+              aria-label="Switch to timeline view"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <polyline points="3 12 9 12 12 5 15 19 18 12 21 12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" aria-hidden>
+                <path d="M3 12h2.558a2 2 0 0 0 1.898-1.367L10 3l4 18 2.544-7.633A2 2 0 0 1 18.442 12H21" />
               </svg>
-              Timeline
             </button>
           </div>
         )}
