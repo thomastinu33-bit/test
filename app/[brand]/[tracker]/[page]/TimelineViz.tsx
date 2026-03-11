@@ -466,31 +466,12 @@ function generateMockTimelineData(
   return { dates, series };
 }
 
-/** Generate mock radar/perception map data for H&M trackers */
+/** Generate mock radar/perception map data for H&M trackers using actual topics */
 function generateMockRadarData(
   brands: string[],
-  topicCount: number = 10,
+  topicColumns: RadarTopicColumn[],
   metric: TimelineMetric = "AI Brand Score"
 ): { topicColumns: RadarTopicColumn[]; rows: { brand: string; [k: string]: unknown }[] } {
-  const topicIds = ["overall", "topOfMind", "perception", "media", "process", "product", "price", "pricing", "quality", "availability"];
-  const topicLabels: Record<string, string> = {
-    overall: "Overall",
-    topOfMind: "Top of Mind",
-    perception: "Perception",
-    media: "Media",
-    process: "Process",
-    product: "Product",
-    price: "Price",
-    pricing: "Pricing",
-    quality: "Quality",
-    availability: "Availability",
-  };
-
-  const topicColumns: RadarTopicColumn[] = topicIds.slice(0, topicCount).map((id) => ({
-    id,
-    label: topicLabels[id] || id,
-  }));
-
   const getBaseValue = () => {
     if (metric === "Average Position") return Math.random() * 15 + 2;
     return Math.random() * 20 + 60;
@@ -829,7 +810,7 @@ export function TimelineViz(props?: TimelineVizProps) {
       .then((data: { topicColumns: RadarTopicColumn[]; rows: { brand: string; [k: string]: unknown }[] }) => {
         // Use mock data as fallback for H&M trackers if API returns empty
         if (brandId === "hm" && (!data.topicColumns || data.topicColumns.length === 0 || !data.rows || data.rows.length === 0)) {
-          const mockData = generateMockRadarData(Array.from(selectedBrandsTimeline), 10, metric);
+          const mockData = generateMockRadarData(Array.from(selectedBrandsTimeline), topicColumns, metric);
           setRadarTableData(mockData);
         } else {
           setRadarTableData(data);
@@ -838,14 +819,14 @@ export function TimelineViz(props?: TimelineVizProps) {
       .catch(() => {
         // Use mock data as fallback for H&M trackers on API error
         if (brandId === "hm" && selectedBrandsTimeline.size > 0) {
-          const mockData = generateMockRadarData(Array.from(selectedBrandsTimeline), 10, metric);
+          const mockData = generateMockRadarData(Array.from(selectedBrandsTimeline), topicColumns, metric);
           setRadarTableData(mockData);
         } else {
           setRadarTableData(null);
         }
       })
       .finally(() => setRadarLoading(false));
-  }, [chartView, brandId, trackerId, metric, selectedBrandsTimeline, modelIdsForRequest.join(","), selectedModel, selectedDateStr, compareToDateStr]);
+  }, [chartView, brandId, trackerId, metric, selectedBrandsTimeline, modelIdsForRequest.join(","), selectedModel, selectedDateStr, compareToDateStr, topicColumns]);
 
   const radarTopicColumnsAll: RadarTopicColumn[] = radarTableData?.topicColumns ?? [];
   const radarTopicColumnsFiltered = radarTopicColumnsAll.filter((t) => selectedTopics.has(String(t.id)));
