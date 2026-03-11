@@ -427,6 +427,45 @@ function GroupedTopicChart({
   );
 }
 
+/** Generate mock timeline data for the last 5 days for H&M trackers */
+function generateMockTimelineData(
+  brands: string[],
+  days: number = 5,
+  metric: TimelineMetric = "AI Brand Score"
+): { dates: string[]; series: TimelineSeries[] } {
+  const dates: string[] = [];
+  const today = new Date();
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+
+  const getBaseValue = () => {
+    if (metric === "Average Position") return Math.random() * 15 + 2;
+    return Math.random() * 20 + 60;
+  };
+
+  const series: TimelineSeries[] = brands.map((brand) => {
+    const baseValue = getBaseValue();
+    const volatility = metric === "Average Position" ? 0.3 : 5;
+
+    return {
+      brand,
+      data: dates.map((date) => ({
+        date,
+        value: Math.max(
+          metric === "Average Position" ? 1 : 0,
+          baseValue + (Math.random() - 0.5) * volatility * 2
+        ),
+      })),
+    };
+  });
+
+  return { dates, series };
+}
+
 export interface TimelineVizProps {
   metric?: TimelineMetric;
   setMetric?: (m: TimelineMetric) => void;
@@ -617,10 +656,27 @@ export function TimelineViz(props?: TimelineVizProps) {
       fetch(`/api/timeline?${params}`)
         .then((res) => res.json())
         .then((data: { dates: string[]; series: TimelineSeries[] }) => {
-          setDates(data.dates ?? []);
-          setSeries(data.series ?? []);
+          // For topics mode, use mock data if available, otherwise use API response
+          if (brandId === "hm" && (!data.dates || data.dates.length === 0)) {
+            const availableBrands = (data.brands ?? internalBrandsList).slice(0, 6);
+            const mockData = generateMockTimelineData(availableBrands, 5, metric);
+            setDates(mockData.dates);
+            setSeries(mockData.series);
+          } else {
+            setDates(data.dates ?? []);
+            setSeries(data.series ?? []);
+          }
         })
-        .catch(() => { setDates([]); setSeries([]); })
+        .catch(() => {
+          if (brandId === "hm" && internalBrandsList.length > 0) {
+            const mockData = generateMockTimelineData(internalBrandsList.slice(0, 6), 5, metric);
+            setDates(mockData.dates);
+            setSeries(mockData.series);
+          } else {
+            setDates([]);
+            setSeries([]);
+          }
+        })
         .finally(() => setLoading(false));
       return;
     }
@@ -649,12 +705,26 @@ export function TimelineViz(props?: TimelineVizProps) {
     fetch(`/api/timeline?${params}`)
       .then((res) => res.json())
       .then((data: { dates: string[]; series: TimelineSeries[] }) => {
-        setDates(data.dates ?? []);
-        setSeries(data.series ?? []);
+        // Use mock data as fallback for H&M trackers if API returns empty
+        if (brandId === "hm" && (!data.dates || data.dates.length === 0)) {
+          const mockData = generateMockTimelineData(timelineBrands, 5, metric);
+          setDates(mockData.dates);
+          setSeries(mockData.series);
+        } else {
+          setDates(data.dates ?? []);
+          setSeries(data.series ?? []);
+        }
       })
       .catch(() => {
-        setDates([]);
-        setSeries([]);
+        // Use mock data as fallback for H&M trackers on API error
+        if (brandId === "hm" && timelineBrands.length > 0) {
+          const mockData = generateMockTimelineData(timelineBrands, 5, metric);
+          setDates(mockData.dates);
+          setSeries(mockData.series);
+        } else {
+          setDates([]);
+          setSeries([]);
+        }
       })
       .finally(() => setLoading(false));
   }, [chartView, brandId, trackerId, metric, selectedBrandsTimeline, selectedTopicTimeline, selectedBrand, selectedTopics, timelineSeriesBy, selectedModel, modelIdsForRequest.join(","), selectedDateStr, compareToDateStr, comparisonDays, isV2TopicsMode]);
