@@ -1518,6 +1518,40 @@ export function OverviewViz(props?: OverviewVizProps) {
           </>
         )}
 
+        {showTimelineToggle && (
+          <div className="flex items-center justify-center gap-2 mt-6 mb-6">
+            <button
+              type="button"
+              onClick={() => setOverviewView("gauge")}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                overviewView === "gauge"
+                  ? "bg-[var(--primary)] text-white"
+                  : "border border-[#e5e5e5] bg-white text-[#262626] hover:bg-[#f5f5f5]"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                <path d="M12 6v6l4 2" strokeWidth={2} strokeLinecap="round" />
+              </svg>
+              Gauges
+            </button>
+            <button
+              type="button"
+              onClick={() => setOverviewView("timeline")}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                overviewView === "timeline"
+                  ? "bg-[var(--primary)] text-white"
+                  : "border border-[#e5e5e5] bg-white text-[#262626] hover:bg-[#f5f5f5]"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <polyline points="3 12 9 12 12 5 15 19 18 12 21 12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Timeline
+            </button>
+          </div>
+        )}
+
         {showTimelineToggle && overviewView === "timeline" && (timelineData?.dates && timelineData?.series && timelineData.dates.length > 0 && timelineData.series.length > 0 ? (
           <div ref={chartRef} className="w-full min-w-0">
             <OverviewTimelineChart
