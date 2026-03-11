@@ -73,6 +73,23 @@ export const HM_HEATMAP_TABLE_TOPICS: { id: HmHeatmapTopic; label: string }[] = 
   label: HM_HEATMAP_DIM_LABELS[id],
 }));
 
+// Model ID → display label overrides (to clean up "Maker Model" combinations)
+const LABEL_OVERRIDES: Record<string, string> = {
+  "ChatGPT|GPT 4.1": "ChatGPT",
+  "ChatGPT|GPT 5": "ChatGPT",
+  "OpenAI|ChatGPT": "ChatGPT",
+  "OpenAI Web|ChatGPT Search": "ChatGPT Search",
+  "Perplexity Web|Perplexity": "Perplexity",
+  "Perplexity|Perplexity": "Perplexity",
+  "Claude|Claude Haiku 4.5": "Claude",
+  "Anthropic|Claude": "Claude",
+  "DeepSeek|Deep Seek v3.1": "DeepSeek",
+  "Gemini|Gemini 2.5": "Gemini",
+  "Google|Gemini": "Gemini",
+  "Meta AI|Llama 4": "Meta AI",
+  "Meta|Llama": "Meta AI",
+};
+
 function parseCsvLine(line: string): string[] {
   return line.split(",").map((s) => s.trim());
 }
@@ -220,16 +237,45 @@ export function getUniqueBrands(): string[] {
 export function getUniqueModels(): { id: string; label: string }[] {
   const rows = getHmHeatmapScores();
   const seen = new Set<string>();
+  const labelToIds = new Map<string, Set<string>>();
   const list: { id: string; label: string }[] = [];
+
   for (const r of rows) {
     const id = `${r.modelMaker}|${r.model}`;
     if (seen.has(id)) continue;
     seen.add(id);
-    const rawLabel = r.modelMaker === r.model ? r.model : `${r.modelMaker} ${r.model}`;
-    const label = rawLabel === "OpenAI ChatGPT" ? "ChatGPT" : rawLabel;
-    list.push({ id, label });
+    const label =
+      LABEL_OVERRIDES[id] ??
+      (r.modelMaker === r.model ? r.model : `${r.modelMaker} ${r.model}`);
+
+    if (!labelToIds.has(label)) {
+      labelToIds.set(label, new Set());
+      list.push({ id: label, label });
+    }
+    labelToIds.get(label)!.add(id);
   }
   return list.sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/** Map consolidated label to all original model IDs. */
+export function getOriginalModelIds(label: string): string[] {
+  const rows = getHmHeatmapScores();
+  const seen = new Set<string>();
+  const ids: string[] = [];
+
+  for (const r of rows) {
+    const id = `${r.modelMaker}|${r.model}`;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const rowLabel =
+      LABEL_OVERRIDES[id] ??
+      (r.modelMaker === r.model ? r.model : `${r.modelMaker} ${r.model}`);
+
+    if (rowLabel === label) {
+      ids.push(id);
+    }
+  }
+  return ids;
 }
 
 export function getTopBrandsByLatestScore(
@@ -282,6 +328,51 @@ export function getGaugeDimensionsForModelWithChange(
   const all = getHmHeatmapScores();
   const latest = getLatestReportDate();
   const weekAgo = getReportDateDaysAgo(6);
+
+  // Handle consolidated models - fetch all original IDs
+  const originalIds = modelId === "__average__" ? [] : getOriginalModelIds(modelId);
+
+  if (originalIds.length > 0) {
+    // Aggregate data from all original model IDs
+    const currentScores = originalIds.map((id) => {
+      const rows = all.filter((r) => r.brand === brand && r.reportDate === latest && `${r.modelMaker}|${r.model}` === id);
+      return getDimensionsForRows(rows, metric);
+    });
+    const previousScores = originalIds.map((id) => {
+      const rows = all.filter((r) => r.brand === brand && r.reportDate === weekAgo && `${r.modelMaker}|${r.model}` === id);
+      return getDimensionsForRows(rows, metric);
+    });
+
+    // Average the scores across all dimensions
+    const current = Object.fromEntries(HM_HEATMAP_TOPIC_KEYS.map((k) => [k, 0])) as Record<HmHeatmapTopic, number>;
+    for (const score of currentScores) {
+      for (const k of HM_HEATMAP_TOPIC_KEYS) {
+        current[k] += score[k];
+      }
+    }
+    for (const k of HM_HEATMAP_TOPIC_KEYS) {
+      current[k] = currentScores.length > 0 ? current[k] / currentScores.length : 0;
+    }
+
+    const previous = Object.fromEntries(HM_HEATMAP_TOPIC_KEYS.map((k) => [k, 0])) as Record<HmHeatmapTopic, number>;
+    for (const score of previousScores) {
+      for (const k of HM_HEATMAP_TOPIC_KEYS) {
+        previous[k] += score[k];
+      }
+    }
+    for (const k of HM_HEATMAP_TOPIC_KEYS) {
+      previous[k] = previousScores.length > 0 ? previous[k] / previousScores.length : 0;
+    }
+
+    const round = (x: number) => Math.round(x * 10) / 10;
+    const result: Record<string, number> = { ...current };
+    for (const k of HM_HEATMAP_TOPIC_KEYS) {
+      const changeKey = `change${k.charAt(0).toUpperCase()}${k.slice(1)}`;
+      result[changeKey] = round(current[k] - previous[k]);
+    }
+    return result;
+  }
+
   const rowsLatest = all.filter(
     (r) =>
       r.brand === brand &&

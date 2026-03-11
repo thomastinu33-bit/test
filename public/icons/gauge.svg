@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Outer circle (gauge body) -->
+  <circle cx="12" cy="13" r="8"/>
+  <!-- Gauge arc (background) -->
+  <path d="M 5 13 A 7 7 0 0 1 19 13" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.2"/>
+  <!-- Gauge needle -->
+  <line x1="12" y1="13" x2="12" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <!-- Needle pivot point -->
+  <circle cx="12" cy="13" r="1.5" fill="currentColor"/>
+  <!-- Indicator marks -->
+  <line x1="5.5" y1="13" x2="4" y2="13" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+  <line x1="18.5" y1="13" x2="20" y2="13" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+  <line x1="8" y1="8.5" x2="6.8" y2="7.3" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+</svg>

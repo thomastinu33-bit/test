@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 /** Format Date as YYYY-MM-DD for API params. */
 export function formatDateForApi(d: Date): string {
@@ -27,29 +27,33 @@ const TrackerDateContext = createContext<TrackerDateContextValue | null>(null);
 
 export function TrackerDateProvider({
   children,
-  selectedDate,
-  setSelectedDate,
-  compareToDate,
-  setCompareToDate,
-  useDateForData,
+  selectedDate: propSelectedDate,
+  setSelectedDate: propSetSelectedDate,
+  compareToDate: propCompareToDate,
+  setCompareToDate: propSetCompareToDate,
+  useDateForData = false,
   comparisonDays = null,
 }: {
   children: ReactNode;
-  selectedDate: Date;
-  setSelectedDate: (d: Date) => void;
-  compareToDate: Date;
-  setCompareToDate: (d: Date) => void;
+  selectedDate?: Date;
+  setSelectedDate?: (d: Date) => void;
+  compareToDate?: Date;
+  setCompareToDate?: (d: Date) => void;
   /** When true, data fetches use these dates (e.g. Luxury SUV trackers). */
-  useDateForData: boolean;
+  useDateForData?: boolean;
   comparisonDays?: number | null;
 }) {
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState(propSelectedDate ?? today);
+  const [compareToDate, setCompareToDate] = useState(propCompareToDate ?? new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000));
+
   const value: TrackerDateContextValue = {
-    selectedDate,
-    setSelectedDate,
-    selectedDateStr: useDateForData ? formatDateForApi(selectedDate) : null,
-    compareToDate,
-    setCompareToDate,
-    compareToDateStr: useDateForData ? formatDateForApi(compareToDate) : null,
+    selectedDate: propSelectedDate ?? selectedDate,
+    setSelectedDate: propSetSelectedDate ?? setSelectedDate,
+    selectedDateStr: useDateForData ? formatDateForApi(propSelectedDate ?? selectedDate) : null,
+    compareToDate: propCompareToDate ?? compareToDate,
+    setCompareToDate: propSetCompareToDate ?? setCompareToDate,
+    compareToDateStr: useDateForData ? formatDateForApi(propCompareToDate ?? compareToDate) : null,
     comparisonDays: useDateForData ? comparisonDays : null,
   };
 

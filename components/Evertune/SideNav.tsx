@@ -203,11 +203,13 @@ const defaultNavItems: NavItem[] = [
     label: "H&M",
     href: "/hm",
     children: [
-      { id: "hm-pants", label: "H&M Pants", icon: "list", href: "/hm/pants" },
-      { id: "hm-heatmap", label: "H&M Heatmap", icon: "list", href: "/hm/heatmap" },
-      { id: "hm-jeans", label: "H&M Jeans", icon: "list", href: "/hm/jeans" },
-      { id: "hm-womens-fashion", label: "Women's Fashion", icon: "list", href: "/hm/womens-fashion" },
-      { id: "hm-mens-fashion", label: "Men's Fashion", icon: "list", href: "/hm/mens-fashion" },
+      { id: "hm-pants", label: "H&M Pants (US)", icon: "list", href: "/hm/pants" },
+      { id: "hm-heatmap", label: "H&M Heatmap (US)", icon: "list", href: "/hm/heatmap" },
+      { id: "hm-jeans", label: "H&M Jeans (US)", icon: "list", href: "/hm/jeans" },
+      { id: "hm-pants-uk", label: "H&M Pants (UK)", icon: "list", href: "/hm/pants-uk" },
+      { id: "hm-heatmap-uk", label: "H&M Heatmap (UK)", icon: "list", href: "/hm/heatmap-uk" },
+      { id: "hm-pants-germany", label: "H&M Pants (Germany)", icon: "list", href: "/hm/pants-germany" },
+      { id: "hm-heatmap-germany", label: "H&M Heatmap (Germany)", icon: "list", href: "/hm/heatmap-germany" },
     ],
   },
   {

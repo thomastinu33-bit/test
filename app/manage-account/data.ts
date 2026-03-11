@@ -3,7 +3,7 @@ export const brands = [
   { id: "asus", name: "ASUS", trackerCount: 2 },
   { id: "bmw", name: "BMW", trackerCount: 6 },
   { id: "cetaphil", name: "Cetaphil", trackerCount: 1 },
-  { id: "hm", name: "H&M", trackerCount: 3 },
+  { id: "hm", name: "H&M", trackerCount: 7 },
   { id: "nike", name: "Nike", trackerCount: 12 },
   { id: "porsche", name: "Porsche", trackerCount: 19 },
 ] as const;
@@ -29,9 +29,13 @@ export const trackersByBrand: Record<string, { id: string; name: string; locatio
     { id: "skincare", name: "Skincare", location: "United States English" },
   ],
   hm: [
-    { id: "pants", name: "H&M Pants", location: "United States English" },
-    { id: "heatmap", name: "H&M Heatmap", location: "United States English" },
-    { id: "jeans", name: "H&M Jeans", location: "United States English" },
+    { id: "pants", name: "H&M Pants", location: "United States" },
+    { id: "heatmap", name: "H&M Heatmap", location: "United States" },
+    { id: "jeans", name: "H&M Jeans", location: "United States" },
+    { id: "pants-uk", name: "H&M Pants UK", location: "United Kingdom" },
+    { id: "heatmap-uk", name: "H&M Heatmap UK", location: "United Kingdom" },
+    { id: "pants-germany", name: "H&M Pants Germany", location: "Germany" },
+    { id: "heatmap-germany", name: "H&M Heatmap Germany", location: "Germany" },
   ],
 };
 

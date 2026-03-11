@@ -124,9 +124,9 @@ export function ScoreGauge({
           </span>
         </div>
       </div>
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-start justify-center gap-1">
         {icon && (
-          <span className="flex-shrink-0 flex items-center justify-center [&>img]:max-w-[1.75rem] [&>img]:max-h-[1.75rem] [&>svg]:w-5 [&>svg]:h-5">
+          <span className="flex-shrink-0 flex items-center justify-center mt-0.5 [&>img]:max-w-[1.75rem] [&>img]:max-h-[1.75rem] [&>svg]:w-5 [&>svg]:h-5">
             {icon}
           </span>
         )}
