@@ -932,50 +932,46 @@ export function OverviewViz(props?: OverviewVizProps) {
                 <>
                   <div className="fixed inset-0 z-40" aria-hidden onClick={() => setTrackerDropdownOpen(false)} />
                   <div className="absolute right-0 top-full mt-1 z-50 w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden">
-                    <div className="max-h-64 overflow-auto py-1">
+                    <div className="max-h-96 overflow-auto py-1">
                       {overviewGroupBy === "tracker" ? (
                         <>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (selectedTrackerIds.size === trackerList.length) {
-                                setSelectedTrackerIds(new Set());
-                              } else {
-                                setSelectedTrackerIds(new Set(trackerList.map(t => t.id)));
-                              }
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] text-[#262626]"
-                          >
-                            <span className="w-4 h-4 rounded border-2 border-[#e5e5e5] flex items-center justify-center shrink-0 flex-none">
-                              {selectedTrackerIds.size === trackerList.length && selectedTrackerIds.size > 0 && (
-                                <span className="w-2.5 h-2.5 rounded-sm bg-[var(--primary)]" />
-                              )}
-                            </span>
+                          <label className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                            <input
+                              type="checkbox"
+                              checked={selectedTrackerIds.size === trackerList.length && selectedTrackerIds.size > 0}
+                              onChange={() => {
+                                if (selectedTrackerIds.size === trackerList.length) {
+                                  setSelectedTrackerIds(new Set());
+                                } else {
+                                  setSelectedTrackerIds(new Set(trackerList.map(t => t.id)));
+                                }
+                              }}
+                              className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                            />
                             <span className="truncate font-medium">Select All</span>
-                          </button>
+                          </label>
                           <div className="border-t border-[#e5e5e5] my-1" />
                           {trackerList.map((tracker) => (
-                            <button
+                            <label
                               key={tracker.id}
-                              type="button"
-                              onClick={() => {
-                                const next = new Set(selectedTrackerIds);
-                                if (next.has(tracker.id)) {
-                                  next.delete(tracker.id);
-                                } else {
-                                  next.add(tracker.id);
-                                }
-                                setSelectedTrackerIds(next);
-                              }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[#f5f5f5] text-[#262626]"
+                              className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm"
                             >
-                              <span className="w-4 h-4 rounded border-2 border-[#e5e5e5] flex items-center justify-center shrink-0 flex-none">
-                                {selectedTrackerIds.has(tracker.id) && (
-                                  <span className="w-2.5 h-2.5 rounded-sm bg-[var(--primary)]" />
-                                )}
-                              </span>
+                              <input
+                                type="checkbox"
+                                checked={selectedTrackerIds.has(tracker.id)}
+                                onChange={() => {
+                                  const next = new Set(selectedTrackerIds);
+                                  if (next.has(tracker.id)) {
+                                    next.delete(tracker.id);
+                                  } else {
+                                    next.add(tracker.id);
+                                  }
+                                  setSelectedTrackerIds(next);
+                                }}
+                                className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                              />
                               <span className="truncate">{tracker.name}</span>
-                            </button>
+                            </label>
                           ))}
                         </>
                       ) : (
