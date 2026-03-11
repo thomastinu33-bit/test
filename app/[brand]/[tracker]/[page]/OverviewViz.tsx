@@ -755,6 +755,64 @@ export function OverviewViz(props?: OverviewVizProps) {
     fetchData();
   }, [brandId, trackerId, metric, topicId, selectedBrand, overviewView, selectedDateStr, compareToDateStr, trackerList]);
 
+  // Fetch timeline data for selected trackers when in "By Tracker" view
+  useEffect(() => {
+    if (brandId === "hm" && overviewGroupBy === "tracker" && overviewView === "timeline" && trackerList && trackerList.length > 0) {
+      const trackersToFetch = selectedTrackerIds.size > 0 ? Array.from(selectedTrackerIds) : trackerList.map((t) => t.id);
+
+      if (trackersToFetch.length === 0) {
+        setTimelineData(null);
+        return;
+      }
+
+      setLoading(true);
+      const trackerPromises = trackersToFetch.map((tid) => {
+        const q = new URLSearchParams({ brandId, trackerId: tid, metric, model: AVERAGE_ACROSS_ALL, topic: topicId, view: "timeline" });
+        if (selectedDateStr) q.set("date", selectedDateStr);
+        if (compareToDateStr) q.set("compareToDate", compareToDateStr);
+        return fetch(`/api/scores?${q}`).then((res) => res.json());
+      });
+
+      Promise.all(trackerPromises)
+        .then((responses) => {
+          const allDates = new Set<string>();
+          const trackerTimelineMap: Record<string, Record<string, number>> = {};
+
+          // Collect all dates and tracker timeline data
+          responses.forEach((json: OverviewApiResponse, idx) => {
+            const tid = trackersToFetch[idx];
+            const tracker = trackerList.find((t) => t.id === tid);
+            const trackerName = tracker?.name || tid;
+
+            if (json.timeline?.dates) {
+              json.timeline.dates.forEach((d) => allDates.add(d));
+              trackerTimelineMap[trackerName] = {};
+              json.timeline.dates.forEach((date, i) => {
+                if (json.timeline!.series.length > 0 && json.timeline!.series[0].data[i]) {
+                  trackerTimelineMap[trackerName][date] = json.timeline!.series[0].data[i].value;
+                }
+              });
+            }
+          });
+
+          // Create timeline series for each tracker
+          const sortedDates = Array.from(allDates).sort();
+          const series: DimensionTimelineSeries[] = Object.entries(trackerTimelineMap).map(([trackerName, dateValues]) => ({
+            dimension: trackerName,
+            label: trackerName,
+            data: sortedDates.map((date) => ({
+              date,
+              value: dateValues[date] ?? 0,
+            })),
+          }));
+
+          setTimelineData({ dates: sortedDates, series });
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
+  }, [brandId, overviewGroupBy, overviewView, selectedTrackerIds, trackerList, metric, topicId, selectedDateStr, compareToDateStr]);
+
   useEffect(() => {
     const el = chartRef.current;
     if (!el) return;
