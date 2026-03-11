@@ -1638,6 +1638,10 @@ export function OverviewViz(props?: OverviewVizProps) {
               compareToDateLabel={compareToDateStr ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : undefined}
             />
           </div>
+        ) : showTimelineToggle && overviewView === "timeline" ? (
+          <div className="rounded-xl border border-[#e5e5e5] bg-white p-8 text-sm text-[#7F7F7F] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+            {loading ? "Loading timeline data…" : "No timeline data available."}
+          </div>
         ) : null)}
 
         {(isAvgPosition || compareToDateStr) && (
