@@ -923,7 +923,7 @@ export function OverviewViz(props?: OverviewVizProps) {
   const config = METRIC_CONFIG[metric];
   const maxVal = config.max;
   const isAvgPosition = metric === "Average Position";
-  const showTimelineToggle = trackerId !== "luxury-suvs";
+  const showTimelineToggle = !!onTrackerChange && brandId === "hm";
 
   const formatValue = (value: number) =>
     typeof value === "number" && Number.isFinite(value)
