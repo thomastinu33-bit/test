@@ -513,6 +513,13 @@ export function OverviewViz(props?: OverviewVizProps) {
     }
   }, [onTrackerChange]);
 
+  // Set topic to "overall" when in tracker page context
+  useEffect(() => {
+    if (!onTrackerChange) {
+      setTopicId("overall");
+    }
+  }, [onTrackerChange]);
+
   const fetchData = () => {
     setLoading(true);
 
