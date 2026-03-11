@@ -498,7 +498,9 @@ export function OverviewViz(props?: OverviewVizProps) {
   const [chartWidth, setChartWidth] = useState(600);
   const [selectedTrackerIds, setSelectedTrackerIds] = useState<Set<string>>(new Set());
   const [selectedModelId, setSelectedModelId] = useState<string>("");
+  const [selectedBrandIds, setSelectedBrandIds] = useState<Set<string>>(new Set());
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
 
   const { selectedDateStr, compareToDateStr, compareToDate } = useTrackerDate();
   const changeTooltip = compareToDateStr
@@ -786,6 +788,16 @@ export function OverviewViz(props?: OverviewVizProps) {
       }
     }
   }, [overviewGroupBy, models, selectedModelId]);
+
+  // Initialize selectedBrandIds when switching to "By Brand" view
+  useEffect(() => {
+    if (overviewGroupBy === "brand" && brandScores && brandScores.length > 0) {
+      if (selectedBrandIds.size === 0) {
+        const brandIds = new Set(brandScores.map(bs => bs.id));
+        setSelectedBrandIds(brandIds);
+      }
+    }
+  }, [overviewGroupBy, brandScores, selectedBrandIds.size]);
 
   // Filter tracker scores to only show data for the selected model
   const filteredTrackerScores = useMemo(() => {
@@ -1247,6 +1259,76 @@ export function OverviewViz(props?: OverviewVizProps) {
               )}
             </div>
           )}
+          {brandId === "hm" && overviewGroupBy === "brand" && brandScores && brandScores.length > 0 && (
+            <div className="relative min-w-[10rem]">
+              <button
+                type="button"
+                onClick={() => setBrandDropdownOpen((prev) => !prev)}
+                className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
+                aria-label="Select brands"
+                aria-expanded={brandDropdownOpen}
+              >
+                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
+                  Brand
+                </span>
+                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">
+                  {selectedBrandIds.size === brandScores.length ? "All Brands" : `${selectedBrandIds.size} Selected`}
+                </span>
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </button>
+              {brandDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" aria-hidden onClick={() => setBrandDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-50 w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden">
+                    <div className="max-h-96 overflow-auto py-1">
+                      <label className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedBrandIds.size === brandScores.length && selectedBrandIds.size > 0}
+                          onChange={() => {
+                            if (selectedBrandIds.size === brandScores.length) {
+                              setSelectedBrandIds(new Set());
+                            } else {
+                              setSelectedBrandIds(new Set(brandScores.map(bs => bs.id)));
+                            }
+                          }}
+                          className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                        />
+                        <span className="truncate font-medium">Select All</span>
+                      </label>
+                      <div className="border-t border-[#e5e5e5] my-1" />
+                      {brandScores.map((brand) => (
+                        <label
+                          key={brand.id}
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedBrandIds.has(brand.id)}
+                            onChange={() => {
+                              const next = new Set(selectedBrandIds);
+                              if (next.has(brand.id)) {
+                                next.delete(brand.id);
+                              } else {
+                                next.add(brand.id);
+                              }
+                              setSelectedBrandIds(next);
+                            }}
+                            className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                          />
+                          <span className="truncate">{brand.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <TopicDropdown
             topicDropdownOpen={topicDropdownOpen}
             setTopicDropdownOpen={(open) => {
@@ -1285,7 +1367,7 @@ export function OverviewViz(props?: OverviewVizProps) {
           <>
             {brandId === "hm" && overviewGroupBy === "brand" && brandScores && brandScores.length > 0 ? (
               <div className="grid grid-cols-6 w-full gap-x-4 gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
-                {brandScores.map((bs, i) => {
+                {brandScores.filter(bs => selectedBrandIds.has(bs.id)).map((bs, i) => {
                   const change =
                     bs.change != null && Number.isFinite(bs.change)
                       ? isAvgPosition
