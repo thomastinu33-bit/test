@@ -500,7 +500,6 @@ export function OverviewViz(props?: OverviewVizProps) {
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrandIds, setSelectedBrandIds] = useState<Set<string>>(new Set());
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
-  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
 
   const { selectedDateStr, compareToDateStr, compareToDate } = useTrackerDate();
   const changeTooltip = compareToDateStr
@@ -1129,7 +1128,11 @@ export function OverviewViz(props?: OverviewVizProps) {
                 <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
                   Brand
                 </span>
-                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">{brandDisplayLabel}</span>
+                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">
+                  {overviewGroupBy === "brand" && brandId === "hm"
+                    ? selectedBrandIds.size === brandScores?.length ? "All Brands" : `${selectedBrandIds.size} Selected`
+                    : brandDisplayLabel}
+                </span>
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1153,7 +1156,86 @@ export function OverviewViz(props?: OverviewVizProps) {
                       />
                     </div>
                     <div className="max-h-64 overflow-auto py-1">
-                      {!hasAnyFiltered ? (
+                      {overviewGroupBy === "brand" && brandId === "hm" ? (
+                        <>
+                          <label className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
+                            <input
+                              type="checkbox"
+                              checked={selectedBrandIds.size === brands.length && selectedBrandIds.size > 0}
+                              onChange={() => {
+                                if (selectedBrandIds.size === brands.length) {
+                                  setSelectedBrandIds(new Set());
+                                } else {
+                                  setSelectedBrandIds(new Set(brands));
+                                }
+                              }}
+                              className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                            />
+                            <span className="truncate font-medium">Select All</span>
+                          </label>
+                          <div className="border-t border-[#e5e5e5] my-1" />
+                          {!hasAnyFiltered ? (
+                            <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
+                          ) : (
+                            <>
+                              <div className="px-3 pt-2 pb-1">
+                                <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">
+                                  Competitor &amp; Keywords list
+                                </p>
+                              </div>
+                              {filteredCompetitor.map((b) => (
+                                <label
+                                  key={b}
+                                  className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedBrandIds.has(b)}
+                                    onChange={() => {
+                                      const next = new Set(selectedBrandIds);
+                                      if (next.has(b)) {
+                                        next.delete(b);
+                                      } else {
+                                        next.add(b);
+                                      }
+                                      setSelectedBrandIds(next);
+                                    }}
+                                    className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                                  />
+                                  <span className="truncate">{b}</span>
+                                </label>
+                              ))}
+                              <div className="px-3 pt-3 pb-1 border-t border-[#e5e5e5] mt-1">
+                                <p className="text-xs font-semibold text-[#7F7F7F] uppercase tracking-wide">
+                                  All Other Brands &amp; Keywords
+                                </p>
+                              </div>
+                              {filteredOther.map((b) => (
+                                <label
+                                  key={b}
+                                  className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedBrandIds.has(b)}
+                                    onChange={() => {
+                                      const next = new Set(selectedBrandIds);
+                                      if (next.has(b)) {
+                                        next.delete(b);
+                                      } else {
+                                        next.add(b);
+                                      }
+                                      setSelectedBrandIds(next);
+                                    }}
+                                    className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
+                                  />
+                                  <span className="truncate">{b}</span>
+                                </label>
+                              ))}
+                            </>
+                          )}
+                        </>
+                      ) : !hasAnyFiltered ? (
                         <p className="px-3 py-2 text-sm text-[#7F7F7F]">No brands match</p>
                       ) : (
                         <>
@@ -1254,76 +1336,6 @@ export function OverviewViz(props?: OverviewVizProps) {
                         {model.label}
                       </button>
                     ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-          {brandId === "hm" && overviewGroupBy === "brand" && brandScores && brandScores.length > 0 && (
-            <div className="relative min-w-[10rem]">
-              <button
-                type="button"
-                onClick={() => setBrandDropdownOpen((prev) => !prev)}
-                className="relative flex w-full items-center rounded-lg border border-[#e5e5e5] bg-white h-10 pl-3 pr-9 text-left hover:bg-[#fafafa]"
-                aria-label="Select brands"
-                aria-expanded={brandDropdownOpen}
-              >
-                <span className="absolute left-3 top-0 -translate-y-1/2 bg-white px-1 text-xs text-[#7F7F7F]">
-                  Brand
-                </span>
-                <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">
-                  {selectedBrandIds.size === brandScores.length ? "All Brands" : `${selectedBrandIds.size} Selected`}
-                </span>
-                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </button>
-              {brandDropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" aria-hidden onClick={() => setBrandDropdownOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-50 w-56 rounded-lg border border-[#e5e5e5] bg-white shadow-lg overflow-hidden">
-                    <div className="max-h-96 overflow-auto py-1">
-                      <label className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm">
-                        <input
-                          type="checkbox"
-                          checked={selectedBrandIds.size === brandScores.length && selectedBrandIds.size > 0}
-                          onChange={() => {
-                            if (selectedBrandIds.size === brandScores.length) {
-                              setSelectedBrandIds(new Set());
-                            } else {
-                              setSelectedBrandIds(new Set(brandScores.map(bs => bs.id)));
-                            }
-                          }}
-                          className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
-                        />
-                        <span className="truncate font-medium">Select All</span>
-                      </label>
-                      <div className="border-t border-[#e5e5e5] my-1" />
-                      {brandScores.map((brand) => (
-                        <label
-                          key={brand.id}
-                          className="flex items-center gap-2 px-3 py-2 hover:bg-[#f5f5f5] cursor-pointer text-sm"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedBrandIds.has(brand.id)}
-                            onChange={() => {
-                              const next = new Set(selectedBrandIds);
-                              if (next.has(brand.id)) {
-                                next.delete(brand.id);
-                              } else {
-                                next.add(brand.id);
-                              }
-                              setSelectedBrandIds(next);
-                            }}
-                            className="rounded border-[#e5e5e5] text-[var(--primary)] focus:ring-[var(--primary)]"
-                          />
-                          <span className="truncate">{brand.label}</span>
-                        </label>
-                      ))}
-                    </div>
                   </div>
                 </>
               )}
