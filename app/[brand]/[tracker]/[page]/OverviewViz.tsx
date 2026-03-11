@@ -1130,7 +1130,7 @@ export function OverviewViz(props?: OverviewVizProps) {
                 </span>
                 <span className="flex-1 min-w-0 text-sm text-[#262626] truncate pt-0.5">
                   {overviewGroupBy === "brand" && brandId === "hm"
-                    ? selectedBrandIds.size === brandScores?.length ? "All Brands" : `${selectedBrandIds.size} Selected`
+                    ? `${selectedBrandIds.size} Selected`
                     : brandDisplayLabel}
                 </span>
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7F7F7F] pointer-events-none">
