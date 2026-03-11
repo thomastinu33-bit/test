@@ -506,6 +506,13 @@ export function OverviewViz(props?: OverviewVizProps) {
     ? `Compared to ${compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}`
     : undefined;
 
+  // Enforce "model" view when in tracker page context (no onTrackerChange prop)
+  useEffect(() => {
+    if (!onTrackerChange) {
+      setOverviewGroupBy("model");
+    }
+  }, [onTrackerChange]);
+
   const fetchData = () => {
     setLoading(true);
 
