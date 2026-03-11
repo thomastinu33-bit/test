@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import html2canvas from "html2canvas";
 import { useTrackerDate } from "../TrackerDateContext";
@@ -9,14 +9,14 @@ import { getTracker } from "@/app/manage-account/data";
 import { ScoreGauge } from "./ScoreGauge";
 import { TopicDropdown } from "./TopicDropdown";
 
-function getCountryFlag(location: string): string {
+function getCountryCode(location: string): string {
   const countryMap: Record<string, string> = {
-    "United States": "🇺🇸",
-    "United Kingdom": "🇬🇧",
-    "Germany": "🇩🇪",
-    "United States English": "🇺🇸",
+    "United States": "us",
+    "United Kingdom": "gb",
+    "Germany": "de",
+    "United States English": "us",
   };
-  return countryMap[location] ?? "🌍";
+  return countryMap[location] ?? "un";
 }
 
 export type OverviewMetric = "AI Brand Score" | "Visibility Score" | "Average Position";
@@ -491,10 +491,13 @@ export function OverviewViz(props?: OverviewVizProps) {
   const [brands, setBrands] = useState<string[]>([]);
   const [modelScores, setModelScores] = useState<ModelScore[] | null>(null);
   const [trackerScores, setTrackerScores] = useState<Array<{ id: string; label: string; location?: string; value: number; change: number | null }> | null>(null);
+  const [trackerModelScores, setTrackerModelScores] = useState<Record<string, Array<{ id: string; label: string; value: number; change: number | null }>>>({});
   const [overviewView, setOverviewView] = useState<OverviewView>("gauge");
   const [overviewGroupBy, setOverviewGroupBy] = useState<OverviewGroupBy>("model");
   const [chartWidth, setChartWidth] = useState(600);
   const [selectedTrackerIds, setSelectedTrackerIds] = useState<Set<string>>(new Set());
+  const [selectedModelId, setSelectedModelId] = useState<string>("");
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
 
   const { selectedDateStr, compareToDateStr, compareToDate } = useTrackerDate();
   const changeTooltip = compareToDateStr
@@ -615,6 +618,7 @@ export function OverviewViz(props?: OverviewVizProps) {
 
           // Calculate tracker scores (average of all models for each tracker)
           const trackerScoresMap: Record<string, { value: number; count: number; change: number; changeCount: number }> = {};
+          const trackerModelScoresMap: Record<string, Array<{ id: string; label: string; value: number; change: number | null }>> = {};
           responses.forEach((json, idx) => {
             const trackerId = trackerIds[idx];
             const trackerObj = trackerList?.find(t => t.id === trackerId);
@@ -624,6 +628,8 @@ export function OverviewViz(props?: OverviewVizProps) {
               if (!trackerScoresMap[trackerId]) {
                 trackerScoresMap[trackerId] = { value: 0, count: 0, change: 0, changeCount: 0 };
               }
+              // Store individual model scores for this tracker
+              trackerModelScoresMap[trackerId] = json.modelScores;
               json.modelScores.forEach((ms) => {
                 trackerScoresMap[trackerId].value += ms.value;
                 trackerScoresMap[trackerId].count += 1;
@@ -672,6 +678,7 @@ export function OverviewViz(props?: OverviewVizProps) {
           setTrackerTopics(trackerTopicsMap);
           setModelScores(aggregatedModelScores.length > 0 ? aggregatedModelScores : null);
           setTrackerScores(calculatedTrackerScores.length > 0 ? calculatedTrackerScores : null);
+          setTrackerModelScores(trackerModelScoresMap);
           setTimelineData(firstResponse?.timeline ?? null);
           setLoading(false);
         })
@@ -721,7 +728,7 @@ export function OverviewViz(props?: OverviewVizProps) {
     return () => ro.disconnect();
   }, [overviewView]);
 
-  // Initialize selectedTrackerIds when switching to "By Tracker" view
+  // Initialize selectedTrackerIds and selectedModelIds when switching to "By Tracker" view
   useEffect(() => {
     if (overviewGroupBy === "tracker" && trackerList && trackerList.length > 0) {
       // Initialize with all trackers if not already selected
@@ -731,6 +738,47 @@ export function OverviewViz(props?: OverviewVizProps) {
       }
     }
   }, [overviewGroupBy, trackerList, selectedTrackerIds.size]);
+
+  // Initialize selectedModelId when switching to "By Tracker" view
+  useEffect(() => {
+    if (overviewGroupBy === "tracker" && models.length > 0) {
+      if (!selectedModelId) {
+        setSelectedModelId("__average__");
+      }
+    }
+  }, [overviewGroupBy, models, selectedModelId]);
+
+  // Filter tracker scores to only show data for the selected model
+  const filteredTrackerScores = useMemo(() => {
+    if (!trackerScores || !selectedModelId || overviewGroupBy !== "tracker") {
+      return trackerScores;
+    }
+
+    return trackerScores.map((ts) => {
+      if (ts.id === "__average__") {
+        return ts;
+      }
+      const modelScores = trackerModelScores[ts.id];
+      if (!modelScores || modelScores.length === 0) {
+        return ts;
+      }
+      // If average is selected, calculate average across all models
+      if (selectedModelId === "__average__") {
+        const avgValue = Math.round((modelScores.reduce((sum, m) => sum + m.value, 0) / modelScores.length) * 10) / 10;
+        const changes = modelScores
+          .map(m => m.change !== null && Number.isFinite(m.change) ? m.change : null)
+          .filter((c): c is number => c !== null);
+        const avgChange = changes.length > 0 ? Math.round((changes.reduce((a, b) => a + b, 0) / changes.length) * 10) / 10 : null;
+        return { ...ts, value: avgValue, change: avgChange };
+      }
+      // Find the score for the selected model
+      const selectedModel = modelScores.find(ms => ms.id === selectedModelId);
+      if (!selectedModel) {
+        return { ...ts, value: 0, change: null };
+      }
+      return { ...ts, value: selectedModel.value, change: selectedModel.change };
+    });
+  }, [trackerScores, trackerModelScores, selectedModelId, overviewGroupBy]);
 
   const handleCapture = async () => {
     if (!cardRef.current) return;
@@ -1099,6 +1147,51 @@ export function OverviewViz(props?: OverviewVizProps) {
               )}
             </div>
           )}
+          {overviewGroupBy === "tracker" && models.length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setModelDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-2 h-10 pl-3 pr-3 rounded-lg border border-[#e5e5e5] bg-white text-sm font-medium text-[#262626] hover:bg-[#fafafa] transition-colors"
+              >
+                {selectedModelId === "__average__" ? "Average" : models.find((m) => m.id === selectedModelId)?.label || "Model"}
+                <svg className="w-4 h-4 text-[#7F7F7F] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {modelDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setModelDropdownOpen(false)} />
+                  <div className="absolute top-full left-0 mt-1 z-50 w-52 rounded-lg border border-[#e5e5e5] bg-white shadow-lg py-1">
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedModelId("__average__"); setModelDropdownOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors hover:bg-[#f5f5f5] ${
+                        selectedModelId === "__average__" ? "text-[var(--primary)] font-medium" : "text-[#262626]"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${selectedModelId === "__average__" ? "bg-[var(--primary)]" : "bg-transparent"}`} />
+                      Average
+                    </button>
+                    <div className="border-t border-[#e5e5e5] my-1" />
+                    {models.map((model) => (
+                      <button
+                        key={model.id}
+                        type="button"
+                        onClick={() => { setSelectedModelId(model.id); setModelDropdownOpen(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors hover:bg-[#f5f5f5] ${
+                          selectedModelId === model.id ? "text-[var(--primary)] font-medium" : "text-[#262626]"
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${selectedModelId === model.id ? "bg-[var(--primary)]" : "bg-transparent"}`} />
+                        {model.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <TopicDropdown
             topicDropdownOpen={topicDropdownOpen}
             setTopicDropdownOpen={(open) => {
@@ -1135,9 +1228,9 @@ export function OverviewViz(props?: OverviewVizProps) {
       <div className="px-4 pt-6 pb-6 sm:px-6">
         {overviewView === "gauge" && (
           <>
-            {trackerList && trackerList.length > 0 && overviewGroupBy === "tracker" && trackerScores && trackerScores.length > 0 ? (
+            {trackerList && trackerList.length > 0 && overviewGroupBy === "tracker" && filteredTrackerScores && filteredTrackerScores.length > 0 ? (
               <div className="grid grid-cols-6 w-full gap-x-4 gap-y-2 sm:gap-y-4 lg:gap-y-6 min-w-0">
-                {trackerScores.filter(ts => ts.id === "__average__" || selectedTrackerIds.has(ts.id)).map((ts, i) => {
+                {filteredTrackerScores.filter(ts => ts.id === "__average__" || selectedTrackerIds.has(ts.id)).map((ts, i) => {
                   const change =
                     ts.change != null && Number.isFinite(ts.change)
                       ? isAvgPosition
@@ -1145,11 +1238,17 @@ export function OverviewViz(props?: OverviewVizProps) {
                         : ts.change
                       : null;
                   const gaugeColors = i === 0 ? { arcColor: "var(--primary-dark)", arcGradientStart: "var(--primary-dark)", arcGradientEnd: "var(--primary-dark)" } : getModelGaugeColors(i - 1);
-                  const label = ts.location ? `${getCountryFlag(ts.location)} ${ts.label}` : ts.label;
                   return (
-                    <div key={ts.id} className="flex justify-center min-w-0">
+                    <div key={ts.id} className="flex flex-col items-center gap-2 min-w-0">
+                      {ts.location && (
+                        <img
+                          src={`https://flagicons.lipis.dev/flags/4x3/${getCountryCode(ts.location)}.svg`}
+                          alt={ts.location}
+                          className="w-6 h-4"
+                        />
+                      )}
                       <ScoreGauge
-                        label={label}
+                        label={ts.label}
                         value={ts.value}
                         max={maxVal}
                         change={change}
