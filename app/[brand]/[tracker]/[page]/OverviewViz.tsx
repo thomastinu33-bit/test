@@ -781,10 +781,8 @@ export function OverviewViz(props?: OverviewVizProps) {
 
       setLoading(true);
       const trackerPromises = trackersToFetch.map((tid) => {
-        const q = new URLSearchParams({ brandId, trackerId: tid, metric, model: AVERAGE_ACROSS_ALL, topic: topicId, view: "timeline" });
-        if (selectedDateStr) q.set("date", selectedDateStr);
-        if (compareToDateStr) q.set("compareToDate", compareToDateStr);
-        return fetch(`/api/scores?${q}`).then((res) => res.json());
+        const q = new URLSearchParams({ brandId, trackerId: tid, metric });
+        return fetch(`/api/timeline?${q}`).then((res) => res.json());
       });
 
       Promise.all(trackerPromises)
@@ -793,17 +791,17 @@ export function OverviewViz(props?: OverviewVizProps) {
           const trackerTimelineMap: Record<string, Record<string, number>> = {};
 
           // Collect all dates and tracker timeline data
-          responses.forEach((json: OverviewApiResponse, idx) => {
+          responses.forEach((json: any, idx) => {
             const tid = trackersToFetch[idx];
             const tracker = trackerList.find((t) => t.id === tid);
             const trackerName = tracker?.name || tid;
 
-            if (json.timeline?.dates) {
-              json.timeline.dates.forEach((d) => allDates.add(d));
+            if (json.dates && json.series) {
+              json.dates.forEach((d: string) => allDates.add(d));
               trackerTimelineMap[trackerName] = {};
-              json.timeline.dates.forEach((date, i) => {
-                if (json.timeline!.series.length > 0 && json.timeline!.series[0].data[i]) {
-                  trackerTimelineMap[trackerName][date] = json.timeline!.series[0].data[i].value;
+              json.dates.forEach((date: string, i: number) => {
+                if (json.series.length > 0 && json.series[0].data[i]) {
+                  trackerTimelineMap[trackerName][date] = json.series[0].data[i].value;
                 }
               });
             }
