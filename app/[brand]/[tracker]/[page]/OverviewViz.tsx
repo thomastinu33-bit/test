@@ -1436,7 +1436,7 @@ export function OverviewViz(props?: OverviewVizProps) {
                   );
                 })}
               </div>
-            )))}
+            ))}
           </>
         )}
 
