@@ -528,7 +528,9 @@ export function TimelineViz(props?: TimelineVizProps) {
           .map((c) => brands.find((b) => b.toUpperCase() === c.toUpperCase())!);
         setSelectedBrandsTimeline((prev) => (prev.size === 0 ? new Set(inList) : prev));
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Failed to fetch timeline metadata:", err);
+      });
   }, [brandId, trackerId, mainBrand]);
 
   useEffect(() => {
@@ -541,6 +543,19 @@ export function TimelineViz(props?: TimelineVizProps) {
       if (defaultBrand) setSelectedBrand(defaultBrand);
     }
   }, [brandsList, top10Brands, mainBrand, selectedBrand]);
+
+  // Initialize selectedBrandsTimeline with competitor list when brands are fetched
+  useEffect(() => {
+    if (brandsList.length > 0 && selectedBrandsTimeline.size === 0) {
+      const competitorOrder = activeCompetitorList;
+      const inList = competitorOrder
+        .filter((c) => brandsList.some((b) => b.toUpperCase() === c.toUpperCase()))
+        .map((c) => brandsList.find((b) => b.toUpperCase() === c.toUpperCase())!);
+      if (inList.length > 0) {
+        setSelectedBrandsTimeline(new Set(inList));
+      }
+    }
+  }, [brandsList, activeCompetitorList]);
 
   useEffect(() => {
     const el = chartContainerRef.current;
