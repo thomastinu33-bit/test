@@ -836,7 +836,7 @@ export function TimelineViz(props?: TimelineVizProps) {
 
   const radarTopicColumnsAll: RadarTopicColumn[] = radarTableData?.topicColumns ?? [];
   const radarTopicColumnsFiltered = radarTopicColumnsAll.filter((t) => selectedTopics.has(String(t.id)));
-  const radarTopicColumns: RadarTopicColumn[] = radarTopicColumnsFiltered.length > 0 ? radarTopicColumnsFiltered : radarTopicColumnsAll.slice(0, 10);
+  const radarTopicColumns: RadarTopicColumn[] = radarTopicColumnsFiltered.length > 0 ? radarTopicColumnsFiltered : radarTopicColumnsAll;
   const radarSeries: BrandSeries[] =
     radarTableData && radarTopicColumns.length > 0
       ? radarTableData.rows
