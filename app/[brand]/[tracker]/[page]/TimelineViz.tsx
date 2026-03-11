@@ -816,8 +816,10 @@ export function TimelineViz(props?: TimelineVizProps) {
       .then((data: { topicColumns: RadarTopicColumn[]; rows: { brand: string; [k: string]: unknown }[] }) => {
         // Use mock data as fallback for H&M trackers if API returns empty
         if (brandId === "hm" && (!data.topicColumns || data.topicColumns.length === 0 || !data.rows || data.rows.length === 0)) {
-          console.log("Using mock data for radar chart", { topicColumns, selectedBrandsTimeline, metric });
-          const mockData = generateMockRadarData(Array.from(selectedBrandsTimeline), topicColumns, metric);
+          // Use topicColumns from state or API data
+          const columnsToUse = data.topicColumns && data.topicColumns.length > 0 ? data.topicColumns : topicColumns;
+          console.log("Using mock data for radar chart", { columnsToUse, selectedBrandsTimeline, metric });
+          const mockData = generateMockRadarData(Array.from(selectedBrandsTimeline), columnsToUse, metric);
           console.log("Generated mock radar data:", mockData);
           setRadarTableData(mockData);
         } else {
@@ -828,7 +830,9 @@ export function TimelineViz(props?: TimelineVizProps) {
       .catch(() => {
         // Use mock data as fallback for H&M trackers on API error
         if (brandId === "hm" && selectedBrandsTimeline.size > 0) {
+          console.log("API error, using mock data for radar chart", { topicColumns, selectedBrandsTimeline, metric });
           const mockData = generateMockRadarData(Array.from(selectedBrandsTimeline), topicColumns, metric);
+          console.log("Generated mock radar data:", mockData);
           setRadarTableData(mockData);
         } else {
           setRadarTableData(null);
