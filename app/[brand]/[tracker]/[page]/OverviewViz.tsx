@@ -1531,9 +1531,10 @@ export function OverviewViz(props?: OverviewVizProps) {
               title="Gauges"
               aria-label="Switch to gauges view"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <circle cx="12" cy="12" r="9" strokeWidth={2} />
-                <path d="M12 6v6l4 2" strokeWidth={2} strokeLinecap="round" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden>
+                <circle cx="12" cy="13" r="8" />
+                <path d="M8 13h8" strokeLinecap="round" />
+                <path d="M12 5v8" strokeLinecap="round" />
               </svg>
             </button>
             <button
