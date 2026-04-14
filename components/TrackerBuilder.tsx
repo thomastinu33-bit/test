@@ -134,151 +134,160 @@ export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdateProm
           </div>
 
           {items.map((item) => (
-            <div key={item.name} className="border border-[#EEE] rounded-lg overflow-hidden">
+            <div key={item.name} className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white hover:border-[#D0D0D0] transition-colors">
               <button
                 onClick={() => toggleTopic(item.name)}
-                className="w-full px-5 py-2 flex items-center justify-between bg-white hover:bg-[#F9F9F9] transition-colors border-b border-[#EEE]"
+                className="w-full px-4 py-3.5 flex items-center justify-between bg-white hover:bg-[#FAFAFA] transition-colors"
               >
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`flex-shrink-0 transition-transform ${
+                      expandedTopics.has(item.name) ? "rotate-90" : ""
+                    }`}
+                  >
+                    <path d="M9 6l6 6-6 6" stroke="#7F7F7F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <div className="flex flex-col min-w-0 gap-1">
+                    {editingTopicName === item.name ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editingTopicValue}
+                        onChange={(e) => setEditingTopicValue(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            saveTopicEdit(item.name);
+                          } else if (e.key === "Escape") {
+                            setEditingTopicName(null);
+                          }
+                        }}
+                        className="text-sm font-semibold text-[#262626] border border-[#048BC5] rounded px-2 py-1 min-w-0"
+                      />
+                    ) : (
+                      <span className="text-sm font-semibold text-[#262626] truncate">{item.name}</span>
+                    )}
+                    <span className="text-xs text-[#999] font-medium">{item.promptCount} prompts</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 ml-2">
                   {editingTopicName === item.name ? (
-                    <input
-                      autoFocus
-                      type="text"
-                      value={editingTopicValue}
-                      onChange={(e) => setEditingTopicValue(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
                           saveTopicEdit(item.name);
-                        } else if (e.key === "Escape") {
+                        }}
+                        className="text-xs font-medium text-[#048BC5] hover:bg-[#E0F3FE] px-2.5 py-1.5 rounded transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditingTopicName(null);
-                        }
-                      }}
-                      className="text-sm font-medium text-[#262626] border border-[#048BC5] rounded px-2 py-1 flex-1 min-w-0"
-                    />
+                        }}
+                        className="text-xs font-medium text-[#7F7F7F] hover:bg-[#F0F0F0] px-2.5 py-1.5 rounded transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </>
                   ) : (
-                    <span className="text-sm font-medium text-[#262626] truncate">{item.name}</span>
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditingTopic(item.name);
+                        }}
+                        className="p-1.5 hover:bg-[#F0F0F0] rounded transition-colors"
+                        title="Edit topic"
+                      >
+                        <EditIcon />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveItem(item.name);
+                        }}
+                        className="p-1.5 hover:bg-[#F0F0F0] rounded transition-colors text-[#7F7F7F] hover:text-[#EF4444]"
+                      >
+                        <DeleteIcon />
+                      </button>
+                    </>
                   )}
                 </div>
-                <span className="text-xs text-[#7F7F7F] font-medium whitespace-nowrap mx-2">
-                  {item.promptCount} prompts
-                </span>
-                {editingTopicName === item.name ? (
-                  <>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        saveTopicEdit(item.name);
-                      }}
-                      className="text-xs font-medium text-[#048BC5] hover:bg-[#E0F3FE] px-2 py-1 rounded"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingTopicName(null);
-                      }}
-                      className="text-xs font-medium text-[#7F7F7F] hover:bg-[#EEE] px-2 py-1 rounded"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startEditingTopic(item.name);
-                      }}
-                      className="hover:bg-[#EEE] p-1 rounded"
-                      title="Edit topic"
-                    >
-                      <EditIcon />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveItem(item.name);
-                      }}
-                      className="hover:bg-[#EEE] p-1 rounded"
-                    >
-                      <DeleteIcon />
-                    </button>
-                  </>
-                )}
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className={`transition-transform ${
-                    expandedTopics.has(item.name) ? "rotate-90" : ""
-                  }`}
-                >
-                  <path d="M9 6l6 6-6 6" stroke="#262626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
               </button>
 
               {/* Prompts */}
               {expandedTopics.has(item.name) && item.prompts && (
-                <div className="bg-[#F9F9F9] space-y-1.5 p-2">
+                <div className="border-t border-[#E5E5E5] bg-[#FAFAFA] divide-y divide-[#E5E5E5]">
                   {item.prompts.map((prompt, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-2 bg-white border border-[#EEE] rounded p-2"
+                      className="flex items-start gap-3 px-4 py-3 hover:bg-[#F3F3F3] transition-colors group"
                     >
-                      {editingPrompt?.topicName === item.name && editingPrompt?.index === idx ? (
-                        <input
-                          autoFocus
-                          type="text"
-                          value={editingPromptValue}
-                          onChange={(e) => setEditingPromptValue(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              savePromptEdit();
-                            } else if (e.key === "Escape") {
-                              setEditingPrompt(null);
-                            }
-                          }}
-                          className="text-xs text-[#262626] flex-1 min-w-0 border border-[#048BC5] rounded px-2 py-1"
-                        />
-                      ) : (
-                        <p className="text-xs text-[#262626] flex-1 min-w-0">{prompt}</p>
-                      )}
-                      {editingPrompt?.topicName === item.name && editingPrompt?.index === idx ? (
-                        <>
-                          <button
-                            onClick={() => savePromptEdit()}
-                            className="text-xs font-medium text-[#048BC5] hover:bg-[#E0F3FE] px-1 py-0.5 rounded flex-shrink-0"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditingPrompt(null)}
-                            className="text-xs font-medium text-[#7F7F7F] hover:bg-[#EEE] px-1 py-0.5 rounded flex-shrink-0"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => startEditingPrompt(item.name, idx, prompt)}
-                          className="hover:bg-[#EEE] p-1 rounded flex-shrink-0"
-                          title="Edit prompt"
-                        >
-                          <EditIcon />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          // Remove individual prompt
-                        }}
-                        className="hover:bg-[#EEE] p-1 rounded flex-shrink-0"
-                      >
-                        <DeleteIcon />
-                      </button>
+                      <span className="text-xs font-medium text-[#BBB] mt-1 flex-shrink-0">{idx + 1}.</span>
+                      <div className="flex-1 min-w-0">
+                        {editingPrompt?.topicName === item.name && editingPrompt?.index === idx ? (
+                          <input
+                            autoFocus
+                            type="text"
+                            value={editingPromptValue}
+                            onChange={(e) => setEditingPromptValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                savePromptEdit();
+                              } else if (e.key === "Escape") {
+                                setEditingPrompt(null);
+                              }
+                            }}
+                            className="text-sm text-[#262626] flex-1 w-full border border-[#048BC5] rounded px-2 py-1"
+                          />
+                        ) : (
+                          <p className="text-sm text-[#262626] leading-relaxed">{prompt}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        {editingPrompt?.topicName === item.name && editingPrompt?.index === idx ? (
+                          <>
+                            <button
+                              onClick={() => savePromptEdit()}
+                              className="text-xs font-medium text-[#048BC5] hover:bg-[#E0F3FE] px-2 py-1 rounded transition-colors"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => setEditingPrompt(null)}
+                              className="text-xs font-medium text-[#7F7F7F] hover:bg-[#E0E0E0] px-2 py-1 rounded transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => startEditingPrompt(item.name, idx, prompt)}
+                              className="p-1.5 hover:bg-[#E0E0E0] rounded transition-colors"
+                              title="Edit prompt"
+                            >
+                              <EditIcon />
+                            </button>
+                            <button
+                              onClick={() => {
+                                // Remove individual prompt
+                              }}
+                              className="p-1.5 hover:bg-[#E0E0E0] rounded transition-colors text-[#7F7F7F] hover:text-[#EF4444]"
+                            >
+                              <DeleteIcon />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
