@@ -135,9 +135,9 @@ export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdateProm
 
           {items.map((item) => (
             <div key={item.name} className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white hover:border-[#D0D0D0] transition-colors">
-              <button
+              <div
                 onClick={() => toggleTopic(item.name)}
-                className="w-full px-4 py-3.5 flex items-center gap-2 bg-white hover:bg-[#FAFAFA] transition-colors"
+                className="w-full px-4 py-3.5 flex items-center gap-2 bg-white hover:bg-[#FAFAFA] transition-colors cursor-pointer"
               >
                 {editingTopicName === item.name ? (
                   <input
@@ -219,7 +219,7 @@ export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdateProm
                 >
                   <path d="M9 6l6 6-6 6" stroke="#7F7F7F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </button>
+              </div>
 
               {/* Prompts */}
               {expandedTopics.has(item.name) && item.prompts && (
