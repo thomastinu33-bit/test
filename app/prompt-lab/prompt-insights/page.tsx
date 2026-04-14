@@ -65,8 +65,8 @@ export default function PromptInsightsPage() {
   return (
     <div className="bg-[#f6f6f6] w-full min-h-screen flex flex-col">
       {/* Tabs */}
-      <div className="bg-[#f6f6f6] px-8 pt-5 w-full">
-        <div className="flex gap-0">
+      <div className="bg-[#f6f6f6] pt-5 w-full">
+        <div className="flex gap-0 px-8">
           {(["prompt-research", "prompt-volume"] as const).map((tab, idx) => {
             const label = tab === "prompt-research" ? "Prompt Research" : "Prompt Volume";
             const isActive = mainTab === tab;
@@ -89,9 +89,9 @@ export default function PromptInsightsPage() {
       </div>
 
       {/* Content Area */}
-      <div className="bg-white font-sans pl-8 pr-8 pt-8 pb-8 w-full flex-1">
+      <div className="bg-white font-sans pt-8 pb-8 w-full flex-1">
         {mainTab === "prompt-research" ? (
-          <div className="space-y-8">
+          <div className="space-y-8 px-8">
             {/* Header */}
             <div>
               <h2 className="text-2xl font-bold text-[#262626] mb-2">Prompt Research</h2>
@@ -234,7 +234,7 @@ export default function PromptInsightsPage() {
             </div>
           </div>
         ) : (
-          <div>
+          <div className="px-8">
             <h2 className="text-2xl font-bold text-[#262626] mb-2">Prompt Volume</h2>
             <p className="text-base text-[#7f7f7f]">Content coming soon...</p>
           </div>
