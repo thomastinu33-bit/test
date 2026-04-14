@@ -64,8 +64,8 @@ export function AiAgentProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AiAgentContext.Provider value={{ isOpen, open, close, toggle }}>
-      <main className="ml-[280px] h-screen flex overflow-hidden">
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+      <div className="flex w-full">
+        <div className="flex-1 min-w-0 flex flex-col">
           {children}
         </div>
         {isOpen && (
@@ -153,7 +153,7 @@ export function AiAgentProvider({ children }: { children: React.ReactNode }) {
             </div>
           </aside>
         )}
-      </main>
+      </div>
     </AiAgentContext.Provider>
   );
 }
