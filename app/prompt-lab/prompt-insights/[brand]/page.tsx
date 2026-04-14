@@ -996,13 +996,13 @@ export default function BrandResearchPage() {
                   <div className="space-y-2">
                     {filteredSubcategories.map((subcategory) => (
                       <div key={subcategory.name} className="border border-[#EEE] rounded-lg overflow-hidden">
-                        <button
+                        <div
                           onClick={() =>
                             setOpenAccordion(
                               openAccordion === subcategory.name ? null : subcategory.name
                             )
                           }
-                          className="w-full px-4 py-3 flex flex-wrap items-start bg-white hover:bg-[#F9F9F9] transition-colors gap-2 relative pr-10"
+                          className="w-full px-4 py-3 flex flex-wrap items-start bg-white hover:bg-[#F9F9F9] transition-colors gap-2 relative pr-10 cursor-pointer"
                         >
                           <div className="flex items-center gap-2 flex-1">
                             <span className="text-sm font-medium text-[#262626] text-left">
@@ -1045,7 +1045,7 @@ export default function BrandResearchPage() {
                               strokeLinejoin="round"
                             />
                           </svg>
-                        </button>
+                        </div>
 
                         {openAccordion === subcategory.name && (
                           <div className="bg-[#F9F9F9] border-t border-[#EEE] p-4 space-y-4">
