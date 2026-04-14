@@ -80,6 +80,19 @@ const COMPETITOR_LIST_HM_PANTS = ["H&M", "ZARA", "UNIQLO", "FOREVER 21", "MANGO"
 const COMPETITOR_LIST_HM_HEATMAP = ["H&M", "ZARA", "UNIQLO", "NIKE", "ADIDAS", "LEVI'S", "LULULEMON", "NORDSTROM"] as const;
 const COMPETITOR_LIST_HM_JEANS = ["H&M", "LEVI'S", "ZARA", "MADEWELL", "AMERICAN EAGLE", "GAP", "BANANA REPUBLIC", "HOLLISTER", "UNIQLO", "MANGO", "ABERCROMBIE & FITCH"] as const;
 
+const CHART_COLORS = [
+  "var(--viz-1)",
+  "var(--viz-2)",
+  "var(--viz-3)",
+  "var(--viz-4)",
+  "var(--viz-5)",
+  "var(--viz-6)",
+  "var(--viz-7)",
+  "var(--viz-8)",
+  "var(--viz-9)",
+  "var(--viz-10)",
+];
+
 const GAUGE_COLORS = [
   "var(--primary)",
   "var(--viz-2)",
@@ -175,8 +188,14 @@ function formatDateLabel(dateStr: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" });
 }
 
+function formatMonthLabel(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y!, m! - 1, d!);
+  return date.toLocaleDateString("en-US", { month: "long" });
+}
+
 const CHART_HEIGHT = 280;
-const CHART_PADDING = { top: 16, right: 16, bottom: 32, left: 44 };
+const CHART_PADDING = { top: 16, right: 8, bottom: 32, left: 36 };
 
 const TOOLTIP_MAX_WIDTH = 224;
 const TOOLTIP_GAP = 12;
@@ -189,6 +208,7 @@ function OverviewTimelineChart({
   formatValue,
   width,
   compareToDateLabel,
+  showAllDates,
 }: {
   dates: string[];
   series: DimensionTimelineSeries[];
@@ -198,6 +218,7 @@ function OverviewTimelineChart({
   formatValue: (v: number) => string;
   width: number;
   compareToDateLabel?: string;
+  showAllDates?: boolean;
 }) {
   const [hoveredDateIndex, setHoveredDateIndex] = useState<number | null>(null);
   const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
@@ -251,8 +272,29 @@ function OverviewTimelineChart({
     isAvgPosition ? v.toFixed(1) : Math.round(v).toString();
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="relative">
+    <div className="w-full">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-3">
+        {series.map((s, idx) => {
+          const isHidden = hiddenSeries.has(s.dimension);
+          return (
+            <button
+              key={s.dimension}
+              type="button"
+              onClick={() => toggleSeries(s.dimension)}
+              className={`flex items-center gap-2 px-2 py-1 -m-1 text-left transition-colors hover:bg-[#f5f5f5] rounded ${isHidden ? "opacity-40" : ""}`}
+            >
+              <span
+                className="h-0.5 shrink-0 rounded-full"
+                style={{ background: getChartColor(CHART_COLORS, idx), width: "16px" }}
+              />
+              <span className={`text-xs font-medium ${isHidden ? "text-[#999] line-through" : "text-[#525252]"}`}>
+                {s.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="relative w-full">
         <svg
           width={width}
           height={CHART_HEIGHT}
@@ -264,25 +306,67 @@ function OverviewTimelineChart({
           {[yMin, yMin + yRange * 0.25, yMin + yRange * 0.5, yMin + yRange * 0.75, yMax].map((v, i) => (
             <text
               key={i}
-              x={CHART_PADDING.left - 8}
-              y={yScale(v)}
+              x={CHART_PADDING.left - 10}
+              y={yScale(v) + 3}
               textAnchor="end"
-              className="fill-[#525252] text-[11px]"
+              dominantBaseline="middle"
+              className="fill-[#6d6d6d] text-[12px] font-normal"
             >
               {isAvgPosition ? v.toFixed(1) : Math.round(v).toString()}
             </text>
           ))}
-          {dates.map((d, i) => (
-            <text
-              key={d}
-              x={xScale(i)}
-              y={CHART_HEIGHT - 8}
-              textAnchor="middle"
-              className="fill-[#525252] text-[10px]"
-            >
-              {formatDateLabel(d)}
-            </text>
-          ))}
+          {dates.map((d, i) => {
+            if (showAllDates) {
+              // Show spaced dates for "by tracker" view (roughly 4-5 evenly spaced labels)
+              let showLabel = false;
+              const targetLabels = 4;
+              const interval = Math.max(1, Math.ceil(dates.length / targetLabels));
+
+              if (i === 0 || i === dates.length - 1) {
+                showLabel = true;
+              } else if (i % interval === 0) {
+                showLabel = true;
+              }
+
+              if (!showLabel) return null;
+
+              return (
+                <text
+                  key={d}
+                  x={xScale(i)}
+                  y={CHART_HEIGHT - 8}
+                  textAnchor="middle"
+                  className="fill-[#6d6d6d] text-[11px]"
+                >
+                  {formatDateLabel(d)}
+                </text>
+              );
+            }
+            // Show month labels at approximate intervals (every ~3-4 days or when month changes)
+            let showLabel = false;
+            if (i === 0 || i === dates.length - 1) {
+              showLabel = true;
+            } else if (dates.length > 5 && i % Math.ceil(dates.length / 7) === 0) {
+              showLabel = true;
+            } else if (i > 0) {
+              const prevMonth = dates[i - 1]!.split("-")[1];
+              const currMonth = d.split("-")[1];
+              if (prevMonth !== currMonth) {
+                showLabel = true;
+              }
+            }
+            return showLabel ? (
+              <text
+                key={d}
+                x={xScale(i)}
+                y={CHART_HEIGHT - 8}
+                textAnchor="middle"
+                className="fill-[#6d6d6d] text-[11px]"
+              >
+                {formatMonthLabel(d)}
+              </text>
+            ) : null;
+          })}
           {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
             <line
               key={i}
@@ -309,7 +393,7 @@ function OverviewTimelineChart({
           )}
           {visibleSeries.map((s) => {
             const idx = series.findIndex((ss) => ss.dimension === s.dimension);
-            const color = getChartColor(GAUGE_COLORS, 1 + idx);
+            const color = getChartColor(CHART_COLORS, idx);
             const points = s.data
               .map((p) => {
                 const dateIdx = dates.indexOf(p.date);
@@ -395,7 +479,7 @@ function OverviewTimelineChart({
                     <span className="flex items-center gap-1.5 min-w-0">
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: getChartGradient(GAUGE_GRADIENTS, 1 + idx) }}
+                        style={{ background: getChartColor(CHART_COLORS, idx) }}
                       />
                       <span className="text-[#525252] truncate">{s.label}</span>
                     </span>
@@ -421,27 +505,6 @@ function OverviewTimelineChart({
             )}
           </div>
         )}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 justify-center border-t border-[#e5e5e5] pt-3">
-        {series.map((s, idx) => {
-          const isHidden = hiddenSeries.has(s.dimension);
-          return (
-            <button
-              key={s.dimension}
-              type="button"
-              onClick={() => toggleSeries(s.dimension)}
-              className={`flex items-center gap-2 rounded-md px-1.5 py-1 -m-1 text-left transition-colors hover:bg-[#f0f0f0] ${isHidden ? "opacity-50" : ""}`}
-            >
-              <span
-                className="w-3 h-0.5 rounded-full shrink-0"
-                style={{ background: getChartGradient(GAUGE_GRADIENTS, 1 + idx) }}
-              />
-              <span className={`text-xs ${isHidden ? "text-[#999] line-through" : "text-[#525252]"}`}>
-                {s.label}
-              </span>
-            </button>
-          );
-        })}
       </div>
     </div>
   );
@@ -640,7 +703,7 @@ export function OverviewViz(props?: OverviewVizProps) {
             const trackerObj = trackerList?.find(t => t.id === trackerId);
             if (!trackerObj) return;
 
-            if (json.modelScores) {
+            if (json.modelScores?.length) {
               if (!trackerScoresMap[trackerId]) {
                 trackerScoresMap[trackerId] = { value: 0, count: 0, change: 0, changeCount: 0 };
               }
@@ -690,12 +753,13 @@ export function OverviewViz(props?: OverviewVizProps) {
 
             responses.forEach((json) => {
               if (json.brands && json.modelScores) {
+                const modelScores = json.modelScores;
                 json.brands.forEach((brand) => {
                   if (COMPETITOR_LIST_HM_BRAND.includes(brand as any)) {
                     if (!brandScoresMap[brand]) {
                       brandScoresMap[brand] = { value: 0, count: 0, change: 0, changeCount: 0 };
                     }
-                    json.modelScores.forEach((ms) => {
+                    modelScores.forEach((ms) => {
                       brandScoresMap[brand].value += ms.value;
                       brandScoresMap[brand].count += 1;
                       if (ms.change !== null) {
@@ -781,7 +845,14 @@ export function OverviewViz(props?: OverviewVizProps) {
 
       setLoading(true);
       const trackerPromises = trackersToFetch.map((tid) => {
-        const q = new URLSearchParams({ brandId, trackerId: tid, metric });
+        const q = new URLSearchParams({
+          brandId,
+          trackerId: tid,
+          metric,
+          brands: "H&M",
+          models: "__average__",
+          chart: "timeline"
+        });
         return fetch(`/api/timeline?${q}`).then((res) => res.json());
       });
 
@@ -836,7 +907,7 @@ export function OverviewViz(props?: OverviewVizProps) {
     ro.observe(el);
     requestAnimationFrame(updateWidth);
     return () => ro.disconnect();
-  }, [overviewView]);
+  }, []);
 
   // Initialize selectedTrackerIds and selectedModelIds when switching to "By Tracker" view
   useEffect(() => {
@@ -1001,7 +1072,7 @@ export function OverviewViz(props?: OverviewVizProps) {
 
   const selectBrand = (b: string) => {
     setSelectedBrand(b);
-    setBrandDropdownOpen(false);
+    setModelViewBrandDropdownOpen(false);
   };
 
   const toggleTrackerExpanded = (trackerId: string) => {
@@ -1428,7 +1499,7 @@ export function OverviewViz(props?: OverviewVizProps) {
         </div>
       </div>
 
-      <div className="px-4 pt-6 pb-6 sm:px-6">
+      <div className={`${showTimelineToggle && overviewView === "timeline" ? "" : "px-4 pt-6 pb-6 sm:px-6"}`}>
         {overviewView === "gauge" && (
           <>
             {brandId === "hm" && overviewGroupBy === "brand" && brandScores && brandScores.length > 0 ? (
@@ -1588,59 +1659,78 @@ export function OverviewViz(props?: OverviewVizProps) {
           </>
         )}
 
-        {showTimelineToggle && (
-          <div className="flex items-center justify-center gap-2 mt-6 mb-6">
-            <button
-              type="button"
-              onClick={() => setOverviewView("gauge")}
-              className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
-                overviewView === "gauge"
-                  ? "bg-[var(--primary)] text-white"
-                  : "border border-[#e5e5e5] bg-white text-[#262626] hover:bg-[#f5f5f5]"
-              }`}
-              title="Gauges"
-              aria-label="Switch to gauges view"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path d="M11 5.08V2C6 2.5 2 6.81 2 12C2 17.19 6 21.5 11 22V18.92C8 18.44 5 15.52 5 12C5 8.48 8 5.56 11 5.08ZM18.97 11H22C21.53 6 18 2.47 13 2V5.08C16 5.51 18.54 8 18.97 11ZM13 18.92V22C18 21.53 21.53 18 22 13H18.97C18.54 16 16 18.49 13 18.92Z" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => setOverviewView("timeline")}
-              className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
-                overviewView === "timeline"
-                  ? "bg-[var(--primary)] text-white"
-                  : "border border-[#e5e5e5] bg-white text-[#262626] hover:bg-[#f5f5f5]"
-              }`}
-              title="Timeline"
-              aria-label="Switch to timeline view"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" aria-hidden>
-                <path d="M3 12h2.558a2 2 0 0 0 1.898-1.367L10 3l4 18 2.544-7.633A2 2 0 0 1 18.442 12H21" />
-              </svg>
-            </button>
-          </div>
-        )}
-
         {showTimelineToggle && overviewView === "timeline" && (timelineData?.dates && timelineData?.series && timelineData.dates.length > 0 && timelineData.series.length > 0 ? (
-          <div ref={chartRef} className="w-full min-w-0">
-            <OverviewTimelineChart
-              dates={timelineData!.dates}
-              series={timelineData!.series}
-              metric={metric}
-              maxVal={maxVal}
-              isAvgPosition={isAvgPosition}
-              formatValue={formatValue}
-              width={chartWidth}
-              compareToDateLabel={compareToDateStr ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : undefined}
-            />
+          <div className={`w-full ${overviewGroupBy === "tracker" ? "min-h-[400px]" : "min-h-[600px]"} flex flex-col`}>
+            <div ref={chartRef} className="w-full min-w-0 flex-1">
+              <OverviewTimelineChart
+                dates={timelineData!.dates}
+                series={timelineData!.series}
+                metric={metric}
+                maxVal={maxVal}
+                isAvgPosition={isAvgPosition}
+                formatValue={formatValue}
+                width={chartWidth}
+                compareToDateLabel={compareToDateStr ? compareToDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : undefined}
+                showAllDates={overviewGroupBy === "tracker"}
+              />
+            </div>
+            <div className="mt-6 mb-4 flex items-center justify-center gap-1">
+              <button
+                type="button"
+                onClick={() => setOverviewView("gauge")}
+                className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]`}
+                aria-label="Gauges view"
+                title="Gauges"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 5.08V2C6 2.5 2 6.81 2 12C2 17.19 6 21.5 11 22V18.92C8 18.44 5 15.52 5 12C5 8.48 8 5.56 11 5.08ZM18.97 11H22C21.53 6 18 2.47 13 2V5.08C16 5.51 18.54 8 18.97 11ZM13 18.92V22C18 21.53 21.53 18 22 13H18.97C18.54 16 16 18.49 13 18.92Z" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setOverviewView("timeline")}
+                className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]`}
+                aria-label="Timeline view"
+                title="Timeline"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         ) : showTimelineToggle && overviewView === "timeline" ? (
           <div className="rounded-xl border border-[#e5e5e5] bg-white p-8 text-sm text-[#7F7F7F] shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
             {loading ? "Loading timeline data…" : "No timeline data available."}
           </div>
         ) : null)}
+
+        {showTimelineToggle && overviewView === "gauge" && (
+          <div className="mt-6 mb-6 flex items-center justify-center gap-1">
+            <button
+              type="button"
+              onClick={() => setOverviewView("gauge")}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors border-[var(--primary)] bg-[#f0fafa] text-[var(--primary)]`}
+              aria-label="Gauges view"
+              title="Gauges"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5.08V2C6 2.5 2 6.81 2 12C2 17.19 6 21.5 11 22V18.92C8 18.44 5 15.52 5 12C5 8.48 8 5.56 11 5.08ZM18.97 11H22C21.53 6 18 2.47 13 2V5.08C16 5.51 18.54 8 18.97 11ZM13 18.92V22C18 21.53 21.53 18 22 13H18.97C18.54 16 16 18.49 13 18.92Z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => setOverviewView("timeline")}
+              className={`flex items-center justify-center w-10 h-10 rounded-lg border transition-colors border-[#e5e5e5] bg-white text-[#525252] hover:bg-[#f5f5f5]`}
+              aria-label="Timeline view"
+              title="Timeline"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         {(isAvgPosition || compareToDateStr) && (
           <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[#7F7F7F]">
