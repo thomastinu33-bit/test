@@ -747,7 +747,7 @@ export default function BrandResearchPage() {
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const [trackerItems, setTrackerItems] = useState<TrackerItem[]>([]);
   const [showTracker, setShowTracker] = useState(false);
-  const [trackerWidth, setTrackerWidth] = useState(400);
+  const [trackerWidth, setTrackerWidth] = useState(500);
 
   const handleAddToTracker = (
     name: string,
