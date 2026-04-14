@@ -22,9 +22,9 @@ export function RootLayoutContent({
   const shouldCollapse = isTrackerOpen || manualCollapse;
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen w-full flex bg-white">
       <SideNav collapsed={shouldCollapse} onCollapseToggle={handleCollapseToggle} />
-      <div className="flex-1 bg-white">
+      <div className="flex-1 bg-white w-full">
         <AiAgentProvider>{children}</AiAgentProvider>
       </div>
     </div>
