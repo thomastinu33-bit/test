@@ -418,7 +418,18 @@ export function getResultsTableData(
   const date = getLatestReportDate();
   const prevDate = getReportDateDaysAgo(1);
   const brandSet = new Set(brandIds);
-  const modelSet = new Set(modelIds);
+  // Convert model labels to original IDs, or use as-is if already in original format
+  const modelSet = new Set<string>();
+  for (const modelId of modelIds) {
+    if (modelId.includes("|")) {
+      // Already in original format
+      modelSet.add(modelId);
+    } else {
+      // It's a label, get all original IDs for this label
+      const originalIds = getOriginalModelIds(modelId);
+      originalIds.forEach((id) => modelSet.add(id));
+    }
+  }
   const byBrandTopic = new Map<string, { sum: number; count: number }>();
   const prevByBrandTopic = new Map<string, { sum: number; count: number }>();
 
@@ -507,14 +518,15 @@ export function getTimelineData(
 ): { dates: string[]; series: { brand: string; data: { date: string; value: number }[] }[] } {
   const rows = getHmPantsScores();
   const brandSet = new Set(brandIds);
-  const modelSet = new Set(modelIds);
+  const isAvg = modelIds.includes("__average__");
+  const modelSet = new Set(isAvg ? [] : modelIds);
   const dateSet = new Set<string>();
   const byBrandDate = new Map<string, { sum: number; count: number }>();
 
   for (const r of rows) {
     if (!brandSet.has(r.brand) || r.metric !== metric) continue;
     const mid = `${r.modelMaker}|${r.model}`;
-    if (!modelSet.has(mid)) continue;
+    if (!isAvg && !modelSet.has(mid)) continue;
     dateSet.add(r.reportDate);
     const key = `${r.brand}|${r.reportDate}`;
     const val = r[topic] ?? r.overall;

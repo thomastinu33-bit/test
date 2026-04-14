@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
-import { SideNav, AiAgentProvider } from "@/components/Evertune";
+import { TrackerProvider } from "./TrackerContext";
+import { RootLayoutContent } from "./RootLayoutClient";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -21,11 +22,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-<body className={`${dmSans.variable} font-sans antialiased`}>
-        <div className="min-h-screen">
-          <SideNav />
-          <AiAgentProvider>{children}</AiAgentProvider>
-        </div>
+      <body className={`${dmSans.variable} font-sans antialiased`}>
+        <TrackerProvider>
+          <RootLayoutContent dmSansFontClass={dmSans.variable}>
+            {children}
+          </RootLayoutContent>
+        </TrackerProvider>
       </body>
     </html>
   );

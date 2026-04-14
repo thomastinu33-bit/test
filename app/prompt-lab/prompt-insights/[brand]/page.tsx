@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toggle, Dropdown, Button, IntentBadge } from "@/components/Evertune";
 import type { IntentType } from "@/components/Evertune";
 import { TrackerBuilder } from "@/components/TrackerBuilder";
 import type { TrackerItem } from "@/components/TrackerBuilder";
+import { useTracker } from "@/app/TrackerContext";
 
 const ChevronRightIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -740,6 +741,7 @@ export default function BrandResearchPage() {
   const router = useRouter();
   const params = useParams();
   const brand = params.brand as string;
+  const { setIsTrackerOpen } = useTracker();
   const [mainTab, setMainTab] = useState<"prompt-research" | "prompt-volume">("prompt-research");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [brandType, setBrandType] = useState<"Non-Branded" | "Branded">("Non-Branded");
@@ -748,6 +750,11 @@ export default function BrandResearchPage() {
   const [trackerItems, setTrackerItems] = useState<TrackerItem[]>([]);
   const [showTracker, setShowTracker] = useState(false);
   const [trackerWidth, setTrackerWidth] = useState(600);
+
+  // Update global tracker state when local showTracker changes
+  useEffect(() => {
+    setIsTrackerOpen(showTracker);
+  }, [showTracker, setIsTrackerOpen]);
 
   const handleAddToTracker = (
     name: string,
