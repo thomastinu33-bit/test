@@ -778,6 +778,20 @@ export default function BrandResearchPage() {
     setTrackerItems(trackerItems.filter(item => item.name !== name));
   };
 
+  const handleUpdateTrackerItem = (oldName: string, newName: string) => {
+    setTrackerItems(trackerItems.map(item =>
+      item.name === oldName ? { ...item, name: newName } : item
+    ));
+  };
+
+  const handleUpdatePrompt = (topicName: string, promptIndex: number, newPrompt: string) => {
+    setTrackerItems(trackerItems.map(item =>
+      item.name === topicName && item.prompts
+        ? { ...item, prompts: item.prompts.map((p, idx) => idx === promptIndex ? newPrompt : p) }
+        : item
+    ));
+  };
+
   const handleCloseTracker = () => {
     setShowTracker(false);
   };
@@ -1104,6 +1118,8 @@ export default function BrandResearchPage() {
               <TrackerBuilder
                 items={trackerItems}
                 onRemoveItem={handleRemoveTrackerItem}
+                onUpdateItem={handleUpdateTrackerItem}
+                onUpdatePrompt={handleUpdatePrompt}
                 onClose={handleCloseTracker}
               />
             </div>

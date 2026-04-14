@@ -13,6 +13,8 @@ export interface TrackerItem {
 interface TrackerBuilderProps {
   items: TrackerItem[];
   onRemoveItem: (name: string) => void;
+  onUpdateItem?: (oldName: string, newName: string) => void;
+  onUpdatePrompt?: (topicName: string, promptIndex: number, newPrompt: string) => void;
   onClose: () => void;
 }
 
@@ -41,10 +43,14 @@ const ChevronIcon = () => (
   </svg>
 );
 
-export function TrackerBuilder({ items, onRemoveItem, onClose }: TrackerBuilderProps) {
+export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdatePrompt, onClose }: TrackerBuilderProps) {
   const defaultName = items.length > 0 ? items[0].name : "Untitled";
   const [trackerName, setTrackerName] = useState(defaultName);
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
+  const [editingTopicName, setEditingTopicName] = useState<string | null>(null);
+  const [editingTopicValue, setEditingTopicValue] = useState("");
+  const [editingPrompt, setEditingPrompt] = useState<{ topicName: string; index: number } | null>(null);
+  const [editingPromptValue, setEditingPromptValue] = useState("");
 
   useEffect(() => {
     if (items.length > 0 && trackerName === "Untitled") {
@@ -65,6 +71,30 @@ export function TrackerBuilder({ items, onRemoveItem, onClose }: TrackerBuilderP
       newExpanded.add(topicName);
     }
     setExpandedTopics(newExpanded);
+  };
+
+  const startEditingTopic = (topicName: string) => {
+    setEditingTopicName(topicName);
+    setEditingTopicValue(topicName);
+  };
+
+  const saveTopicEdit = (oldName: string) => {
+    if (editingTopicValue.trim() && editingTopicValue !== oldName) {
+      onUpdateItem?.(oldName, editingTopicValue.trim());
+    }
+    setEditingTopicName(null);
+  };
+
+  const startEditingPrompt = (topicName: string, index: number, prompt: string) => {
+    setEditingPrompt({ topicName, index });
+    setEditingPromptValue(prompt);
+  };
+
+  const savePromptEdit = () => {
+    if (editingPrompt && editingPromptValue.trim()) {
+      onUpdatePrompt?.(editingPrompt.topicName, editingPrompt.index, editingPromptValue.trim());
+    }
+    setEditingPrompt(null);
   };
 
   const totalPrompts = items.reduce((sum, item) => sum + item.promptCount, 0);
@@ -110,20 +140,73 @@ export function TrackerBuilder({ items, onRemoveItem, onClose }: TrackerBuilderP
                 className="w-full px-5 py-2 flex items-center justify-between bg-white hover:bg-[#F9F9F9] transition-colors border-b border-[#EEE]"
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="text-sm font-medium text-[#262626] truncate">{item.name}</span>
+                  {editingTopicName === item.name ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editingTopicValue}
+                      onChange={(e) => setEditingTopicValue(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          saveTopicEdit(item.name);
+                        } else if (e.key === "Escape") {
+                          setEditingTopicName(null);
+                        }
+                      }}
+                      className="text-sm font-medium text-[#262626] border border-[#048BC5] rounded px-2 py-1 flex-1 min-w-0"
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-[#262626] truncate">{item.name}</span>
+                  )}
                 </div>
                 <span className="text-xs text-[#7F7F7F] font-medium whitespace-nowrap mx-2">
                   {item.promptCount} prompts
                 </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemoveItem(item.name);
-                  }}
-                  className="hover:bg-[#EEE] p-1 rounded"
-                >
-                  <DeleteIcon />
-                </button>
+                {editingTopicName === item.name ? (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        saveTopicEdit(item.name);
+                      }}
+                      className="text-xs font-medium text-[#048BC5] hover:bg-[#E0F3FE] px-2 py-1 rounded"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingTopicName(null);
+                      }}
+                      className="text-xs font-medium text-[#7F7F7F] hover:bg-[#EEE] px-2 py-1 rounded"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditingTopic(item.name);
+                      }}
+                      className="hover:bg-[#EEE] p-1 rounded"
+                      title="Edit topic"
+                    >
+                      <EditIcon />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveItem(item.name);
+                      }}
+                      className="hover:bg-[#EEE] p-1 rounded"
+                    >
+                      <DeleteIcon />
+                    </button>
+                  </>
+                )}
                 <svg
                   width="16"
                   height="16"
@@ -146,7 +229,48 @@ export function TrackerBuilder({ items, onRemoveItem, onClose }: TrackerBuilderP
                       key={idx}
                       className="flex items-center gap-2 bg-white border border-[#EEE] rounded p-2"
                     >
-                      <p className="text-xs text-[#262626] flex-1 min-w-0">{prompt}</p>
+                      {editingPrompt?.topicName === item.name && editingPrompt?.index === idx ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          value={editingPromptValue}
+                          onChange={(e) => setEditingPromptValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              savePromptEdit();
+                            } else if (e.key === "Escape") {
+                              setEditingPrompt(null);
+                            }
+                          }}
+                          className="text-xs text-[#262626] flex-1 min-w-0 border border-[#048BC5] rounded px-2 py-1"
+                        />
+                      ) : (
+                        <p className="text-xs text-[#262626] flex-1 min-w-0">{prompt}</p>
+                      )}
+                      {editingPrompt?.topicName === item.name && editingPrompt?.index === idx ? (
+                        <>
+                          <button
+                            onClick={() => savePromptEdit()}
+                            className="text-xs font-medium text-[#048BC5] hover:bg-[#E0F3FE] px-1 py-0.5 rounded flex-shrink-0"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingPrompt(null)}
+                            className="text-xs font-medium text-[#7F7F7F] hover:bg-[#EEE] px-1 py-0.5 rounded flex-shrink-0"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => startEditingPrompt(item.name, idx, prompt)}
+                          className="hover:bg-[#EEE] p-1 rounded flex-shrink-0"
+                          title="Edit prompt"
+                        >
+                          <EditIcon />
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           // Remove individual prompt
