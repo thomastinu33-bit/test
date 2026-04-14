@@ -22,9 +22,9 @@ export function RootLayoutContent({
   const shouldCollapse = isTrackerOpen || manualCollapse;
 
   return (
-    <div className="min-h-screen w-full bg-white">
+    <div className="min-h-screen w-full">
       <SideNav collapsed={shouldCollapse} onCollapseToggle={handleCollapseToggle} />
-      <div className={`transition-all duration-200 ${shouldCollapse ? "ml-[72px]" : "ml-[280px]"}`}>
+      <div className={`transition-all duration-200 ${shouldCollapse ? "pl-[72px]" : "pl-[280px]"}`}>
         <AiAgentProvider>{children}</AiAgentProvider>
       </div>
     </div>
