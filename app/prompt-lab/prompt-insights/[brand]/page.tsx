@@ -824,7 +824,7 @@ export default function BrandResearchPage() {
   };
 
   return (
-    <div className="bg-[#f6f6f6]">
+    <div className="bg-[#f6f6f6] w-full">
       {/* Tabs */}
       <div className="bg-[#f6f6f6] px-8 pt-5">
         <div className="flex gap-0">
@@ -850,9 +850,9 @@ export default function BrandResearchPage() {
       </div>
 
       {/* Content Area */}
-      <div className="bg-white font-sans overflow-y-auto flex" style={{ height: 'calc(100vh - 60px)' }}>
-        <div className={`flex flex-col flex-1 ${showTracker ? 'overflow-y-auto' : ''}`} style={{ overflow: showTracker ? 'auto' : 'visible' }}>
-          <div className="p-5">
+      <div className="bg-white font-sans overflow-y-auto flex w-full" style={{ height: 'calc(100vh - 60px)' }}>
+        <div className={`flex flex-col flex-1 w-full ${showTracker ? 'overflow-y-auto' : ''}`} style={{ overflow: showTracker ? 'auto' : 'visible' }}>
+          <div className="p-5 w-full">
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 mb-8">
           <button
