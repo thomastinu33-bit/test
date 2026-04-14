@@ -63,9 +63,9 @@ export default function PromptInsightsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="bg-[#f6f6f6] w-full">
+    <div className="bg-[#f6f6f6] w-full min-h-screen flex flex-col">
       {/* Tabs */}
-      <div className="bg-[#f6f6f6] px-8 pt-5">
+      <div className="bg-[#f6f6f6] px-8 pt-5 w-full">
         <div className="flex gap-0">
           {(["prompt-research", "prompt-volume"] as const).map((tab, idx) => {
             const label = tab === "prompt-research" ? "Prompt Research" : "Prompt Volume";
@@ -89,7 +89,7 @@ export default function PromptInsightsPage() {
       </div>
 
       {/* Content Area */}
-      <div className="bg-white font-sans pl-8 pr-8 pt-8 pb-8 w-full">
+      <div className="bg-white font-sans pl-8 pr-8 pt-8 pb-8 w-full flex-1">
         {mainTab === "prompt-research" ? (
           <div className="space-y-8">
             {/* Header */}
