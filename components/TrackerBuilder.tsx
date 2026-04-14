@@ -137,45 +137,31 @@ export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdateProm
             <div key={item.name} className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white hover:border-[#D0D0D0] transition-colors">
               <button
                 onClick={() => toggleTopic(item.name)}
-                className="w-full px-4 py-3.5 flex items-center justify-between bg-white hover:bg-[#FAFAFA] transition-colors"
+                className="w-full px-4 py-3.5 flex items-center gap-2 bg-white hover:bg-[#FAFAFA] transition-colors"
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`flex-shrink-0 transition-transform ${
-                      expandedTopics.has(item.name) ? "rotate-90" : ""
-                    }`}
-                  >
-                    <path d="M9 6l6 6-6 6" stroke="#7F7F7F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <div className="flex flex-col min-w-0 gap-1">
-                    {editingTopicName === item.name ? (
-                      <input
-                        autoFocus
-                        type="text"
-                        value={editingTopicValue}
-                        onChange={(e) => setEditingTopicValue(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            saveTopicEdit(item.name);
-                          } else if (e.key === "Escape") {
-                            setEditingTopicName(null);
-                          }
-                        }}
-                        className="text-sm font-semibold text-[#262626] border border-[#048BC5] rounded px-2 py-1 min-w-0"
-                      />
-                    ) : (
-                      <span className="text-sm font-semibold text-[#262626] truncate">{item.name}</span>
-                    )}
-                    <span className="text-xs text-[#999] font-medium">{item.promptCount} prompts</span>
-                  </div>
+                {editingTopicName === item.name ? (
+                  <input
+                    autoFocus
+                    type="text"
+                    value={editingTopicValue}
+                    onChange={(e) => setEditingTopicValue(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        saveTopicEdit(item.name);
+                      } else if (e.key === "Escape") {
+                        setEditingTopicName(null);
+                      }
+                    }}
+                    className="text-sm font-semibold text-[#262626] border border-[#048BC5] rounded px-2 py-1 min-w-0 flex-1"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold text-[#262626] truncate flex-1">{item.name}</span>
+                )}
+                <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                  <span className="text-xs text-[#999] font-medium whitespace-nowrap">{item.promptCount} prompts</span>
                 </div>
-                <div className="flex items-center gap-1 ml-2">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   {editingTopicName === item.name ? (
                     <>
                       <button
@@ -221,6 +207,18 @@ export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdateProm
                     </>
                   )}
                 </div>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`flex-shrink-0 transition-transform ${
+                    expandedTopics.has(item.name) ? "rotate-90" : ""
+                  }`}
+                >
+                  <path d="M9 6l6 6-6 6" stroke="#7F7F7F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
 
               {/* Prompts */}
