@@ -1,10 +1,10 @@
-export interface ToggleProps {
-  options: string[];
-  value: string;
-  onChange: (value: string) => void;
+export interface ToggleProps<T extends string = string> {
+  options: T[];
+  value: T;
+  onChange: (value: T) => void;
 }
 
-export function Toggle({ options, value, onChange }: ToggleProps) {
+export function Toggle<T extends string = string>({ options, value, onChange }: ToggleProps<T>) {
   return (
     <div className="bg-[#F6F6F6] border border-[#EEE] flex items-center p-1 rounded-lg w-fit">
       {options.map((option) => (
