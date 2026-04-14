@@ -1,29 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Button, AskAIButton } from "@/components/Evertune";
-import { getBrandInsights, type TopicData, type CategoryData, type SubtopicData, type CompetitorData, type BrandStats, type TrendPeriod } from "./data";
-import { SaveToListModal } from "../SaveToListModal";
-import { AddToTrackerModal } from "../AddToTrackerModal";
-import { useTrackerDrawer } from "../TrackerDrawerContext";
-import type { SavedPrompt } from "../usePromptLists";
-
-const DragHandle = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 text-[#c0c0c0]">
-    <circle cx="4.5" cy="3" r="1.2" fill="currentColor" />
-    <circle cx="9.5" cy="3" r="1.2" fill="currentColor" />
-    <circle cx="4.5" cy="7" r="1.2" fill="currentColor" />
-    <circle cx="9.5" cy="7" r="1.2" fill="currentColor" />
-    <circle cx="4.5" cy="11" r="1.2" fill="currentColor" />
-    <circle cx="9.5" cy="11" r="1.2" fill="currentColor" />
-  </svg>
-);
-
-const ChevronDownIcon = ({ className = "" }: { className?: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <path d="M6 9l6 6 6-6" stroke="#262626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/Evertune";
 
 const LocationIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -37,1138 +16,230 @@ const TranslateIcon = () => (
   </svg>
 );
 
-const InfoIcon = () => (
+const ChevronDownIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" fill="#262626" />
+    <path d="M6 9l6 6 6-6" stroke="#262626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-
-const BRANDS = [
-  { name: "BMW", category: "Automobile" },
-  { name: "Mercedes-Benz", category: "Automobile" },
-  { name: "Porsche", category: "Automobile" },
-  { name: "Audi", category: "Automobile" },
-  { name: "Coach", category: "Accessory" },
-  { name: "Louis Vuitton", category: "Accessory" },
-  { name: "Gucci", category: "Accessory" },
-  { name: "Ray-Ban", category: "Accessory" },
-  { name: "IKEA", category: "Furniture" },
-  { name: "Herman Miller", category: "Furniture" },
-  { name: "Restoration Hardware", category: "Furniture" },
-];
-
-const LOCATIONS = ["United States", "United Kingdom", "Canada", "Australia", "Germany", "France"];
-const LANGUAGES = ["English", "Spanish", "French", "German", "Japanese", "Chinese"];
-
 
 const SearchIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="#9e9e9e" strokeWidth="2" strokeLinecap="round" />
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15.5 14h-.79l-.28-.27a6.471 6.471 0 0 0 1.57-4.23A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 5L20.49 19l-5-5Zm-6 0A4.5 4.5 0 1 1 14 9.5 4.505 4.505 0 0 1 9.5 14Z" fill="#7F7F7F" />
   </svg>
 );
 
-function SearchDropdown({
-  value,
-  options,
-  placeholder,
-  open,
-  onOpenChange,
-  onChange,
-}: {
-  value: string;
-  options: string[];
-  placeholder: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onChange: (v: string) => void;
-}) {
-  const [search, setSearch] = useState("");
-
-  const filtered = options
-    .filter((o) => o.toLowerCase().includes(search.toLowerCase()))
-    .sort();
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => onOpenChange(!open)}
-        className="w-full flex items-center justify-between bg-white border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary-600"
-      >
-        <span className={value ? "text-foreground" : "text-muted"}>{value || "Select a brand..."}</span>
-        <ChevronDownIcon />
-      </button>
-
-      {open && (
-        <div className="absolute z-20 mt-1 w-full bg-white border border-border rounded-lg shadow-lg overflow-hidden">
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
-            <SearchIcon />
-            <input
-              autoFocus
-              type="text"
-              placeholder={placeholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 text-sm text-foreground placeholder-muted focus:outline-none"
-            />
-          </div>
-          <div className="max-h-56 overflow-y-auto py-1">
-            {filtered.map((name) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => { onChange(name); onOpenChange(false); setSearch(""); }}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                  value === name
-                    ? "bg-primary-100 text-primary-600 font-medium"
-                    : "text-foreground hover:bg-background"
-                }`}
-              >
-                {name}
-              </button>
-            ))}
-            {filtered.length === 0 && (
-              <p className="px-4 py-3 text-sm text-muted">No results found.</p>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const PERIODS: TrendPeriod[] = ["3m", "6m", "12m"];
-const PERIOD_LABELS: Record<TrendPeriod, string> = {
-  "3m": "3M",
-  "6m": "6M",
-  "12m": "12M",
-};
-
-function TrendChart({ stats }: { stats: BrandStats }) {
-  const [period, setPeriod] = useState<TrendPeriod>("3m");
-  const [hovered, setHovered] = useState<number | null>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
-
-  const series = stats.trends[period];
-  const { values, labels } = series;
-
-  const W = 560;
-  const H = 80;
-  const padX = 6;
-  const padTop = 10;
-  const padBottom = 6;
-
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-
-  const pts = values.map((v, i) => ({
-    x: padX + (i / (values.length - 1)) * (W - padX * 2),
-    y: padTop + (1 - (v - min) / range) * (H - padTop - padBottom),
-  }));
-
-  const linePath = `M ${pts.map((p) => `${p.x},${p.y}`).join(" L ")}`;
-  const areaPath = `M ${pts[0].x},${H} L ${pts.map((p) => `${p.x},${p.y}`).join(" L ")} L ${pts[pts.length - 1].x},${H} Z`;
-
-  const toVol = (rel: number) => {
-    const approx = (rel / values[values.length - 1]) * stats.volumeRaw;
-    if (approx >= 1_000_000) return `${(approx / 1_000_000).toFixed(1)}M`;
-    if (approx >= 1_000) return `${Math.round(approx / 1_000)}k`;
-    return `${Math.round(approx)}`;
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const mouseX = ((e.clientX - rect.left) / rect.width) * W;
-    let closest = 0, minDist = Infinity;
-    pts.forEach((p, i) => {
-      const d = Math.abs(p.x - mouseX);
-      if (d < minDist) { minDist = d; closest = i; }
-    });
-    setHovered(closest);
-  };
-
-  // Decide which label indices to show based on series length
-  const visibleLabelIndices = (() => {
-    const n = labels.length;
-    if (n <= 8) return labels.map((_, i) => i);
-    if (n <= 16) return labels.map((_, i) => i).filter((i) => i % 2 === 0 || i === n - 1);
-    return labels.map((_, i) => i).filter((i) => i === 0 || i === n - 1 || i % Math.ceil(n / 6) === 0);
-  })();
-
-  const hp = hovered !== null ? pts[hovered] : null;
-
-  return (
-    <div className="flex flex-col gap-2">
-      {/* Period selector */}
-      <div className="flex gap-1">
-        {PERIODS.map((p) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => { setPeriod(p); setHovered(null); }}
-            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-              period === p
-                ? "bg-primary-100 text-primary-700 font-semibold"
-                : "text-muted hover:text-foreground hover:bg-surface"
-            }`}
-          >
-            {PERIOD_LABELS[p]}
-          </button>
-        ))}
-      </div>
-
-      {/* Chart */}
-      <div className="relative">
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${W} ${H}`}
-          className="w-full"
-          style={{ height: 80, display: "block" }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setHovered(null)}
-        >
-          <defs>
-            <linearGradient id="trend-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path d={areaPath} fill="url(#trend-grad)" />
-          <path d={linePath} stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-
-          {/* Hover crosshair + dot */}
-          {hp && (
-            <>
-              <line x1={hp.x} y1={padTop} x2={hp.x} y2={H} stroke="var(--primary)" strokeWidth="1" strokeDasharray="3,2" opacity="0.4" />
-              <circle cx={hp.x} cy={hp.y} r="4" fill="white" stroke="var(--primary)" strokeWidth="2" />
-            </>
-          )}
-          {hovered === null && (
-            <circle cx={pts[pts.length - 1].x} cy={pts[pts.length - 1].y} r="3.5" fill="var(--primary)" />
-          )}
-        </svg>
-
-        {/* Tooltip */}
-        {hovered !== null && hp && (() => {
-          const pct = ((hp.x - padX) / (W - padX * 2)) * 100;
-          return (
-            <div
-              className="pointer-events-none absolute -top-1 z-10"
-              style={{
-                left: `${pct}%`,
-                transform: pct > 70 ? "translateX(-100%)" : pct < 20 ? "translateX(0)" : "translateX(-50%)",
-              }}
-            >
-              <div className="bg-[#262626] text-white rounded-md px-2.5 py-1.5 text-xs leading-tight whitespace-nowrap shadow-lg">
-                <span className="font-semibold">{toVol(values[hovered])}</span>
-                {labels[hovered] && <span className="text-white/60 ml-1.5">{labels[hovered]}</span>}
-              </div>
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* X-axis labels */}
-      <div className="relative h-4">
-        {visibleLabelIndices.map((i) => {
-          if (!labels[i]) return null;
-          const pct = (i / (values.length - 1)) * 100;
-          return (
-            <span
-              key={i}
-              className="absolute text-[11px] leading-none transition-colors"
-              style={{
-                left: `${pct}%`,
-                transform: i === values.length - 1 ? "translateX(-100%)" : i === 0 ? "translateX(0)" : "translateX(-50%)",
-                color: hovered === i ? "var(--primary)" : "#9e9e9e",
-                fontWeight: hovered === i ? 600 : 400,
-              }}
-            >
-              {labels[i]}
-            </span>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-const StarIcon = ({ filled }: { filled: boolean }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+const DeleteIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-9l-1 1H5v2h14V4z" fill="#9e9e9e" />
   </svg>
 );
 
-const StarButton = ({ className = "", active, onToggle }: { className?: string; active?: boolean; onToggle?: (v: boolean) => void }) => {
-  const [localActive, setLocalActive] = useState(false);
-  const isActive = active !== undefined ? active : localActive;
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onToggle) onToggle(!isActive);
-    else setLocalActive((v) => !v);
-  };
-  return (
-    <button
-      type="button"
-      title={isActive ? "Unfavorite" : "Favorite"}
-      onClick={handleClick}
-      className={`transition-colors shrink-0 ${isActive ? "text-[#f5d726]" : "text-[#c0c0c0] hover:text-[#f5d726]"} ${className}`}
-    >
-      <StarIcon filled={isActive} />
-    </button>
-  );
-};
-
-const PROMPTS_PAGE_SIZE = 3;
-
-function TopicAccordion({ topic, prompts, subtopics, popularity, userIntent, brand, open, onOpen }: { topic: string; prompts: string[]; subtopics?: SubtopicData[]; popularity: "high" | "medium" | "low"; userIntent: string; brand: string; open: boolean; onOpen: () => void }) {
-  const [visiblePrompts, setVisiblePrompts] = useState(PROMPTS_PAGE_SIZE);
-  const [saveModal, setSaveModal] = useState<{ prompts: SavedPrompt[]; defaultName?: string } | null>(null);
-  const [trackerModal, setTrackerModal] = useState<{ prompts: SavedPrompt[]; defaultName?: string } | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { isOpen: isTrackerOpen } = useTrackerDrawer();
-
-  const handleToggle = () => {
-    if (!open) {
-      onOpen();
-      setTimeout(() => {
-        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }, 220);
-    } else {
-      onOpen(); // closes by toggling in parent
-    }
-  };
-
-  return (
-    <>
-    <div
-      ref={containerRef}
-      className="border border-border rounded-lg overflow-hidden"
-      draggable
-      onDragStart={(e) => {
-        const allPrompts = subtopics && subtopics.length > 0
-          ? subtopics.flatMap((st) => st.prompts.map((p) => ({ text: p, topic: st.name, brand })))
-          : prompts.map((p) => ({ text: p, topic, brand }));
-        e.dataTransfer.setData("application/tracker-prompts", JSON.stringify(allPrompts));
-        e.dataTransfer.effectAllowed = "copy";
-      }}
-    >
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={handleToggle}
-        onKeyDown={(e) => e.key === "Enter" && handleToggle()}
-        className={`w-full flex items-center justify-between px-5 py-4 transition-colors cursor-pointer ${open ? "bg-surface" : "bg-white hover:bg-surface"}`}
-      >
-        <div className="flex items-center gap-3">
-          {isTrackerOpen && <DragHandle />}
-          <span className="text-sm font-semibold text-foreground">{topic}</span>
-          <span className={`text-[10px] font-semibold rounded-full px-2 py-0.5 uppercase tracking-wide ${
-            popularity === "high"
-              ? "bg-[#DCFCE7] text-[#16A34A]"
-              : popularity === "medium"
-              ? "bg-[#FFF8E1] text-[#F59E0B]"
-              : "bg-[#FEE2E2] text-[#DC2626]"
-          }`}>
-            {popularity === "high" ? "High Popularity" : popularity === "medium" ? "Medium Popularity" : "Low Popularity"}
-          </span>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs text-muted">
-            {subtopics ? subtopics.reduce((acc, st) => acc + st.prompts.length, 0) : prompts.length} prompts
-          </span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              const allPrompts = subtopics && subtopics.length > 0
-                ? subtopics.flatMap((st) => st.prompts.map((p) => ({ text: p, topic: st.name, brand })))
-                : prompts.map((p) => ({ text: p, topic, brand }));
-              setTrackerModal({ prompts: allPrompts, defaultName: topic });
-            }}
-            className="flex items-center gap-1 text-xs text-primary-600 font-medium px-2 py-1 rounded-md hover:bg-primary-100 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Add to Tracker
-          </button>
-          <ChevronDownIcon className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-        </div>
-      </div>
-
-      <div
-        className="grid transition-[grid-template-rows] duration-200 ease-in-out"
-        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
-      >
-        <div className="overflow-hidden">
-          <div className="border-t border-border">
-            <div className="p-3 border-b border-border">
-              <div className="bg-background rounded-lg p-3 flex flex-col gap-0.5">
-                <p className="text-[13px] font-semibold text-foreground uppercase tracking-wide">User Intent</p>
-                <p className="text-[13px] text-foreground leading-relaxed">{userIntent}</p>
-              </div>
-            </div>
-            {subtopics && subtopics.length > 0 ? (
-              subtopics.map((st) => (
-                <div key={st.name}>
-                  <div
-                    className="flex items-center justify-between px-5 py-2 bg-surface border-b border-border cursor-grab active:cursor-grabbing"
-                    draggable
-                    onDragStart={(e) => {
-                      e.stopPropagation();
-                      e.dataTransfer.setData("application/tracker-prompts", JSON.stringify(st.prompts.map((p) => ({ text: p, topic: st.name, brand }))));
-                      e.dataTransfer.effectAllowed = "copy";
-                    }}
-                  >
-                    <div className="flex items-center gap-2">
-                      {isTrackerOpen && <DragHandle />}
-                      <p className="text-xs font-semibold text-foreground">{st.name}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setTrackerModal({ prompts: st.prompts.map((p) => ({ text: p, topic: st.name, brand })), defaultName: st.name }); }}
-                      className="flex items-center gap-1 text-xs text-primary-600 font-medium px-2 py-1 rounded-md hover:bg-primary-100 transition-colors"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                      </svg>
-                      Add to Tracker
-                    </button>
-                  </div>
-                  {st.prompts.map((prompt, i) => (
-                    <div
-                      key={i}
-                      draggable
-                      onDragStart={(e) => {
-                        e.stopPropagation();
-                        e.dataTransfer.setData("application/tracker-prompts", JSON.stringify([{ text: prompt, topic: st.name, brand }]));
-                        e.dataTransfer.effectAllowed = "copy";
-                      }}
-                      className="group flex items-center gap-2 px-5 py-2.5 border-b border-background last:border-b-0 hover:bg-surface cursor-grab active:cursor-grabbing"
-                    >
-                      {isTrackerOpen && <DragHandle />}
-                      <p className="flex-1 text-[13px] text-foreground">{prompt}</p>
-                      <button
-                        type="button"
-                        onClick={() => setTrackerModal({ prompts: [{ text: prompt, topic: st.name, brand }] })}
-                        className="shrink-0 ml-3 opacity-0 group-hover:opacity-100 flex items-center gap-1 text-xs text-primary-600 font-medium px-2 py-1 rounded-md hover:bg-primary-100 transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Add to Tracker
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ))
-            ) : (
-              prompts.map((prompt, i) => (
-                <div
-                  key={i}
-                  draggable
-                  onDragStart={(e) => {
-                    e.stopPropagation();
-                    e.dataTransfer.setData("application/tracker-prompts", JSON.stringify([{ text: prompt, topic, brand }]));
-                    e.dataTransfer.effectAllowed = "copy";
-                  }}
-                  className="group flex items-center gap-2 px-5 py-2.5 border-b border-background last:border-b-0 hover:bg-surface cursor-grab active:cursor-grabbing"
-                >
-                  {isTrackerOpen && <DragHandle />}
-                  <p className="flex-1 text-[13px] text-foreground">{prompt}</p>
-                  <button
-                    type="button"
-                    onClick={() => setTrackerModal({ prompts: [{ text: prompt, topic, brand }] })}
-                    className="shrink-0 ml-3 opacity-0 group-hover:opacity-100 flex items-center gap-1 text-xs text-primary-600 font-medium px-2 py-1 rounded-md hover:bg-primary-100 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-3.5 h-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add to Tracker
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {saveModal && (
-      <SaveToListModal prompts={saveModal.prompts} defaultName={saveModal.defaultName} onClose={() => setSaveModal(null)} />
-    )}
-    {trackerModal && (
-      <AddToTrackerModal prompts={trackerModal.prompts} defaultName={trackerModal.defaultName} onClose={() => setTrackerModal(null)} />
-    )}
-    </>
-  );
+interface TableRow {
+  brand: string;
+  url: string;
+  country: string;
+  language: string;
+  categories: number;
+  subcategories: number;
+  prompts: number;
+  status: "ready" | "researching" | "failed";
 }
 
-const TOPICS_PAGE_SIZE = 5;
-
-const SESSION_KEY = "prompt-insights-state";
-
-function loadSession() {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
+const TABLE_DATA: TableRow[] = [
+  { brand: "Bose", url: "bose.com", country: "United States", language: "English", categories: 10, subcategories: 250, prompts: 5236, status: "ready" },
+  { brand: "Tesla", url: "tesla.com", country: "United States", language: "English", categories: 16, subcategories: 167, prompts: 7892, status: "researching" },
+  { brand: "ASUS", url: "asus.com", country: "United States", language: "English", categories: 21, subcategories: 235, prompts: 9012, status: "ready" },
+  { brand: "NordicTrack", url: "nordictrack.com", country: "United States", language: "English", categories: 25, subcategories: 112, prompts: 4321, status: "failed" },
+  { brand: "BMW", url: "bmw.com/usa", country: "Germany", language: "German", categories: 17, subcategories: 135, prompts: 6789, status: "ready" },
+];
 
 export default function PromptInsightsPage() {
-  const [brand, setBrand] = useState<string>("");
-  const [location, setLocation] = useState<string>("United States");
-  const [language, setLanguage] = useState<string>("English");
-  const [includeBrand, setIncludeBrand] = useState<boolean>(false);
-  const [openDropdown, setOpenDropdown] = useState<"brand" | "location" | "language" | null>(null);
-  const [results, setResults] = useState<TopicData[] | null>(null);
-  const [brandStats, setBrandStats] = useState<BrandStats | null>(null);
-  const [competitors, setCompetitors] = useState<CompetitorData[]>([]);
-  const [favoriteCompetitors, setFavoriteCompetitors] = useState<Set<string>>(new Set());
-  const [favoriteCategories, setFavoriteCategories] = useState<Set<string>>(new Set());
-  const [categories, setCategories] = useState<CategoryData[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const [categorySearch, setCategorySearch] = useState("");
-  const categoryDropdownRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(false);
-  const [visibleTopicsCount, setVisibleTopicsCount] = useState(TOPICS_PAGE_SIZE);
-  const [openTopic, setOpenTopic] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<"your-brand" | "non-branded">("non-branded");
-  const [competitorPage, setCompetitorPage] = useState(0);
-  const [categoryTablePage, setCategoryTablePage] = useState(0);
-  const [resultsTab, setResultsTab] = useState<"prompt-volume" | "prompt-themes">("prompt-volume");
-  const [competitorSearch, setCompetitorSearch] = useState("");
-  const [categorySearch2, setCategorySearch2] = useState("");
-  const COMPETITORS_PAGE_SIZE = 10;
-  const CATEGORY_TABLE_PAGE_SIZE = 10;
-
-  // Restore session after mount to avoid SSR/client mismatch
-  useEffect(() => {
-    const session = loadSession();
-    if (!session) return;
-    if (session.location) setLocation(session.location);
-    if (session.language) setLanguage(session.language);
-    if (session.includeBrand !== undefined) setIncludeBrand(session.includeBrand);
-  }, []);
-
-  useEffect(() => {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ location, language, includeBrand }));
-  }, [brand, location, language, includeBrand, results]);
-
-  useEffect(() => {
-    if (categories.length > 0 && !selectedCategory) {
-      const vol = (v: string) => parseFloat(v.replace("M", "")) * 1_000_000;
-      const sorted = [...categories].sort((a, b) => vol(b.volume) - vol(a.volume));
-      setSelectedCategory(sorted[0].name);
-    }
-  }, [categories, selectedCategory]);
-
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
-        setCategoryDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const parseVol = useCallback((v: string) => parseFloat(v.replace("M", "")) * 1_000_000, []);
-
-  const handleGenerate = () => {
-    if (!brand) return;
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      const data = getBrandInsights(brand);
-      if (data) {
-        setResults(data.topics);
-        setBrandStats(data.stats ?? null);
-        setCompetitors(data.competitors ?? []);
-        const cats = data.categories ?? [];
-        setCategories(cats);
-        const parseVol = (v: string) => parseFloat(v.replace("M", "")) * 1_000_000;
-        const top1 = [...cats].sort((a, b) => parseVol(b.volume) - parseVol(a.volume))[0]?.name ?? null;
-        setSelectedCategory(top1);
-        setVisibleTopicsCount(TOPICS_PAGE_SIZE);
-        setOpenTopic(null);
-      }
-    }, 2000);
-  };
+  const router = useRouter();
+  const [mainTab, setMainTab] = useState<"prompt-research" | "prompt-volume">("prompt-research");
+  const [brand, setBrand] = useState("");
+  const [url, setUrl] = useState("");
+  const [location, setLocation] = useState("Country");
+  const [language, setLanguage] = useState("Language");
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="flex-1 min-w-0 overflow-y-auto p-8 font-sans">
-      <div className="flex items-center justify-between mb-1">
-        <h2 className="text-2xl font-semibold text-foreground">Prompt Lab</h2>
-        <AskAIButton />
-      </div>
-      <p className="text-sm text-muted mb-5">
-        Type in any brand and see categories and prompt themes related to the brand.{" "}
-        <a href="#" className="text-primary-600 hover:underline font-medium">Learn More</a>
-      </p>
-
-      <div className="bg-white rounded-lg">
-        {/* Brand + Location + Language + Generate */}
-        <div className="flex gap-5 pb-4 items-end border border-border rounded-lg p-4">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground mb-1.5">Select Brand</p>
-            <SearchDropdown
-              value={brand}
-              options={BRANDS.map((b) => b.name)}
-              placeholder="Search brands..."
-              open={openDropdown === "brand"}
-              onOpenChange={(o) => setOpenDropdown(o ? "brand" : null)}
-              onChange={(v) => { setBrand(v); setResults(null); setBrandStats(null); setFavoriteCompetitors(new Set()); setFavoriteCategories(new Set()); }}
-            />
-          </div>
-
-          <div className="flex-1">
-            <div className="flex items-center gap-1 mb-1.5">
-              <LocationIcon />
-              <p className="text-sm font-medium text-foreground">Location</p>
-            </div>
-            <SearchDropdown
-              value={location}
-              options={LOCATIONS}
-              placeholder="Search locations..."
-              open={openDropdown === "location"}
-              onOpenChange={(o) => setOpenDropdown(o ? "location" : null)}
-              onChange={setLocation}
-            />
-          </div>
-
-          <div className="flex-1">
-            <div className="flex items-center gap-1 mb-1.5">
-              <TranslateIcon />
-              <p className="text-sm font-medium text-foreground">Language</p>
-            </div>
-            <SearchDropdown
-              value={language}
-              options={LANGUAGES}
-              placeholder="Search languages..."
-              open={openDropdown === "language"}
-              onOpenChange={(o) => setOpenDropdown(o ? "language" : null)}
-              onChange={setLanguage}
-            />
-          </div>
-
-          <div className="shrink-0 self-end">
-            <Button variant="secondary" className="rounded-lg" onClick={handleGenerate} disabled={!brand || loading || !!results}>
-              {loading && (
-                <svg className="animate-spin w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                </svg>
-              )}
-              {loading ? "Generating..." : "Generate Insights"}
-            </Button>
-          </div>
+    <div className="bg-[#f6f6f6]">
+      {/* Tabs */}
+      <div className="bg-[#f6f6f6] px-8 pt-5">
+        <div className="flex gap-0">
+          {(["prompt-research", "prompt-volume"] as const).map((tab, idx) => {
+            const label = tab === "prompt-research" ? "Prompt Research" : "Prompt Volume";
+            const isActive = mainTab === tab;
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setMainTab(tab)}
+                className={`w-48 py-3 text-center font-medium text-base transition-colors ${
+                  isActive
+                    ? "bg-[#048BC5] text-white rounded-tl-lg"
+                    : "bg-[#E1EBF8] text-[#262626] opacity-70 rounded-tr-lg"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
+      </div>
 
-        {/* No brand selected — show Prompt Volume bottom section */}
-        {!results && (
-          <div className="mt-6 flex flex-col gap-5">
-            <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
-              <p className="text-sm text-foreground">
-                Did you know{" "}
-                <span className="font-semibold text-primary-600">over 80% of prompts are unique</span>
-                {" "}— i.e. never seen again. That&apos;s because prompts are long.
-              </p>
-            </div>
+      {/* Content Area */}
+      <div className="bg-white font-sans pl-8 pr-8 pt-8 pb-8">
+        {mainTab === "prompt-research" ? (
+          <div className="space-y-8">
+            {/* Header */}
             <div>
-              <h3 className="text-base font-semibold text-foreground mb-3">Prompt Word Count</h3>
-              <div className="border border-border rounded-lg overflow-hidden">
-                <div className="grid grid-cols-3 bg-surface border-b border-border">
-                  <div className="px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Model</div>
-                  <div className="px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide border-l border-border">Avg. Word Count</div>
-                  <div className="px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide border-l border-border">Median Word Count</div>
-                </div>
-                {[
-                  { model: "ChatGPT", avg: 96, median: 19 },
-                  { model: "Gemini", avg: 143, median: 18 },
-                  { model: "Perplexity", avg: 45, median: 14 },
-                  { model: "Copilot", avg: 44, median: 15 },
-                ].map((row) => (
-                  <div key={row.model} className="grid grid-cols-3 border-b border-border last:border-b-0 bg-white hover:bg-surface transition-colors">
-                    <div className="px-4 py-3 text-sm font-medium text-foreground">{row.model}</div>
-                    <div className="px-4 py-3 text-sm text-foreground border-l border-border">{row.avg}</div>
-                    <div className="px-4 py-3 text-sm text-foreground border-l border-border">{row.median}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <p className="text-sm text-muted">
-              Just like no two conversations with a person are ever exactly the same, the way people prompt AI can vary a lot. That&apos;s why it&apos;s more helpful to focus on topics and themes, rather than trying to match exact prompts.
-            </p>
-          </div>
-        )}
-
-        {/* Results */}
-        {results && (
-          <div className="mt-6 flex flex-col gap-4">
-            {/* Brand Stats */}
-            {brandStats && (
-              <div className="grid grid-cols-3 gap-4">
-                {/* Prompts / month + trend */}
-                <div className="col-span-1 border border-border rounded-lg p-4 flex flex-col gap-3 bg-white">
-                  <p className="text-xs font-semibold text-muted uppercase tracking-wide">Monthly Prompts</p>
-                  <div className="flex items-center gap-3">
-                    <p className="text-3xl font-bold text-foreground leading-none">{brandStats.volume}</p>
-                    <span className={`inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2 py-0.5 ${brandStats.changePositive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
-                      {brandStats.changePositive
-                        ? <svg width="7" height="7" viewBox="0 0 8 8" fill="currentColor"><polygon points="4,0 8,8 0,8" /></svg>
-                        : <svg width="7" height="7" viewBox="0 0 8 8" fill="currentColor"><polygon points="0,0 8,0 4,8" /></svg>
-                      }
-                      {brandStats.change} vs last month
-                    </span>
-                  </div>
-                  <TrendChart stats={brandStats} />
-                </div>
-
-                {/* Share across models */}
-                <div className="col-span-2 border border-border rounded-lg p-4 flex flex-col gap-3 bg-white">
-                  <p className="text-xs font-semibold text-muted uppercase tracking-wide">Share of Volume by Model</p>
-                  {/* Stacked bar */}
-                  <div className="flex rounded-full overflow-hidden h-3">
-                    {brandStats.modelShare.map((m) => (
-                      <div key={m.model} style={{ width: `${m.share}%`, background: m.color }} title={`${m.model}: ${m.share}%`} />
-                    ))}
-                  </div>
-                  {/* Legend */}
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 mt-1">
-                    {brandStats.modelShare.map((m) => (
-                      <div key={m.model} className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: m.color }} />
-                          <span className="text-sm text-foreground truncate">{m.model}</span>
-                        </div>
-                        <span className="text-sm font-semibold text-foreground tabular-nums shrink-0">{m.share}%</span>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Individual bars */}
-                  <div className="flex flex-col gap-2 mt-1">
-                    {brandStats.modelShare.map((m) => (
-                      <div key={m.model} className="flex items-center gap-3">
-                        <span className="text-xs text-muted w-20 shrink-0">{m.model}</span>
-                        <div className="flex-1 h-1.5 bg-[#f0f0f0] rounded-full overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${m.share}%`, background: m.color }} />
-                        </div>
-                        <span className="text-xs text-muted tabular-nums w-8 text-right">{m.share}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Key Insights */}
-            <div className="relative bg-primary-50 rounded-lg pl-5 pr-4 py-3 flex flex-col gap-0.5 overflow-hidden">
-              <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg" style={{ background: "linear-gradient(180deg, var(--primary-gradient-start) 0%, var(--primary) 50%, var(--primary-gradient-end) 100%)" }} />
-              <p className="text-base font-semibold text-foreground">Key Insights</p>
-              <p className="text-[13px] text-foreground leading-relaxed">
-                Users primarily search for pricing &amp; deals, specific product/model lookup and purchase sources, and brand identity, manufacturing and authenticity information.
+              <h2 className="text-2xl font-bold text-[#262626] mb-2">Prompt Research</h2>
+              <p className="text-base text-[#7f7f7f]">
+                Enter a brand to see what people ask AI about.{" "}
+                <a href="#" className="text-[#048BC5] hover:underline">
+                  Learn more
+                </a>
               </p>
             </div>
 
-            {/* Top-level tabs */}
-            <nav className="border-b border-[#e5e5e5]">
-              <div className="flex gap-6">
-                {(["prompt-volume", "prompt-themes"] as const).map((tab) => {
-                  const label = tab === "prompt-volume" ? "Prompt Volume" : "Prompt Themes";
-                  const isActive = resultsTab === tab;
-                  return (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setResultsTab(tab)}
-                      className={`relative pb-3 pt-3 px-1 text-xs tracking-wide uppercase transition-colors duration-150 ${
-                        isActive
-                          ? "font-bold text-[var(--primary)]"
-                          : "font-semibold text-[#404040] hover:text-[var(--primary)]"
-                      }`}
-                    >
-                      {label}
-                      {isActive && <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--primary)] rounded-full" />}
-                    </button>
-                  );
-                })}
+            {/* Form */}
+            <div className="flex gap-4 items-end">
+              {/* Enter Brand */}
+              <div className="flex-1 flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#262626]">Enter Brand</label>
+                <input
+                  type="text"
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
+                  placeholder="Enter Brand"
+                  className="w-full px-4 py-3 bg-white border border-[#eee] rounded-lg text-base text-[#7f7f7f] placeholder-[#7f7f7f] focus:outline-none focus:ring-1 focus:ring-[#048BC5]"
+                />
               </div>
-            </nav>
 
-            {/* Prompt Volume tab */}
-            {resultsTab === "prompt-volume" && (
-            <div className="flex gap-4 items-stretch">
-              {(() => {
-                const filtered = competitors.filter((c) => c.name.toLowerCase().includes(competitorSearch.toLowerCase()));
-                const totalPages = Math.ceil(filtered.length / COMPETITORS_PAGE_SIZE);
-                const pageItems = filtered.slice(competitorPage * COMPETITORS_PAGE_SIZE, (competitorPage + 1) * COMPETITORS_PAGE_SIZE);
-                return (
-                  <div className="border border-border rounded-lg overflow-hidden flex-1">
-                    <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-base font-semibold text-foreground">Competitors Discovered</p>
-                        <p className="text-xs text-muted mt-0.5">{competitors.length} brands · ranked by prompt volume</p>
-                      </div>
-                      <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-1.5 bg-white">
-                        <SearchIcon />
-                        <input
-                          type="text"
-                          placeholder="Search..."
-                          value={competitorSearch}
-                          onChange={(e) => { setCompetitorSearch(e.target.value); setCompetitorPage(0); }}
-                          className="text-sm text-foreground placeholder-muted focus:outline-none w-36"
-                        />
-                      </div>
-                    </div>
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-surface border-b border-border">
-                          <th className="w-8 pl-4" />
-                          <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wide">Name</th>
-                          <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wide">Monthly Prompts</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {pageItems.map((competitor, i) => (
-                          <tr key={competitor.name} className="group hover:bg-surface transition-colors">
-                            <td className="w-8 pl-4">
-                              <StarButton
-                                active={favoriteCompetitors.has(competitor.name)}
-                                onToggle={(v) => setFavoriteCompetitors((prev) => {
-                                  const next = new Set(prev);
-                                  v ? next.add(competitor.name) : next.delete(competitor.name);
-                                  return next;
-                                })}
-                              />
-                            </td>
-                            <td className="px-4 py-2.5 font-medium text-foreground">{competitor.name}</td>
-                            <td className="px-4 py-2.5 text-left tabular-nums text-foreground">
-                              <span>{competitor.volume}</span>
-                              <span className={`ml-2 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${competitor.changePositive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
-                                {competitor.changePositive
-                                  ? <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="4,0 8,8 0,8" /></svg>
-                                  : <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="0,0 8,0 4,8" /></svg>
-                                }
-                                {competitor.change.replace(/^[+-]/, "")}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {totalPages > 1 && (
-                      <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-surface">
-                        <p className="text-xs text-muted">
-                          {competitorPage * COMPETITORS_PAGE_SIZE + 1}–{Math.min((competitorPage + 1) * COMPETITORS_PAGE_SIZE, filtered.length)} of {filtered.length}
-                        </p>
-                        <div className="flex items-center gap-1">
-                          <button type="button" disabled={competitorPage === 0} onClick={() => setCompetitorPage((p) => p - 1)} className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-white disabled:opacity-40 disabled:pointer-events-none transition-colors">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          </button>
-                          <span className="text-xs text-muted px-1">{competitorPage + 1} / {totalPages}</span>
-                          <button type="button" disabled={competitorPage === totalPages - 1} onClick={() => setCompetitorPage((p) => p + 1)} className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-white disabled:opacity-40 disabled:pointer-events-none transition-colors">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+              {/* Enter URL */}
+              <div className="flex-1 flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#262626]">Enter URL</label>
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="Enter URL"
+                  className="w-full px-4 py-3 bg-white border border-[#eee] rounded-lg text-base text-[#7f7f7f] placeholder-[#7f7f7f] focus:outline-none focus:ring-1 focus:ring-[#048BC5]"
+                />
+              </div>
 
-              {(() => {
-                const sortedCats = [...categories]
-                  .sort((a, b) => parseVol(b.volume) - parseVol(a.volume))
-                  .filter((c) => c.name.toLowerCase().includes(categorySearch2.toLowerCase()));
-                const totalPages = Math.ceil(sortedCats.length / CATEGORY_TABLE_PAGE_SIZE);
-                const pageItems = sortedCats.slice(categoryTablePage * CATEGORY_TABLE_PAGE_SIZE, (categoryTablePage + 1) * CATEGORY_TABLE_PAGE_SIZE);
-                return (
-                  <div className="border border-border rounded-lg overflow-hidden flex-1">
-                    <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-base font-semibold text-foreground">Product Categories & Topics</p>
-                        <p className="text-xs text-muted mt-0.5">{categories.length} categories discovered</p>
-                      </div>
-                      <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-1.5 bg-white">
-                        <SearchIcon />
-                        <input
-                          type="text"
-                          placeholder="Search..."
-                          value={categorySearch2}
-                          onChange={(e) => { setCategorySearch2(e.target.value); setCategoryTablePage(0); }}
-                          className="text-sm text-foreground placeholder-muted focus:outline-none w-36"
-                        />
-                      </div>
-                    </div>
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-surface border-b border-border">
-                          <th className="w-8 pl-4" />
-                          <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wide">Name</th>
-                          <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wide">Monthly Prompts</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {pageItems.map((cat) => (
-                          <tr key={cat.name} className="group hover:bg-surface transition-colors">
-                            <td className="w-8 pl-4">
-                              <StarButton
-                                active={favoriteCategories.has(cat.name)}
-                                onToggle={(v) => setFavoriteCategories((prev) => {
-                                  const next = new Set(prev);
-                                  v ? next.add(cat.name) : next.delete(cat.name);
-                                  return next;
-                                })}
-                              />
-                            </td>
-                            <td className="px-4 py-2.5 font-medium text-foreground">{cat.name}</td>
-                            <td className="px-4 py-2.5 text-left tabular-nums text-foreground">
-                              <span>{cat.volume}</span>
-                              <span className={`ml-2 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${cat.changePositive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
-                                {cat.changePositive
-                                  ? <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="4,0 8,8 0,8" /></svg>
-                                  : <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="0,0 8,0 4,8" /></svg>
-                                }
-                                {cat.change.replace(/^[+-]/, "")}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {totalPages > 1 && (
-                      <div className="flex items-center justify-between px-4 py-2.5 border-t border-border bg-surface">
-                        <p className="text-xs text-muted">
-                          {categoryTablePage * CATEGORY_TABLE_PAGE_SIZE + 1}–{Math.min((categoryTablePage + 1) * CATEGORY_TABLE_PAGE_SIZE, sortedCats.length)} of {sortedCats.length}
-                        </p>
+              {/* Location */}
+              <div className="flex-1 flex flex-col gap-2">
+                <div className="flex items-center gap-1 text-sm font-medium text-[#262626]">
+                  <LocationIcon />
+                  <span>Location</span>
+                </div>
+                <div className="w-full px-4 py-3 bg-white border border-[#eee] rounded-lg flex items-center justify-between text-base text-[#7f7f7f] cursor-pointer">
+                  <span>{location}</span>
+                  <ChevronDownIcon />
+                </div>
+              </div>
 
-                        <div className="flex items-center gap-1">
-                          <button type="button" disabled={categoryTablePage === 0} onClick={() => setCategoryTablePage((p) => p - 1)} className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-white disabled:opacity-40 disabled:pointer-events-none transition-colors">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          </button>
-                          <span className="text-xs text-muted px-1">{categoryTablePage + 1} / {totalPages}</span>
-                          <button type="button" disabled={categoryTablePage === totalPages - 1} onClick={() => setCategoryTablePage((p) => p + 1)} className="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-white disabled:opacity-40 disabled:pointer-events-none transition-colors">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+              {/* Language */}
+              <div className="flex-1 flex flex-col gap-2">
+                <div className="flex items-center gap-1 text-sm font-medium text-[#262626]">
+                  <TranslateIcon />
+                  <span>Language</span>
+                </div>
+                <div className="w-full px-4 py-3 bg-white border border-[#eee] rounded-lg flex items-center justify-between text-base text-[#7f7f7f] cursor-pointer">
+                  <span>{language}</span>
+                  <ChevronDownIcon />
+                </div>
+              </div>
+
+              {/* Button */}
+              <Button variant="primary" className="h-[46px] px-4">
+                Discover Prompts
+              </Button>
             </div>
-            )} {/* end prompt-volume tab */}
 
-            {/* Prompt Themes tab */}
-            {resultsTab === "prompt-themes" && (
-            <div className="flex flex-col gap-3">
+            {/* Prompt Library */}
+            <div className="space-y-3">
+              <h3 className="text-[20px] font-medium text-[#262626]">Prompt Library</h3>
 
-              {/* Favorite Competitors */}
-              {favoriteCompetitors.size > 0 && (
-                <div className="rounded-xl bg-white border border-border px-4 py-3 flex flex-col gap-2.5">
-                  <p className="text-sm font-semibold text-foreground">Competitor Watchlist</p>
-                  <div className="flex flex-wrap gap-2">
-                    {competitors
-                      .filter((c) => favoriteCompetitors.has(c.name))
-                      .map((c) => (
-                        <div key={c.name} className="inline-flex items-center bg-white border border-border rounded-full px-3 py-1 text-sm font-medium text-foreground">
-                          {c.name}
-                        </div>
+              {/* Search Bar */}
+              <div className="flex items-center gap-2 bg-[#f6f6f6] px-4 py-2 rounded-lg w-80">
+                <SearchIcon />
+                <input
+                  type="text"
+                  placeholder="Search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent flex-1 text-sm text-[#262626] placeholder-[#7f7f7f] outline-none"
+                />
+              </div>
+
+              {/* Table */}
+              <div className="border border-[#eee] rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-[#f6f6f6] border-b border-[#eee]">
+                        <th className="sticky left-0 bg-[#f6f6f6] px-4 py-3 text-left text-xs font-bold text-[#262626] whitespace-nowrap z-10">Brand</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-[#262626] whitespace-nowrap">URL</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-[#262626] whitespace-nowrap">Country</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-[#262626] whitespace-nowrap">Language</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-[#262626] whitespace-nowrap">Categories</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-[#262626] whitespace-nowrap">Subcategories</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-[#262626] whitespace-nowrap">Prompts</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-[#262626] whitespace-nowrap">Status</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-[#262626] w-10"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {TABLE_DATA.map((row) => (
+                        <tr key={row.brand} onClick={() => router.push(`/prompt-lab/prompt-insights/${row.brand}`)} className="border-b border-[#eee] hover:bg-[#f6f6f6] transition-colors cursor-pointer">
+                          <td className="sticky left-0 bg-white hover:bg-[#f6f6f6] px-4 py-3 text-sm font-medium text-[#262626] z-10 shadow-[4px_0_8px_rgba(0,0,0,0.1)]">{row.brand}</td>
+                          <td className="px-4 py-3 text-sm text-[#048BC5]">{row.url}</td>
+                          <td className="px-4 py-3 text-sm text-[#262626]">{row.country}</td>
+                          <td className="px-4 py-3 text-sm text-[#262626]">{row.language}</td>
+                          <td className="px-4 py-3 text-sm text-[#262626] text-center">{row.categories}</td>
+                          <td className="px-4 py-3 text-sm text-[#262626] text-center">{row.subcategories}</td>
+                          <td className="px-4 py-3 text-sm text-[#262626] text-center">{row.prompts}</td>
+                          <td className="px-4 py-3 text-sm">
+                            {row.status === "ready" ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#F1F8F2] text-[#32693D] rounded-full text-xs font-medium">
+                                <span className="inline-block w-1.5 h-1.5 bg-[#32693D] rounded-full"></span>
+                                Ready
+                              </span>
+                            ) : row.status === "researching" ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#FFF4E5] text-[#D67A02] rounded-full text-xs font-medium">
+                                <span className="inline-block w-1.5 h-1.5 bg-[#D67A02] rounded-full"></span>
+                                Researching
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#FEE2E2] text-[#DC2626] rounded-full text-xs font-medium">
+                                <span className="inline-block w-1.5 h-1.5 bg-[#DC2626] rounded-full"></span>
+                                Failed
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button className="text-[#9e9e9e] hover:text-[#262626] transition-colors p-1">
+                              <DeleteIcon />
+                            </button>
+                          </td>
+                        </tr>
                       ))}
-                  </div>
+                    </tbody>
+                  </table>
                 </div>
-              )}
-
-              {/* Category cards */}
-              {(() => {
-                const sortedByVol = [...categories].sort((a, b) => parseVol(b.volume) - parseVol(a.volume));
-                const favCats = sortedByVol.filter((c) => favoriteCategories.has(c.name));
-                const nonFavCats = sortedByVol.filter((c) => !favoriteCategories.has(c.name));
-                const visibleCount = Math.max(5, favCats.length);
-                const nonFavSlots = visibleCount - favCats.length;
-                const visibleCats = [...favCats, ...nonFavCats.slice(0, nonFavSlots)];
-                const overflowCats = nonFavCats.slice(nonFavSlots);
-                return (
-                  <div className="flex flex-wrap gap-2 items-stretch w-full">
-                    {/* Top 5 category cards */}
-                    {visibleCats.map((cat) => (
-                      <button
-                        key={cat.name}
-                        type="button"
-                        onClick={() => { setSelectedCategory(cat.name); setVisibleTopicsCount(TOPICS_PAGE_SIZE); setSelectedTab("non-branded"); }}
-                        className={`flex-1 min-w-[160px] flex flex-col items-start px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                          selectedCategory === cat.name
-                            ? "bg-primary-50 border-primary-300 text-primary-700"
-                            : "bg-white border-border text-foreground hover:bg-surface"
-                        }`}
-                      >
-                        <span className="flex items-center gap-1">
-                          {favoriteCategories.has(cat.name) && <StarIcon filled={true} />}
-                          {cat.name}
-                        </span>
-                        <span className={`flex items-center gap-1 text-xs font-normal mt-0.5 ${selectedCategory === cat.name ? "text-primary-500" : "text-muted"}`}>
-                          {cat.volume}
-                          <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${
-                            cat.changePositive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
-                          }`}>
-                            {cat.changePositive
-                              ? <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="4,0 8,8 0,8" /></svg>
-                              : <svg width="6" height="6" viewBox="0 0 8 8" fill="currentColor"><polygon points="0,0 8,0 4,8" /></svg>
-                            }
-                            {cat.change.replace(/^[+-]/, "")}
-                          </span>
-                        </span>
-                      </button>
-                    ))}
-
-                    {/* Overflow "+" card */}
-                    {overflowCats.length > 0 && (
-                      <div className="relative self-stretch shrink-0" ref={categoryDropdownRef}>
-                        <button
-                          type="button"
-                          onClick={() => { setCategoryDropdownOpen((v) => !v); setCategorySearch(""); }}
-                          className={`h-full flex items-center justify-center px-3 rounded-lg border text-sm font-medium transition-colors ${
-                            categoryDropdownOpen || overflowCats.some((c) => c.name === selectedCategory)
-                              ? "bg-primary-50 border-primary-300 text-primary-700"
-                              : "bg-white border-border text-foreground hover:bg-surface"
-                          }`}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                          </svg>
-                        </button>
-
-                        {categoryDropdownOpen && (
-                          <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-[#e5e5e5] rounded-lg shadow-lg w-64 max-h-64 overflow-y-auto">
-                            <div className="flex items-center gap-2 px-3 py-2 border-b border-[#e5e5e5] sticky top-0 bg-white">
-                              <SearchIcon />
-                              <input
-                                autoFocus
-                                type="text"
-                                placeholder="Search..."
-                                value={categorySearch}
-                                onChange={(e) => setCategorySearch(e.target.value)}
-                                className="flex-1 text-sm text-[#262626] placeholder-[#9e9e9e] outline-none bg-transparent"
-                              />
-                              {categorySearch && (
-                                <button type="button" onClick={() => setCategorySearch("")} className="text-[#9e9e9e] hover:text-[#262626]">
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                                </button>
-                              )}
-                            </div>
-                            <div className="py-1">
-                              {overflowCats
-                                .filter((c) => c.name.toLowerCase().includes(categorySearch.toLowerCase()))
-                                .map((cat) => (
-                                  <button
-                                    key={cat.name}
-                                    type="button"
-                                    onClick={() => { setSelectedCategory(cat.name); setVisibleTopicsCount(TOPICS_PAGE_SIZE); setSelectedTab("non-branded"); setCategoryDropdownOpen(false); setCategorySearch(""); }}
-                                    className={`w-full flex items-center justify-between px-4 py-2 text-left transition-colors ${selectedCategory === cat.name ? "bg-primary-50 text-primary-600" : "text-[#262626] hover:bg-[#f6f6f6]"}`}
-                                  >
-                                    <span className={`text-sm truncate ${selectedCategory === cat.name ? "font-semibold" : "font-medium"}`}>{cat.name}</span>
-                                    <span className="text-xs text-[#7F7F7F] tabular-nums shrink-0 ml-3">{cat.volume}</span>
-                                  </button>
-                                ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-            {selectedCategory && (
-              <nav className="border-b border-[#e5e5e5] mt-2">
-                <div className="flex gap-6">
-                  {(["your-brand", "non-branded"] as const).map((tab) => {
-                    const label = tab === "your-brand" ? "Branded" : "Non Branded";
-                    const isActive = selectedTab === tab;
-                    return (
-                      <button
-                        key={tab}
-                        type="button"
-                        onClick={() => setSelectedTab(tab)}
-                        className={`relative pb-4 pt-1 px-3 -mx-3 text-xs tracking-wide uppercase transition-colors duration-150 rounded-t-md ${
-                          isActive
-                            ? "font-bold text-[var(--primary)]"
-                            : "font-semibold text-[#404040] hover:text-[var(--primary)] hover:bg-[#f6f6f6]"
-                        }`}
-                      >
-                        {label}
-                        {isActive && (
-                          <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--primary)] rounded-full" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </nav>
-            )}
-
-            {(() => {
-              const allFiltered = [...results]
-                .filter((item) => {
-                  const categoryMatch = !selectedCategory || item.category === selectedCategory;
-                  const tabMatch =
-                    selectedTab === "your-brand" ? item.tab === "your-brand" :
-                    (item.tab === "non-branded" || !item.tab);
-                  return categoryMatch && tabMatch;
-                })
-                .sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.popularity] - { high: 0, medium: 1, low: 2 }[b.popularity]));
-
-              const tabFiltered = allFiltered.slice(0, visibleTopicsCount);
-              const hasMore = allFiltered.length > visibleTopicsCount;
-
-              if (tabFiltered.length === 0) {
-                return <p className="text-sm text-muted py-6 text-center">No data available for this view yet.</p>;
-              }
-
-              return (
-                <div className="flex flex-col gap-3">
-                  {tabFiltered.map((item) => (
-                    <TopicAccordion
-                      key={item.topic}
-                      topic={item.topic}
-                      prompts={item.prompts}
-                      subtopics={item.subtopics}
-                      popularity={item.popularity}
-                      userIntent={item.userIntent}
-                      brand={brand}
-                      open={openTopic === item.topic}
-                      onOpen={() => setOpenTopic(openTopic === item.topic ? null : item.topic)}
-                    />
-                  ))}
-                  {hasMore && (
-                    <button
-                      type="button"
-                      onClick={() => setVisibleTopicsCount((n) => n + TOPICS_PAGE_SIZE)}
-                      className="w-full py-2.5 text-sm font-medium text-primary-600 border border-border rounded-lg hover:bg-surface transition-colors"
-                    >
-                      Show more ({allFiltered.length - visibleTopicsCount} remaining)
-                    </button>
-                  )}
-                </div>
-              );
-            })()}
-
+              </div>
             </div>
-            )} {/* end prompt-themes tab */}
-
+          </div>
+        ) : (
+          <div>
+            <h2 className="text-2xl font-bold text-[#262626] mb-2">Prompt Volume</h2>
+            <p className="text-base text-[#7f7f7f]">Content coming soon...</p>
           </div>
         )}
       </div>
     </div>
-
   );
 }
