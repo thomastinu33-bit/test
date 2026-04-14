@@ -482,7 +482,7 @@ function generateMockRadarData(
   });
 
   const rows = brands.map((brand) => {
-    const row: Record<string, unknown> = { brand };
+    const row: { brand: string; [k: string]: unknown } = { brand };
     topicColumns.forEach((topic) => {
       const score = baselineScore + topicVariance[topic.id] + (Math.random() - 0.5) * 5;
       row[topic.id] = Math.max(isPosition ? 1 : 0, score);
@@ -685,7 +685,7 @@ export function TimelineViz(props?: TimelineVizProps) {
         .then((data: { dates: string[]; series: TimelineSeries[] }) => {
           // For topics mode, use mock data if available, otherwise use API response
           if (brandId === "hm" && (!data.dates || data.dates.length === 0)) {
-            const availableBrands = (data.brands ?? internalBrandsList).slice(0, 6);
+            const availableBrands = internalBrandsList.slice(0, 6);
             const mockData = generateMockTimelineData(availableBrands, 5, metric);
             setDates(mockData.dates);
             setSeries(mockData.series);
@@ -862,7 +862,8 @@ export function TimelineViz(props?: TimelineVizProps) {
               const v = row[changeKey];
               return typeof v === "number" && Number.isFinite(v) ? (v as number) : null;
             }),
-          }))
+            };
+          })
       : [];
 
   const brandSearchLower = brandSearchQuery.trim().toLowerCase();
