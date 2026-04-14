@@ -153,10 +153,10 @@ export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdateProm
                         setEditingTopicName(null);
                       }
                     }}
-                    className="text-sm font-semibold text-[#262626] border border-[#048BC5] rounded px-2 py-1 min-w-0 flex-1"
+                    className="text-sm font-semibold text-[#262626] border border-[#048BC5] rounded px-2 py-1 min-w-0 flex-1 text-left"
                   />
                 ) : (
-                  <span className="text-sm font-semibold text-[#262626] truncate flex-1">{item.name}</span>
+                  <span className="text-sm font-semibold text-[#262626] truncate flex-1 text-left">{item.name}</span>
                 )}
                 <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                   <span className="text-xs text-[#999] font-medium whitespace-nowrap">{item.promptCount} prompts</span>
