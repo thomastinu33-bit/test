@@ -1,7 +1,7 @@
 "use client";
 
 import { SideNav, AiAgentProvider } from "@/components/Evertune";
-import { useTracker } from "./TrackerContext";
+import { useTracker, SideNavProvider } from "./TrackerContext";
 import { useState } from "react";
 
 export function RootLayoutContent({
@@ -25,7 +25,9 @@ export function RootLayoutContent({
     <div className="min-h-screen w-full">
       <SideNav collapsed={shouldCollapse} onCollapseToggle={handleCollapseToggle} />
       <div className={`transition-all duration-200 ${shouldCollapse ? "pl-[72px]" : "pl-[280px]"}`}>
-        <AiAgentProvider>{children}</AiAgentProvider>
+        <SideNavProvider isCollapsed={shouldCollapse}>
+          <AiAgentProvider>{children}</AiAgentProvider>
+        </SideNavProvider>
       </div>
     </div>
   );

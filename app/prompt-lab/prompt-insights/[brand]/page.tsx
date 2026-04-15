@@ -6,7 +6,7 @@ import { Toggle, Dropdown, Button, IntentBadge } from "@/components/Evertune";
 import type { IntentType } from "@/components/Evertune";
 import { TrackerBuilder } from "@/components/TrackerBuilder";
 import type { TrackerItem } from "@/components/TrackerBuilder";
-import { useTracker } from "@/app/TrackerContext";
+import { useTracker, useSideNav } from "@/app/TrackerContext";
 
 const ChevronRightIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -742,6 +742,7 @@ export default function BrandResearchPage() {
   const params = useParams();
   const brand = params.brand as string;
   const { setIsTrackerOpen } = useTracker();
+  const { isCollapsed } = useSideNav();
   const [mainTab, setMainTab] = useState<"prompt-research" | "prompt-volume">("prompt-research");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [brandType, setBrandType] = useState<"Non-Branded" | "Branded">("Non-Branded");
@@ -1205,7 +1206,7 @@ export default function BrandResearchPage() {
         )}
       </div>
       {showTracker2 && mainTab === "prompt-research" && (
-        <div className="fixed bottom-0 bg-white border-t border-[#EEE] flex flex-col transition-all duration-200" style={{ height: `${trackerHeight2}px`, zIndex: 40, left: showTracker ? '72px' : '280px', right: 0 }}>
+        <div className="fixed bottom-0 bg-white border-t border-[#EEE] flex flex-col transition-all duration-200" style={{ height: `${trackerHeight2}px`, zIndex: 40, left: isCollapsed ? '72px' : '280px', right: 0 }}>
           <div className="h-1 bg-[#DDD] cursor-ns-resize hover:bg-[#BBE9FC] transition-colors" onMouseDown={(e) => {
             e.preventDefault();
             const startY = e.clientY;
