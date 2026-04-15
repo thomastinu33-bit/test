@@ -1241,9 +1241,10 @@ export default function BrandResearchPage() {
       {!showTracker && mainTab === "prompt-research" && trackerItems.length > 0 && (
         <button
           onClick={() => setShowTracker(true)}
-          className="fixed right-6 top-20 bg-[#048BC5] text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-[#037BA8] transition-colors shadow-lg z-30"
+          className="fixed right-0 top-1/2 -translate-y-1/2 bg-[#048BC5] text-white px-2 py-3 rounded-l-lg font-medium text-xs hover:bg-[#037BA8] transition-colors shadow-lg z-30 flex flex-col items-center gap-1"
         >
-          Tracker 1 ({trackerItems.length})
+          <span>T1</span>
+          <span className="text-xs">({trackerItems.length})</span>
         </button>
       )}
 
