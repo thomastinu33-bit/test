@@ -900,8 +900,8 @@ export default function BrandResearchPage() {
       </div>
 
       {/* Content Area */}
-      <div className={`bg-white font-sans ${showTracker2 ? 'flex flex-col' : 'flex'} w-full`} style={{ height: showTracker2 ? 'auto' : 'calc(100vh - 60px)' }}>
-        <div className={`flex flex-col flex-1 w-full ${showTracker ? 'overflow-y-auto' : ''} ${showTracker2 ? 'h-1/2' : ''}`} style={{ overflow: showTracker ? 'auto' : 'visible', height: showTracker2 ? '50%' : 'auto' }}>
+      <div className="relative bg-white font-sans flex w-full" style={{ height: 'calc(100vh - 60px)' }}>
+        <div className={`flex flex-col flex-1 w-full ${showTracker ? 'overflow-y-auto' : ''}`} style={{ overflow: showTracker ? 'auto' : 'visible' }}>
           <div className="p-5 w-full">
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 mb-8">
@@ -1203,20 +1203,39 @@ export default function BrandResearchPage() {
             </div>
           </div>
         )}
-        {showTracker2 && (
-          <div className="flex-1 border-t border-[#EEE] overflow-hidden bg-white">
-            <div className="h-full overflow-y-auto">
-              <TrackerBuilder
-                items={trackerItems2}
-                onRemoveItem={handleRemoveTrackerItem2}
-                onUpdateItem={handleUpdateTrackerItem2}
-                onUpdatePrompt={handleUpdatePrompt2}
-                onClose={handleCloseTracker2}
-              />
-            </div>
-          </div>
-        )}
       </div>
+      {showTracker2 && (
+        <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#EEE] flex flex-col" style={{ height: `${trackerHeight2}px`, zIndex: 40 }}>
+          <div className="h-1 bg-[#DDD] cursor-ns-resize hover:bg-[#BBE9FC] transition-colors" onMouseDown={(e) => {
+            e.preventDefault();
+            const startY = e.clientY;
+            const startHeight = trackerHeight2;
+
+            const handleMouseMove = (moveEvent: MouseEvent) => {
+              const deltaY = moveEvent.clientY - startY;
+              const newHeight = Math.max(200, startHeight - deltaY);
+              setTrackerHeight2(newHeight);
+            };
+
+            const handleMouseUp = () => {
+              document.removeEventListener('mousemove', handleMouseMove);
+              document.removeEventListener('mouseup', handleMouseUp);
+            };
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+          }} />
+          <div className="flex-1 overflow-y-auto">
+            <TrackerBuilder
+              items={trackerItems2}
+              onRemoveItem={handleRemoveTrackerItem2}
+              onUpdateItem={handleUpdateTrackerItem2}
+              onUpdatePrompt={handleUpdatePrompt2}
+              onClose={handleCloseTracker2}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
