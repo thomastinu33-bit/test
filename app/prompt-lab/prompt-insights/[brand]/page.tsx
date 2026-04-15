@@ -1244,7 +1244,7 @@ export default function BrandResearchPage() {
           className="fixed right-0 top-1/2 -translate-y-1/2 bg-[#048BC5] text-white px-4 py-3 rounded-l-lg font-medium hover:bg-[#037BA8] transition-colors shadow-lg z-30 flex items-center gap-2"
         >
           <span className="text-sm font-semibold">Draft Tracker</span>
-          <span className="bg-white bg-opacity-20 text-white px-2 py-0.5 rounded text-xs font-semibold">
+          <span className="bg-white bg-opacity-20 text-[#048BC5] px-2 py-0.5 rounded text-xs font-semibold">
             {trackerItems.reduce((sum, item) => sum + (item.promptCount || 0), 0)}
           </span>
         </button>
