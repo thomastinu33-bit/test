@@ -750,6 +750,9 @@ export default function BrandResearchPage() {
   const [trackerItems, setTrackerItems] = useState<TrackerItem[]>([]);
   const [showTracker, setShowTracker] = useState(false);
   const [trackerWidth, setTrackerWidth] = useState(600);
+  const [trackerItems2, setTrackerItems2] = useState<TrackerItem[]>([]);
+  const [showTracker2, setShowTracker2] = useState(false);
+  const [trackerHeight2, setTrackerHeight2] = useState(300);
 
   // Update global tracker state when local showTracker changes
   useEffect(() => {
@@ -781,6 +784,31 @@ export default function BrandResearchPage() {
     setShowTracker(true);
   };
 
+  const handleAddToTracker2 = (
+    name: string,
+    promptCount: number,
+    type: "subcategory" | "topic" = "topic",
+    topics?: Topic[]
+  ) => {
+    let newItems: TrackerItem[] = [];
+
+    if (type === "subcategory" && topics) {
+      // Add individual topics from the subcategory
+      newItems = topics.map((topic) => ({
+        name: topic.name,
+        promptCount: topic.prompts.length,
+        type: "topic" as const,
+        prompts: topic.prompts,
+      }));
+    } else {
+      // Add single topic
+      newItems = [{ name, promptCount, type }];
+    }
+
+    setTrackerItems2([...trackerItems2, ...newItems]);
+    setShowTracker2(true);
+  };
+
   const handleRemoveTrackerItem = (name: string) => {
     setTrackerItems(trackerItems.filter(item => item.name !== name));
   };
@@ -799,8 +827,30 @@ export default function BrandResearchPage() {
     ));
   };
 
+  const handleRemoveTrackerItem2 = (name: string) => {
+    setTrackerItems2(trackerItems2.filter(item => item.name !== name));
+  };
+
+  const handleUpdateTrackerItem2 = (oldName: string, newName: string) => {
+    setTrackerItems2(trackerItems2.map(item =>
+      item.name === oldName ? { ...item, name: newName } : item
+    ));
+  };
+
+  const handleUpdatePrompt2 = (topicName: string, promptIndex: number, newPrompt: string) => {
+    setTrackerItems2(trackerItems2.map(item =>
+      item.name === topicName && item.prompts
+        ? { ...item, prompts: item.prompts.map((p, idx) => idx === promptIndex ? newPrompt : p) }
+        : item
+    ));
+  };
+
   const handleCloseTracker = () => {
     setShowTracker(false);
+  };
+
+  const handleCloseTracker2 = () => {
+    setShowTracker2(false);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -850,8 +900,8 @@ export default function BrandResearchPage() {
       </div>
 
       {/* Content Area */}
-      <div className="bg-white font-sans overflow-y-auto flex w-full" style={{ height: 'calc(100vh - 60px)' }}>
-        <div className={`flex flex-col flex-1 w-full ${showTracker ? 'overflow-y-auto' : ''}`} style={{ overflow: showTracker ? 'auto' : 'visible' }}>
+      <div className={`bg-white font-sans ${showTracker2 ? 'flex flex-col' : 'flex'} w-full`} style={{ height: showTracker2 ? 'auto' : 'calc(100vh - 60px)' }}>
+        <div className={`flex flex-col flex-1 w-full ${showTracker ? 'overflow-y-auto' : ''} ${showTracker2 ? 'h-1/2' : ''}`} style={{ overflow: showTracker ? 'auto' : 'visible', height: showTracker2 ? '50%' : 'auto' }}>
           <div className="p-5 w-full">
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 mb-8">
@@ -1026,6 +1076,17 @@ export default function BrandResearchPage() {
                             >
                               Add to tracker 1
                             </Button>
+                            <Button
+                              variant="primaryOutline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const promptCount = subcategory.topics.reduce((sum, topic) => sum + topic.prompts.length, 0);
+                                handleAddToTracker2(subcategory.name, promptCount, "subcategory", subcategory.topics);
+                              }}
+                              className="py-1 px-2 text-xs"
+                            >
+                              Add to tracker 2
+                            </Button>
                           </div>
                           <svg
                             width="16"
@@ -1087,6 +1148,16 @@ export default function BrandResearchPage() {
                                   >
                                     Add to tracker 1
                                   </Button>
+                                  <Button
+                                    variant="primaryOutline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAddToTracker2(topic.name, topic.prompts.length, "topic");
+                                    }}
+                                    className="py-1 px-2 text-xs shrink-0"
+                                  >
+                                    Add to tracker 2
+                                  </Button>
                                 </div>
                               </div>
                             ))}
@@ -1128,6 +1199,19 @@ export default function BrandResearchPage() {
                 onUpdateItem={handleUpdateTrackerItem}
                 onUpdatePrompt={handleUpdatePrompt}
                 onClose={handleCloseTracker}
+              />
+            </div>
+          </div>
+        )}
+        {showTracker2 && (
+          <div className="flex-1 border-t border-[#EEE] overflow-hidden bg-white">
+            <div className="h-full overflow-y-auto">
+              <TrackerBuilder
+                items={trackerItems2}
+                onRemoveItem={handleRemoveTrackerItem2}
+                onUpdateItem={handleUpdateTrackerItem2}
+                onUpdatePrompt={handleUpdatePrompt2}
+                onClose={handleCloseTracker2}
               />
             </div>
           </div>
