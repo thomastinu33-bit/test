@@ -133,8 +133,8 @@ export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdateProm
             </span>
           </div>
 
-          {items.map((item) => (
-            <div key={item.name} className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white hover:border-[#D0D0D0] transition-colors">
+          {items.map((item, index) => (
+            <div key={`${item.name}-${index}`} className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white hover:border-[#D0D0D0] transition-colors">
               <div
                 onClick={() => toggleTopic(item.name)}
                 className="w-full px-4 py-3.5 flex items-center gap-2 bg-white hover:bg-[#FAFAFA] transition-colors cursor-pointer"
