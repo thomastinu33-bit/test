@@ -1237,6 +1237,16 @@ export default function BrandResearchPage() {
           </div>
         </div>
       )}
+
+      {!showTracker2 && mainTab === "prompt-research" && trackerItems2.length > 0 && (
+        <button
+          onClick={() => setShowTracker2(true)}
+          className="fixed bottom-6 right-6 bg-[#048BC5] text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-[#037BA8] transition-colors shadow-lg z-30"
+          style={{ left: isCollapsed ? '88px' : '296px' }}
+        >
+          Tracker 2 ({trackerItems2.length})
+        </button>
+      )}
     </div>
   );
 }
