@@ -1204,8 +1204,8 @@ export default function BrandResearchPage() {
           </div>
         )}
       </div>
-      {showTracker2 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#EEE] flex flex-col" style={{ height: `${trackerHeight2}px`, zIndex: 40 }}>
+      {showTracker2 && mainTab === "prompt-research" && (
+        <div className="fixed bottom-0 bg-white border-t border-[#EEE] flex flex-col transition-all duration-200" style={{ height: `${trackerHeight2}px`, zIndex: 40, left: 0, right: 0, marginLeft: showTracker ? '72px' : '280px' }}>
           <div className="h-1 bg-[#DDD] cursor-ns-resize hover:bg-[#BBE9FC] transition-colors" onMouseDown={(e) => {
             e.preventDefault();
             const startY = e.clientY;
