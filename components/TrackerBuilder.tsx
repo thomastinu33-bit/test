@@ -16,6 +16,7 @@ interface TrackerBuilderProps {
   onUpdateItem?: (oldName: string, newName: string) => void;
   onUpdatePrompt?: (topicName: string, promptIndex: number, newPrompt: string) => void;
   onClose: () => void;
+  onClearAll?: () => void;
 }
 
 const CloseIcon = () => (
@@ -43,7 +44,7 @@ const ChevronIcon = () => (
   </svg>
 );
 
-export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdatePrompt, onClose }: TrackerBuilderProps) {
+export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdatePrompt, onClose, onClearAll }: TrackerBuilderProps) {
   const defaultName = items.length > 0 ? items[0].name : "Untitled";
   const [trackerName, setTrackerName] = useState(defaultName);
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
@@ -99,6 +100,30 @@ export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdateProm
 
   const totalPrompts = items.reduce((sum, item) => sum + item.promptCount, 0);
 
+  const handleDownload = () => {
+    const data = {
+      trackerName,
+      items: items.map(item => ({
+        name: item.name,
+        type: item.type,
+        promptCount: item.promptCount,
+        prompts: item.prompts || []
+      })),
+      exportedAt: new Date().toISOString()
+    };
+
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${trackerName || 'tracker'}-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="bg-white border-l border-[#EEE] p-5 flex flex-col h-full overflow-y-auto">
       {/* Header */}
@@ -126,11 +151,32 @@ export function TrackerBuilder({ items, onRemoveItem, onUpdateItem, onUpdateProm
       {/* Your Analysis */}
       {items.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center justify-between gap-2 mb-4">
             <h3 className="text-[20px] font-semibold text-[#262626]">Your Analysis</h3>
             <span className="text-xs text-[#7F7F7F] font-medium bg-[#F9F9F9] px-2 py-1 rounded-full">
               {totalPrompts} prompts
             </span>
+          </div>
+
+          <div className="flex gap-3 mb-4 justify-end">
+            <button
+              onClick={handleDownload}
+              className="text-xs font-medium text-[#7F7F7F] hover:text-[#048BC5] hover:bg-[#F9F9F9] px-2 py-1 rounded transition-colors"
+              title="Download tracker as JSON"
+            >
+              Download
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to clear all items? This cannot be undone.')) {
+                  onClearAll?.();
+                }
+              }}
+              className="text-xs font-medium text-[#7F7F7F] hover:text-[#EF4444] hover:bg-[#F9F9F9] px-2 py-1 rounded transition-colors"
+              title="Clear all items"
+            >
+              Clear All
+            </button>
           </div>
 
           {items.map((item, index) => (
