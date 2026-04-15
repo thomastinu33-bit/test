@@ -901,8 +901,8 @@ export default function BrandResearchPage() {
       </div>
 
       {/* Content Area */}
-      <div className="relative bg-white font-sans flex w-full" style={{ height: 'calc(100vh - 60px)' }}>
-        <div className={`flex flex-col flex-1 w-full ${showTracker ? 'overflow-y-auto' : ''}`} style={{ overflow: showTracker ? 'auto' : 'visible' }}>
+      <div className="relative bg-white font-sans flex w-full" style={{ minHeight: 'calc(100vh - 60px)' }}>
+        <div className={`flex flex-col flex-1 w-full`}>
           <div className="p-5 w-full">
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 mb-8">
