@@ -1241,10 +1241,12 @@ export default function BrandResearchPage() {
       {!showTracker && mainTab === "prompt-research" && trackerItems.length > 0 && (
         <button
           onClick={() => setShowTracker(true)}
-          className="fixed right-0 top-1/2 -translate-y-1/2 bg-[#048BC5] text-white px-2 py-3 rounded-l-lg font-medium text-xs hover:bg-[#037BA8] transition-colors shadow-lg z-30 flex flex-col items-center gap-1"
+          className="fixed right-0 top-1/2 -translate-y-1/2 bg-[#048BC5] text-white px-3 py-4 rounded-l-lg font-medium text-xs hover:bg-[#037BA8] transition-colors shadow-lg z-30 flex flex-col items-center gap-2 writing-mode-vertical"
         >
-          <span>T1</span>
-          <span className="text-xs">({trackerItems.length})</span>
+          <span className="whitespace-nowrap text-sm font-semibold">Draft Tracker</span>
+          <span className="bg-white text-[#048BC5] px-2 py-1 rounded-full text-xs font-bold">
+            {trackerItems.reduce((sum, item) => sum + (item.promptCount || 0), 0)}
+          </span>
         </button>
       )}
 
