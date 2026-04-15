@@ -1024,7 +1024,7 @@ export default function BrandResearchPage() {
                               }}
                               className="py-1 px-2 text-xs"
                             >
-                              Add to Tracker
+                              Add to tracker 1
                             </Button>
                           </div>
                           <svg
@@ -1085,7 +1085,7 @@ export default function BrandResearchPage() {
                                     }}
                                     className="py-1 px-2 text-xs shrink-0"
                                   >
-                                    Add to Tracker
+                                    Add to tracker 1
                                   </Button>
                                 </div>
                               </div>
