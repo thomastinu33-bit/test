@@ -618,7 +618,7 @@ export default function URLAuditPage() {
                                 {topic.tracker}
                               </span>
                             </div>
-                            <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-6 mr-2">
                               <div className="text-right">
                                 <p className="text-[11px] font-medium text-[#7f7f7f] uppercase">Topic Relevance</p>
                                 <p className="text-sm font-bold text-[#262626]">{topic.topicRelevance}</p>
