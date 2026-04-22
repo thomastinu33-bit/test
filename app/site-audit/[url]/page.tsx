@@ -260,7 +260,7 @@ export default function URLAuditPage() {
         <div className="space-y-8 px-8">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm">
-            <Link href="/site-audit" className="text-[#048BC5] hover:underline">
+            <Link href="/site-audit/audited-pages" className="text-[#048BC5] hover:underline">
               Audited pages
             </Link>
             <ChevronRight size={16} />
