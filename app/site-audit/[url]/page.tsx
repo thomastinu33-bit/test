@@ -604,7 +604,7 @@ export default function URLAuditPage() {
                                   : [...prev, idx]
                               );
                             }}
-                            className="w-full px-4 py-3 flex items-center justify-between hover:bg-[#f9f9f9] transition-colors"
+                            className="w-full px-3 py-3 flex items-center justify-between hover:bg-[#f9f9f9] transition-colors"
                           >
                             <div className="flex items-center gap-2">
                               <p className="text-sm font-semibold text-[#262626]">{topic.name}</p>
@@ -641,14 +641,14 @@ export default function URLAuditPage() {
                           {isExpanded && (
                             <div>
                               {/* Prompts Header */}
-                              <div className="px-4 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-end gap-8 text-xs font-medium text-[#7f7f7f] uppercase whitespace-nowrap">
+                              <div className="px-3 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-end gap-8 text-xs font-medium text-[#7f7f7f] uppercase whitespace-nowrap">
                                 <p>Topic Relevance</p>
                                 <p>Source Share</p>
                               </div>
 
                               {/* Prompt Rows */}
                               {topic.prompts.map((prompt, promptIdx) => (
-                                <div key={promptIdx} className="px-4 py-3 border-b border-[#eee] flex items-center justify-between gap-6 text-sm hover:bg-[#f9f9f9]">
+                                <div key={promptIdx} className="px-3 py-3 border-b border-[#eee] flex items-center justify-between gap-6 text-sm hover:bg-[#f9f9f9]">
                                   <p className="text-[#262626] flex-1">{prompt.text}</p>
                                   <div className="flex gap-12 whitespace-nowrap">
                                     <div className="w-20 text-right">
