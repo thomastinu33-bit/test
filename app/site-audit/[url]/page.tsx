@@ -644,7 +644,7 @@ export default function URLAuditPage() {
                               <div className="px-4 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-between gap-4 text-xs font-medium text-[#7f7f7f] uppercase">
                                 <p className="flex-1">Prompt</p>
                                 <div className="flex gap-6 whitespace-nowrap">
-                                  <div className="w-12 text-right">Topic Relevance</div>
+                                  <div className="w-12 text-right pr-1">Topic Relevance</div>
                                   <div className="w-16 text-right">Source Share</div>
                                 </div>
                               </div>
