@@ -199,15 +199,6 @@ const RELEVANT_TOPICS = [
       { name: "Portable Speakers", color: "#F59E0B", relevance: 87 }
     ]
   },
-  {
-    id: 7,
-    topic: "Water Resistance",
-    description: "Durability & Protection",
-    trackers: [
-      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 76 },
-      { name: "Portable Speakers", color: "#F59E0B", relevance: 72 }
-    ]
-  },
 ];
 
 export default function URLAuditPage() {
