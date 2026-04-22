@@ -183,15 +183,23 @@ const RELEVANT_TOPICS = [
   },
   {
     id: 5,
-    topic: "Design & Build",
-    description: "Aesthetics & Materials",
+    topic: "Sound Quality",
+    description: "Audio Performance & Clarity",
     trackers: [
-      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 84 },
-      { name: "Portable Speakers", color: "#F59E0B", relevance: 80 }
+      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 95 },
+      { name: "Home Cinema Audio", color: "#10B981", relevance: 98 }
     ]
   },
   {
     id: 6,
+    topic: "Materials",
+    description: "Build & Durability",
+    trackers: [
+      { name: "Portable Speakers", color: "#F59E0B", relevance: 83 }
+    ]
+  },
+  {
+    id: 7,
     topic: "Power Output",
     description: "Loudness & Performance",
     trackers: [
