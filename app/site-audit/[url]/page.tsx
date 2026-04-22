@@ -644,8 +644,8 @@ export default function URLAuditPage() {
                               <div className="px-4 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-between gap-4 text-xs font-medium text-[#7f7f7f] uppercase">
                                 <p className="flex-1">Prompt</p>
                                 <div className="flex gap-6 whitespace-nowrap">
-                                  <p>Topic Relevance</p>
-                                  <p>Source Share</p>
+                                  <div className="w-12 text-right">Topic Relevance</div>
+                                  <div className="w-16 text-right">Source Share</div>
                                 </div>
                               </div>
 
@@ -654,10 +654,10 @@ export default function URLAuditPage() {
                                 <div key={promptIdx} className="px-4 py-3 border-b border-[#eee] flex items-start justify-between gap-4 text-sm hover:bg-[#f9f9f9]">
                                   <p className="text-[#262626] flex-1">{prompt.text}</p>
                                   <div className="flex gap-6 whitespace-nowrap">
-                                    <div className="text-right">
+                                    <div className="w-12 text-right">
                                       <p className="text-[#262626] font-semibold text-xs">{prompt.relevance}</p>
                                     </div>
-                                    <div className="text-right">
+                                    <div className="w-16 text-right">
                                       <p className="text-[#262626] font-semibold text-xs">{prompt.sourceShare}%</p>
                                     </div>
                                   </div>
