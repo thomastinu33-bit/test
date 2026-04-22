@@ -1,8 +1,8 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, Link as LinkIcon, Triangle } from "lucide-react";
 import { Tabs, Dropdown, Toggle } from "@/components/Evertune";
 
@@ -222,8 +222,11 @@ const RELEVANT_TOPICS = [
 
 export default function URLAuditPage() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const decodedUrl = decodeURIComponent(params.url as string);
-  const [activeTab, setActiveTab] = useState("issues");
+
+  const [activeTab, setActiveTabState] = useState("issues");
   const [issueSearch, setIssueSearch] = useState("");
   const [issueSeverity, setIssueSeverity] = useState("All Severities");
   const [issueType, setIssueType] = useState("All Types");
@@ -233,7 +236,41 @@ export default function URLAuditPage() {
   const [snippetView, setSnippetView] = useState("snippet");
   const [snippetSort, setSnippetSort] = useState("most-relevant");
   const [expandedTopics, setExpandedTopics] = useState<number[]>([]);
-  const [selectedTopicFilter, setSelectedTopicFilter] = useState<{ topic: string; tracker: string } | null>(null);
+  const [selectedTopicFilter, setSelectedTopicFilterState] = useState<{ topic: string; tracker: string } | null>(null);
+
+  // Sync state with URL parameters
+  useEffect(() => {
+    const tab = searchParams.get("tab") || "issues";
+    setActiveTabState(tab);
+
+    const topicFilter = searchParams.get("topicFilter");
+    const trackerFilter = searchParams.get("trackerFilter");
+    if (topicFilter && trackerFilter) {
+      setSelectedTopicFilterState({ topic: topicFilter, tracker: trackerFilter });
+    } else {
+      setSelectedTopicFilterState(null);
+    }
+  }, [searchParams]);
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", tab);
+    router.push(`?${newParams.toString()}`);
+  };
+
+  const setSelectedTopicFilter = (filter: { topic: string; tracker: string } | null) => {
+    setSelectedTopicFilterState(filter);
+    const newParams = new URLSearchParams(searchParams);
+    if (filter) {
+      newParams.set("topicFilter", filter.topic);
+      newParams.set("trackerFilter", filter.tracker);
+    } else {
+      newParams.delete("topicFilter");
+      newParams.delete("trackerFilter");
+    }
+    router.push(`?${newParams.toString()}`);
+  };
 
   return (
     <div className="bg-[#f6f6f6] w-full min-h-screen flex flex-col m-5">
