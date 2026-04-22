@@ -854,6 +854,10 @@ export default function BrandResearchPage() {
     setShowTracker2(false);
   };
 
+  const handleClearTracker2 = () => {
+    setTrackerItems2([]);
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -1233,6 +1237,7 @@ export default function BrandResearchPage() {
               onUpdateItem={handleUpdateTrackerItem2}
               onUpdatePrompt={handleUpdatePrompt2}
               onClose={handleCloseTracker2}
+              onClearAll={handleClearTracker2}
             />
           </div>
         </div>
