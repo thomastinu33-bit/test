@@ -233,7 +233,7 @@ export default function URLAuditPage() {
   const [snippetView, setSnippetView] = useState("snippet");
   const [snippetSort, setSnippetSort] = useState("most-relevant");
   const [expandedTopics, setExpandedTopics] = useState<number[]>([]);
-  const [selectedTopicFilter, setSelectedTopicFilter] = useState<string | null>(null);
+  const [selectedTopicFilter, setSelectedTopicFilter] = useState<{ topic: string; tracker: string } | null>(null);
 
   return (
     <div className="bg-[#f6f6f6] w-full min-h-screen flex flex-col m-5">
@@ -510,9 +510,9 @@ export default function URLAuditPage() {
                     .map((card) => (
                       <button
                         key={card.id}
-                        onClick={() => setSelectedTopicFilter(card.topic)}
+                        onClick={() => setSelectedTopicFilter({ topic: card.topic, tracker: card.tracker.name })}
                         className={`border rounded-lg p-2.5 w-48 transition-colors text-left ${
-                          selectedTopicFilter === card.topic
+                          selectedTopicFilter?.topic === card.topic && selectedTopicFilter?.tracker === card.tracker.name
                             ? "bg-blue-50 border-[#048BC5]"
                             : "bg-white border-[#eee] hover:bg-[#f6f6f6]"
                         }`}
@@ -577,7 +577,9 @@ export default function URLAuditPage() {
                     <div className="overflow-y-auto">
                     {MOCK_SNIPPETS.filter((snippet) => {
                       if (selectedTopicFilter === null) return true;
-                      return snippet.topics.some((topic) => topic.name === selectedTopicFilter);
+                      return snippet.topics.some(
+                        (topic) => topic.name === selectedTopicFilter.topic && topic.tracker === selectedTopicFilter.tracker
+                      );
                     })
                       .sort((a, b) =>
                         snippetSort === "most-relevant"
