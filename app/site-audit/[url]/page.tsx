@@ -641,23 +641,20 @@ export default function URLAuditPage() {
                           {isExpanded && (
                             <div>
                               {/* Prompts Header */}
-                              <div className="px-4 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-between gap-4 text-xs font-medium text-[#7f7f7f] uppercase">
-                                <p className="flex-1">Prompt</p>
-                                <div className="flex gap-6 whitespace-nowrap">
-                                  <div className="w-12 text-right pr-1">Topic Relevance</div>
-                                  <div className="w-16 text-right">Source Share</div>
-                                </div>
+                              <div className="px-4 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-end gap-8 text-xs font-medium text-[#7f7f7f] uppercase">
+                                <div className="w-20 text-right">Topic Relevance</div>
+                                <div className="w-20 text-right">Source Share</div>
                               </div>
 
                               {/* Prompt Rows */}
                               {topic.prompts.map((prompt, promptIdx) => (
                                 <div key={promptIdx} className="px-4 py-3 border-b border-[#eee] flex items-center justify-between gap-4 text-sm hover:bg-[#f9f9f9]">
                                   <p className="text-[#262626] flex-1">{prompt.text}</p>
-                                  <div className="flex gap-6 whitespace-nowrap">
-                                    <div className="w-12 text-right">
+                                  <div className="flex gap-8 whitespace-nowrap">
+                                    <div className="w-20 text-right">
                                       <p className="text-[#262626] font-semibold text-xs">{prompt.relevance}</p>
                                     </div>
-                                    <div className="w-16 text-right">
+                                    <div className="w-20 text-right">
                                       <p className="text-[#262626] font-semibold text-xs">{prompt.sourceShare}%</p>
                                     </div>
                                   </div>
