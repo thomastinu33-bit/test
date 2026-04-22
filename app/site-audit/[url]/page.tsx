@@ -256,7 +256,7 @@ export default function URLAuditPage() {
     setActiveTabState(tab);
     const newParams = new URLSearchParams(searchParams);
     newParams.set("tab", tab);
-    router.push(`?${newParams.toString()}`);
+    router.push(`?${newParams.toString()}`, { scroll: false });
   };
 
   const setSelectedTopicFilter = (filter: { topic: string; tracker: string } | null) => {
@@ -269,7 +269,7 @@ export default function URLAuditPage() {
       newParams.delete("topicFilter");
       newParams.delete("trackerFilter");
     }
-    router.push(`?${newParams.toString()}`);
+    router.push(`?${newParams.toString()}`, { scroll: false });
   };
 
   return (
