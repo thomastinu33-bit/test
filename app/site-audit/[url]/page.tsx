@@ -591,11 +591,11 @@ export default function URLAuditPage() {
                   </div>
 
                   {/* Right Column - Topics Accordion */}
-                  <div className="bg-white flex flex-col overflow-y-auto">
+                  <div className="bg-white flex flex-col overflow-y-auto gap-2 p-2">
                     {selectedSnippet.topics.map((topic, idx) => {
                       const isExpanded = expandedTopics.includes(idx);
                       return (
-                        <div key={idx} className="border-b border-[#eee] last:border-b-0">
+                        <div key={idx} className="border border-[#eee] rounded-lg overflow-hidden">
                           <button
                             onClick={() => {
                               setExpandedTopics(prev =>
