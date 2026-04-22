@@ -511,10 +511,10 @@ export default function URLAuditPage() {
                       <button
                         key={card.id}
                         onClick={() => setSelectedTopicFilter(card.topic)}
-                        className={`bg-white border rounded-lg p-2.5 w-48 transition-colors text-left ${
+                        className={`border rounded-lg p-2.5 w-48 transition-colors text-left ${
                           selectedTopicFilter === card.topic
-                            ? "border-[#048BC5] bg-blue-50"
-                            : "border-[#eee] hover:border-[#048BC5]"
+                            ? "bg-[#f6f6f6] border-[#eee]"
+                            : "bg-white border-[#eee] hover:bg-[#f6f6f6]"
                         }`}
                       >
                         {/* Tracker Name */}
