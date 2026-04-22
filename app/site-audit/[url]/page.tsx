@@ -661,7 +661,7 @@ export default function URLAuditPage() {
                               {topic.prompts.map((prompt, promptIdx) => (
                                 <div key={promptIdx} className="px-3 py-3 border-b border-[#eee] flex items-center justify-between gap-6 text-sm hover:bg-[#f9f9f9]">
                                   <p className="text-[#262626] flex-1">{prompt.text}</p>
-                                  <div className="flex gap-12 whitespace-nowrap">
+                                  <div className="flex gap-16 whitespace-nowrap">
                                     <div className="flex items-center gap-1">
                                       <div className="h-1 w-12 bg-[#eee] rounded-full overflow-hidden">
                                         <div
