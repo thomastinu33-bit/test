@@ -620,12 +620,12 @@ export default function URLAuditPage() {
                             </div>
                             <div className="flex items-center gap-6">
                               <div className="text-right">
-                                <p className="text-[10px] font-medium text-[#7f7f7f] uppercase">Topic Relevance</p>
-                                <p className="text-xs font-bold text-[#262626]">{topic.topicRelevance}</p>
+                                <p className="text-[11px] font-medium text-[#7f7f7f] uppercase">Topic Relevance</p>
+                                <p className="text-sm font-bold text-[#262626]">{topic.topicRelevance}</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-[10px] font-medium text-[#7f7f7f] uppercase">Source Share</p>
-                                <p className="text-xs font-bold text-[#262626]">{topic.sourceShare}%</p>
+                                <p className="text-[11px] font-medium text-[#7f7f7f] uppercase">Source Share</p>
+                                <p className="text-sm font-bold text-[#262626]">{topic.sourceShare}%</p>
                               </div>
                               <ChevronRight
                                 size={16}
