@@ -491,10 +491,10 @@ export default function URLAuditPage() {
                 <div className="flex gap-4 flex-wrap">
                   <button
                     onClick={() => setSelectedTopicFilter(null)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors border border-[#eee] ${
                       selectedTopicFilter === null
-                        ? "bg-[#048BC5] text-white"
-                        : "bg-[#f6f6f6] text-[#262626] hover:bg-[#eee]"
+                        ? "bg-[#f6f6f6]"
+                        : "bg-white hover:bg-[#f6f6f6]"
                     }`}
                   >
                     All
