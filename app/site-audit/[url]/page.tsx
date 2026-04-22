@@ -641,9 +641,9 @@ export default function URLAuditPage() {
                           {isExpanded && (
                             <div>
                               {/* Prompts Header */}
-                              <div className="px-4 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-end gap-8 text-xs font-medium text-[#7f7f7f] uppercase">
-                                <div className="w-20 text-right">Topic Relevance</div>
-                                <div className="w-20 text-right">Source Share</div>
+                              <div className="px-4 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-end gap-8 text-xs font-medium text-[#7f7f7f] uppercase whitespace-nowrap">
+                                <p>Topic Relevance</p>
+                                <p>Source Share</p>
                               </div>
 
                               {/* Prompt Rows */}
