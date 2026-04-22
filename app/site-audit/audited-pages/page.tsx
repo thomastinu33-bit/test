@@ -206,6 +206,24 @@ export default function AuditedPagesPage() {
 
   return (
     <div className="bg-[#f6f6f6] min-h-screen flex flex-col px-5 py-5">
+      {/* Tabs */}
+      <div className="bg-[#f6f6f6] pt-5 w-full">
+        <div className="flex gap-0 px-8">
+          <Link
+            href="/site-audit/overview"
+            className="px-6 py-3 font-medium text-base transition-colors bg-[#E1EBF8] text-[#262626] opacity-70 rounded-tr-lg hover:opacity-100"
+          >
+            Overview
+          </Link>
+          <button
+            type="button"
+            className="px-6 py-3 font-medium text-base transition-colors bg-[#048BC5] text-white rounded-tl-lg"
+          >
+            Audited pages
+          </button>
+        </div>
+      </div>
+
       {/* Content Area */}
       <div className="bg-white font-sans pt-8 pb-8 w-full flex-1">
         {activeTab === "overview" && (
