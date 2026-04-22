@@ -173,15 +173,6 @@ const RELEVANT_TOPICS = [
   },
   {
     id: 4,
-    topic: "Portability",
-    description: "Compact & Lightweight",
-    trackers: [
-      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 89 },
-      { name: "Portable Speakers", color: "#F59E0B", relevance: 86 }
-    ]
-  },
-  {
-    id: 5,
     topic: "Price",
     description: "Value & Affordability",
     trackers: [
@@ -191,7 +182,7 @@ const RELEVANT_TOPICS = [
     ]
   },
   {
-    id: 6,
+    id: 5,
     topic: "Design & Build",
     description: "Aesthetics & Materials",
     trackers: [
@@ -200,7 +191,7 @@ const RELEVANT_TOPICS = [
     ]
   },
   {
-    id: 7,
+    id: 6,
     topic: "Power Output",
     description: "Loudness & Performance",
     trackers: [
@@ -209,7 +200,7 @@ const RELEVANT_TOPICS = [
     ]
   },
   {
-    id: 8,
+    id: 7,
     topic: "Water Resistance",
     description: "Durability & Protection",
     trackers: [
