@@ -227,32 +227,6 @@ export default function AuditedPagesPage() {
       {/* Content Area */}
       <div className="bg-white font-sans pt-8 pb-8 w-full flex-1">
         {activeTab === "audited-pages" && (
-          <div className="space-y-8 px-8 max-w-6xl">
-            <div>
-              <h2 className="text-2xl font-bold text-[#262626] mb-2">Site Audit Overview</h2>
-              <p className="text-base text-[#7f7f7f]">
-                Monitor and analyze your website's health and performance metrics.
-              </p>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { label: "Total Pages", value: "0", color: "bg-blue-50" },
-                { label: "Issues Found", value: "0", color: "bg-red-50" },
-                { label: "Passed Checks", value: "0", color: "bg-green-50" },
-                { label: "Last Audit", value: "Never", color: "bg-gray-50" },
-              ].map((stat) => (
-                <div key={stat.label} className={`${stat.color} p-6 rounded-lg`}>
-                  <p className="text-sm text-[#7f7f7f] mb-2">{stat.label}</p>
-                  <p className="text-3xl font-bold text-[#262626]">{stat.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === "audited-pages" && (
           <div className="space-y-8 px-8">
             <div>
               <h2 className="text-2xl font-bold text-[#262626] mb-2">Audited Pages</h2>
