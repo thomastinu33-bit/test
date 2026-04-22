@@ -146,30 +146,29 @@ const MOCK_SNIPPETS = [
 const RELEVANT_TOPICS = [
   {
     id: 1,
-    topic: "Sound Quality",
-    description: "Audio Performance & Clarity",
-    trackers: [
-      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 95 },
-      { name: "Home Cinema Audio", color: "#10B981", relevance: 98 },
-      { name: "Portable Speakers", color: "#F59E0B", relevance: 92 }
-    ]
-  },
-  {
-    id: 2,
-    topic: "Battery Life",
-    description: "Endurance & Charging",
+    topic: "Endurance",
+    description: "Battery & Runtime",
     trackers: [
       { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 91 },
       { name: "Portable Speakers", color: "#F59E0B", relevance: 85 }
     ]
   },
   {
-    id: 3,
-    topic: "Connectivity",
-    description: "Wireless & Bluetooth",
+    id: 2,
+    topic: "Portability",
+    description: "Compact & Lightweight",
     trackers: [
-      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 88 },
-      { name: "Home Cinema Audio", color: "#10B981", relevance: 82 }
+      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 89 },
+      { name: "Portable Speakers", color: "#F59E0B", relevance: 86 }
+    ]
+  },
+  {
+    id: 3,
+    topic: "Durability",
+    description: "Build Quality & Protection",
+    trackers: [
+      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 87 },
+      { name: "Portable Speakers", color: "#F59E0B", relevance: 83 }
     ]
   },
   {
