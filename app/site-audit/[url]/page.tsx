@@ -591,7 +591,7 @@ export default function URLAuditPage() {
                   </div>
 
                   {/* Right Column - Topics Accordion */}
-                  <div className="bg-white flex flex-col overflow-y-auto gap-2 p-2">
+                  <div className="bg-white flex flex-col overflow-y-auto gap-2 px-0 py-2">
                     {selectedSnippet.topics.map((topic, idx) => {
                       const isExpanded = expandedTopics.includes(idx);
                       return (
