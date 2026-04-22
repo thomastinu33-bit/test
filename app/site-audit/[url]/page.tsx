@@ -641,9 +641,12 @@ export default function URLAuditPage() {
                           {isExpanded && (
                             <div>
                               {/* Prompts Header */}
-                              <div className="px-3 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-end gap-8 text-xs font-medium text-[#7f7f7f] uppercase whitespace-nowrap">
-                                <p>Topic Relevance</p>
-                                <p>Source Share</p>
+                              <div className="px-3 py-2 bg-[#f6f6f6] border-b border-[#eee] flex items-center justify-between gap-8 text-xs font-medium text-[#7f7f7f] uppercase whitespace-nowrap">
+                                <p className="flex-1">Prompt</p>
+                                <div className="flex gap-8">
+                                  <p>Topic Relevance</p>
+                                  <p>Source Share</p>
+                                </div>
                               </div>
 
                               {/* Prompt Rows */}
