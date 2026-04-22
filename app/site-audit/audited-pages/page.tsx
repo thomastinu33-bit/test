@@ -226,7 +226,7 @@ export default function AuditedPagesPage() {
 
       {/* Content Area */}
       <div className="bg-white font-sans pt-8 pb-8 w-full flex-1">
-        {activeTab === "overview" && (
+        {activeTab === "audited-pages" && (
           <div className="space-y-8 px-8 max-w-6xl">
             <div>
               <h2 className="text-2xl font-bold text-[#262626] mb-2">Site Audit Overview</h2>
