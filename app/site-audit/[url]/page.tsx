@@ -488,7 +488,7 @@ export default function URLAuditPage() {
               {/* Relevant Topics */}
               <div>
                 <h3 className="text-lg font-semibold text-[#262626] mb-4">Relevant Topics</h3>
-                <div className="flex gap-4 flex-wrap mb-4">
+                <div className="flex gap-4 flex-wrap">
                   <button
                     onClick={() => setSelectedTopicFilter(null)}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -499,21 +499,6 @@ export default function URLAuditPage() {
                   >
                     All
                   </button>
-                  {RELEVANT_TOPICS.slice(0, 8).map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setSelectedTopicFilter(item.topic)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        selectedTopicFilter === item.topic
-                          ? "bg-[#048BC5] text-white"
-                          : "bg-[#f6f6f6] text-[#262626] hover:bg-[#eee]"
-                      }`}
-                    >
-                      {item.topic}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex gap-4 flex-wrap">
                   {RELEVANT_TOPICS.flatMap((item) =>
                     item.trackers.map((tracker, trackerIdx) => ({
                       id: `${item.id}-${trackerIdx}`,
@@ -523,7 +508,15 @@ export default function URLAuditPage() {
                   )
                     .slice(0, 8)
                     .map((card) => (
-                      <div key={card.id} className="bg-white border border-[#eee] rounded-lg p-2.5 w-48">
+                      <button
+                        key={card.id}
+                        onClick={() => setSelectedTopicFilter(card.topic)}
+                        className={`bg-white border rounded-lg p-2.5 w-48 transition-colors text-left ${
+                          selectedTopicFilter === card.topic
+                            ? "border-[#048BC5] bg-blue-50"
+                            : "border-[#eee] hover:border-[#048BC5]"
+                        }`}
+                      >
                         {/* Tracker Name */}
                         <p
                           className="text-xs font-medium mb-0.5"
@@ -551,7 +544,7 @@ export default function URLAuditPage() {
                             {card.tracker.relevance}
                           </p>
                         </div>
-                      </div>
+                      </button>
                     ))}
                 </div>
               </div>
