@@ -631,17 +631,9 @@ export default function URLAuditPage() {
                                   <p className="text-sm font-bold text-[#262626] w-8 text-right">{topic.topicRelevance}</p>
                                 </div>
                               </div>
-                              <div className="flex flex-col gap-1 items-end">
+                              <div className="text-right">
                                 <p className="text-[11px] font-medium text-[#7f7f7f] uppercase">Source Share</p>
-                                <div className="flex items-center gap-2">
-                                  <div className="h-1 w-12 bg-[#eee] rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full rounded-full bg-green-500"
-                                      style={{ width: `${topic.sourceShare}%` }}
-                                    />
-                                  </div>
-                                  <p className="text-sm font-bold text-[#262626] w-8 text-right">{topic.sourceShare}%</p>
-                                </div>
+                                <p className="text-sm font-bold text-[#262626]">{topic.sourceShare}%</p>
                               </div>
                               <ChevronRight
                                 size={16}
@@ -679,15 +671,7 @@ export default function URLAuditPage() {
                                       </div>
                                       <p className="text-[#262626] font-semibold text-[11px] w-8 text-right">{prompt.relevance}</p>
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                      <div className="h-1 w-12 bg-[#eee] rounded-full overflow-hidden">
-                                        <div
-                                          className="h-full rounded-full bg-green-500"
-                                          style={{ width: `${prompt.sourceShare}%` }}
-                                        />
-                                      </div>
-                                      <p className="text-[#262626] font-semibold text-[11px] w-8 text-right">{prompt.sourceShare}%</p>
-                                    </div>
+                                    <p className="text-[#262626] font-semibold text-[11px] w-8 text-right">{prompt.sourceShare}%</p>
                                   </div>
                                 </div>
                               ))}
