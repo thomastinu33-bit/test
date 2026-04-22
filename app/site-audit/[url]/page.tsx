@@ -233,6 +233,7 @@ export default function URLAuditPage() {
   const [snippetView, setSnippetView] = useState("snippet");
   const [snippetSort, setSnippetSort] = useState("most-relevant");
   const [expandedTopics, setExpandedTopics] = useState<number[]>([]);
+  const [selectedTopicFilter, setSelectedTopicFilter] = useState<string | null>(null);
 
   return (
     <div className="bg-[#f6f6f6] w-full min-h-screen flex flex-col m-5">
@@ -487,6 +488,31 @@ export default function URLAuditPage() {
               {/* Relevant Topics */}
               <div>
                 <h3 className="text-lg font-semibold text-[#262626] mb-4">Relevant Topics</h3>
+                <div className="flex gap-4 flex-wrap mb-4">
+                  <button
+                    onClick={() => setSelectedTopicFilter(null)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      selectedTopicFilter === null
+                        ? "bg-[#048BC5] text-white"
+                        : "bg-[#f6f6f6] text-[#262626] hover:bg-[#eee]"
+                    }`}
+                  >
+                    All
+                  </button>
+                  {RELEVANT_TOPICS.slice(0, 8).map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setSelectedTopicFilter(item.topic)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        selectedTopicFilter === item.topic
+                          ? "bg-[#048BC5] text-white"
+                          : "bg-[#f6f6f6] text-[#262626] hover:bg-[#eee]"
+                      }`}
+                    >
+                      {item.topic}
+                    </button>
+                  ))}
+                </div>
                 <div className="flex gap-4 flex-wrap">
                   {RELEVANT_TOPICS.flatMap((item) =>
                     item.trackers.map((tracker, trackerIdx) => ({
@@ -556,11 +582,15 @@ export default function URLAuditPage() {
 
                     {/* Snippets List */}
                     <div className="overflow-y-auto">
-                    {MOCK_SNIPPETS.sort((a, b) =>
-                      snippetSort === "most-relevant"
-                        ? b.relevance - a.relevance
-                        : a.relevance - b.relevance
-                    ).map((snippet) => (
+                    {MOCK_SNIPPETS.filter((snippet) => {
+                      if (selectedTopicFilter === null) return true;
+                      return snippet.topics.some((topic) => topic.name === selectedTopicFilter);
+                    })
+                      .sort((a, b) =>
+                        snippetSort === "most-relevant"
+                          ? b.relevance - a.relevance
+                          : a.relevance - b.relevance
+                      ).map((snippet) => (
                       <button
                         key={snippet.id}
                         onClick={() => setSelectedSnippet(snippet)}
