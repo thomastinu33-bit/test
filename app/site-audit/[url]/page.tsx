@@ -149,47 +149,47 @@ const RELEVANT_TOPICS = [
     topic: "Sound Quality",
     description: "Audio Performance & Clarity",
     trackers: [
-      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 95 }
+      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 92 }
     ]
   },
   {
     id: 2,
-    topic: "Endurance",
-    description: "Battery & Runtime",
+    topic: "Audio Performance",
+    description: "Sound Quality & Specs",
     trackers: [
-      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 91 }
+      { name: "Home Cinema Audio", color: "#10B981", relevance: 88 }
     ]
   },
   {
     id: 3,
-    topic: "Comfort",
-    description: "Fit & Wearability",
+    topic: "Endurance",
+    description: "Battery & Runtime",
     trackers: [
-      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 88 }
+      { name: "Portable Speakers", color: "#F59E0B", relevance: 87 }
     ]
   },
   {
     id: 4,
-    topic: "Noise Cancellation",
-    description: "Active & Passive",
+    topic: "Power",
+    description: "Loudness & Performance",
     trackers: [
-      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 89 }
+      { name: "Home Cinema Audio", color: "#10B981", relevance: 84 }
     ]
   },
   {
     id: 5,
-    topic: "Power Output",
-    description: "Loudness & Performance",
+    topic: "Design",
+    description: "Aesthetics & Ergonomics",
     trackers: [
-      { name: "Home Cinema Audio", color: "#10B981", relevance: 96 }
+      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 81 }
     ]
   },
   {
     id: 6,
-    topic: "Room Integration",
-    description: "Smart Features & Control",
+    topic: "Materials",
+    description: "Build & Durability",
     trackers: [
-      { name: "Home Cinema Audio", color: "#10B981", relevance: 92 }
+      { name: "Portable Speakers", color: "#F59E0B", relevance: 78 }
     ]
   },
   {
@@ -197,15 +197,23 @@ const RELEVANT_TOPICS = [
     topic: "Portability",
     description: "Compact & Lightweight",
     trackers: [
-      { name: "Portable Speakers", color: "#F59E0B", relevance: 86 }
+      { name: "Home Cinema Audio", color: "#10B981", relevance: 85 }
     ]
   },
   {
     id: 8,
-    topic: "Materials",
-    description: "Build & Durability",
+    topic: "Durability",
+    description: "Build Quality & Protection",
     trackers: [
-      { name: "Portable Speakers", color: "#F59E0B", relevance: 83 }
+      { name: "Bluetooth Headphones", color: "#3B82F6", relevance: 79 }
+    ]
+  },
+  {
+    id: 9,
+    topic: "Protection",
+    description: "Water & Impact Resistance",
+    trackers: [
+      { name: "Portable Speakers", color: "#F59E0B", relevance: 75 }
     ]
   },
 ];
