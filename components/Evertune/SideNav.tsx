@@ -242,7 +242,7 @@ const defaultNavItems: NavItem[] = [
 ];
 
 const bottomNavItems: NavItem[] = [
-  { id: "site-audit", label: "Site Audit", icon: "globe" },
+  { id: "site-audit", label: "Site Audit", icon: "globe", href: "/site-audit" },
   { id: "bot-analytics", label: "Bot Analytics", icon: "monitor" },
 ];
 
