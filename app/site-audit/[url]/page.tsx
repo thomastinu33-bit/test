@@ -618,7 +618,7 @@ export default function URLAuditPage() {
                                 {topic.tracker}
                               </span>
                             </div>
-                            <div className="flex items-center gap-6 mr-2">
+                            <div className="flex items-center gap-8 mr-2">
                               <div className="flex flex-col gap-1 items-end">
                                 <p className="text-[11px] font-medium text-[#7f7f7f] uppercase">Topic Relevance</p>
                                 <div className="flex items-center gap-2">
@@ -631,9 +631,9 @@ export default function URLAuditPage() {
                                   <p className="text-sm font-bold text-[#262626] w-8 text-right">{topic.topicRelevance}</p>
                                 </div>
                               </div>
-                              <div className="text-right">
+                              <div className="flex flex-col gap-1 items-end">
                                 <p className="text-[11px] font-medium text-[#7f7f7f] uppercase">Source Share</p>
-                                <p className="text-sm font-bold text-[#262626]">{topic.sourceShare}%</p>
+                                <p className="text-sm font-bold text-[#262626] w-8 text-right">{topic.sourceShare}%</p>
                               </div>
                               <ChevronRight
                                 size={16}
