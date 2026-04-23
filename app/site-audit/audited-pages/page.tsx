@@ -149,13 +149,13 @@ const generateMockData = (): AuditRow[] => {
     "bose.com/status",
   ];
 
-  return baseUrls.map((url) => ({
+  return baseUrls.map((url, index) => ({
     url,
-    severity: severities[Math.floor(Math.random() * severities.length)],
-    topicRelevance: Math.floor(Math.random() * 40) + 60,
-    sourceShare: Math.floor(Math.random() * 50) + 15,
-    botPermissions: Math.floor(Math.random() * 30) + 70,
-    headingHierarchy: Math.floor(Math.random() * 35) + 65,
+    severity: severities[index % severities.length],
+    topicRelevance: ((index * 13) % 40) + 60,
+    sourceShare: ((index * 17) % 50) + 15,
+    botPermissions: ((index * 23) % 30) + 70,
+    headingHierarchy: ((index * 29) % 35) + 65,
   }));
 };
 
