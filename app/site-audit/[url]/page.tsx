@@ -494,9 +494,9 @@ export default function URLAuditPage() {
               </div>
 
               {/* Score Cards */}
-              <div className="flex gap-4 mt-4 flex-wrap">
+              <div className="flex gap-4 mt-4">
                 {/* Overall Topic Relevance */}
-                <div className="bg-white border border-[#eee] rounded-lg p-4 max-w-[1000px]">
+                <div className="bg-white border border-[#eee] rounded-lg p-4 flex-1">
                   <p className="text-[#7f7f7f] text-xs mb-2">Overall Topic Relevance</p>
                   <div className="flex items-baseline gap-2">
                     <p className="text-3xl font-bold text-[#262626]">78</p>
@@ -508,7 +508,7 @@ export default function URLAuditPage() {
                 </div>
 
                 {/* Overall Source Share */}
-                <div className="bg-white border border-[#eee] rounded-lg p-4 max-w-[1000px]">
+                <div className="bg-white border border-[#eee] rounded-lg p-4 flex-1">
                   <p className="text-[#7f7f7f] text-xs mb-2">Overall Source Share</p>
                   <div className="flex items-baseline gap-2">
                     <p className="text-3xl font-bold text-[#262626]">62%</p>
