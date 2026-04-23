@@ -273,17 +273,17 @@ export default function URLAuditPage() {
   return (
     <div className="bg-[#f6f6f6] w-full min-h-screen flex flex-col m-5">
       {/* Tabs */}
-      <div className="bg-[#f6f6f6] pt-5 w-full">
+      <div className="bg-[#f6f6f6] pt-5 w-full" style={{borderTopLeftRadius: '8px', borderTopRightRadius: '8px'}}>
         <div className="flex gap-0 px-8">
           <Link
             href="/site-audit/overview"
-            className="px-6 py-3 font-medium text-base transition-colors bg-[#E1EBF8] text-[#262626] opacity-70 rounded-tr-lg hover:opacity-100"
+            className="px-6 py-3 font-medium text-base transition-colors bg-[#E1EBF8] text-[#262626] opacity-70 hover:opacity-100"
           >
             Overview
           </Link>
           <Link
             href="/site-audit/audited-pages"
-            className="px-6 py-3 font-medium text-base transition-colors bg-[#048BC5] text-white rounded-tl-lg"
+            className="px-6 py-3 font-medium text-base transition-colors bg-[#048BC5] text-white"
           >
             Audited pages
           </Link>
